@@ -1,0 +1,16 @@
+## Interface: 11507
+## Title: EverGear
+## Notes: Suggests gear upgrades while leveling in WoW Forever.
+## Author: Amit Reuveni
+## Version: 0.1.0
+## SavedVariables: EverGearDB
+
+Core\Constants.lua
+Core\Database.lua
+Core\Character.lua
+Core\Equipment.lua
+Core\Upgrades.lua
+Core\UI.lua
+Core\Main.lua
+
+Data\Items_Stockade.lua
