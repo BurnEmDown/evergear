@@ -160,12 +160,19 @@ lookaheadRow:SetPoint("TOP", mainFrame, "TOP", 0, -60)
 
 local lookaheadLabel = lookaheadRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 lookaheadLabel:SetPoint("TOP", lookaheadRow, "TOP", 0, 0)
-lookaheadLabel:SetText("Look Ahead: Lvl --")
+lookaheadLabel:SetText("Current Level")
+
+-- Reset button sits to the slider's left; shifting the slider right by half
+-- the button's own footprint (button width + gap) keeps the [button][slider]
+-- pair centered under the label as one group, rather than off-center.
+local RESET_BUTTON_SIZE = 16
+local RESET_BUTTON_GAP = 6
+local sliderXOffset = (RESET_BUTTON_SIZE + RESET_BUTTON_GAP) / 2
 
 local lookaheadSlider = CreateFrame("Slider", "EverGearLookaheadSlider", lookaheadRow, "BackdropTemplate")
 lookaheadSlider:SetOrientation("HORIZONTAL")
 lookaheadSlider:SetSize(170, 14)
-lookaheadSlider:SetPoint("TOP", lookaheadLabel, "BOTTOM", 0, -6)
+lookaheadSlider:SetPoint("TOP", lookaheadLabel, "BOTTOM", sliderXOffset, -6)
 lookaheadSlider:SetHitRectInsets(0, 0, -6, -6)
 lookaheadSlider:SetThumbTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
 lookaheadSlider:SetBackdrop({
@@ -180,13 +187,39 @@ if lookaheadSlider.SetObeyStepOnDrag then
     lookaheadSlider:SetObeyStepOnDrag(true)
 end
 
+-- Resets the slider back to the player's current level (its minimum).
+-- SetValue below fires OnValueChanged, which does the actual write + refresh,
+-- so this button doesn't need its own copy of that logic.
+local lookaheadResetButton = CreateFrame("Button", nil, lookaheadRow)
+lookaheadResetButton:SetSize(RESET_BUTTON_SIZE, RESET_BUTTON_SIZE)
+lookaheadResetButton:SetPoint("RIGHT", lookaheadSlider, "LEFT", -RESET_BUTTON_GAP, 0)
+lookaheadResetButton:SetNormalTexture("Interface\\Buttons\\UI-RefreshButton")
+lookaheadResetButton:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+lookaheadResetButton:SetScript("OnClick", function()
+    lookaheadSlider:SetValue(GetLookaheadMin())
+end)
+lookaheadResetButton:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText("Reset to current level")
+    GameTooltip:Show()
+end)
+lookaheadResetButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
 -- Suppresses the OnValueChanged->RefreshUI round trip while we're the ones
 -- moving the slider programmatically (bounds sync on show/level-up), so it
--- only fires RefreshUI in response to an actual player drag.
+-- only fires RefreshUI in response to an actual player drag or the reset
+-- button, not every automatic bounds sync.
 local syncingSlider = false
 
+-- Shows a plain "Current Level" label when the slider is at its minimum
+-- (nothing being looked ahead to), and the level number only once it's
+-- actually been moved past that.
 local function UpdateLookaheadLabel(value)
-    lookaheadLabel:SetText("Look Ahead: Lvl " .. tostring(value))
+    if value <= GetLookaheadMin() then
+        lookaheadLabel:SetText("Current Level")
+    else
+        lookaheadLabel:SetText("Look Ahead: Lvl " .. tostring(value))
+    end
 end
 
 -- Recomputes the slider's min (current player level) and re-clamps the
