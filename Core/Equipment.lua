@@ -8,6 +8,16 @@ function EverGear:GetEquippedItemId(slotToken)
     return GetInventoryItemID("player", slotId)
 end
 
+-- All equipped item ids at once, keyed by real slot token. Convenience for
+-- UI.lua's single refresh pass instead of calling GetEquippedItemId per slot.
+function EverGear:GetCurrentGear()
+    local gear = {}
+    for _, slotToken in ipairs(self.EQUIP_SLOTS) do
+        gear[slotToken] = self:GetEquippedItemId(slotToken)
+    end
+    return gear
+end
+
 function EverGear:GetEquippedStats()
     local equipped = {}
     for _, slotToken in ipairs(self.EQUIP_SLOTS) do

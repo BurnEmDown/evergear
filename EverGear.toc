@@ -14,3 +14,4 @@ Core\UI.lua
 Core\Main.lua
 
 Data\Items_Stockade.lua
+Data\Items_HallOfThanes.lua
