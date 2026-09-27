@@ -23,7 +23,9 @@
 --   shrunk short. Only the SPACING between rows scales with height.
 
 local FRAME_WIDTH = 334
-local FRAME_HEIGHT = 560
+-- +34 over the original 560 to give the new look-ahead row its own space
+-- without squeezing the bottom weapon row's margin.
+local FRAME_HEIGHT = 594
 
 local LEFT_MARGIN = 24
 local RIGHT_MARGIN = 24
@@ -33,7 +35,7 @@ local TOP_Y = -10
 -- instead of the tight column the character screen has.
 local ROW_SPACING = 42
 local ICON_SIZE = 37
-local TOP_INSET = 134   -- title + spec dropdown + filter checkbox row
+local TOP_INSET = 168   -- title + spec dropdown + look-ahead row + filter checkbox rows
 local BOTTOM_INSET = 12
 
 -- Left column, top to bottom
@@ -132,6 +134,89 @@ UIDropDownMenu_Initialize(specDropdown, function()
 end)
 UIDropDownMenu_SetSelectedValue(specDropdown, EverGearDB.spec)
 
+-- ===== Look-ahead slider =====
+-- Lets the player preview upgrades above their current level (e.g. "what
+-- should I be aiming for in 10 levels"), without needing the full EP/role
+-- system the old LGA look-ahead slider leaned on -- this just widens the
+-- minLevel filter in GetUpgradesForSlot up to the chosen level. The stored
+-- value (EverGearDB.lookaheadLevel) is an ABSOLUTE target level, not a delta,
+-- because the slider's own minimum has to track the player's current level
+-- (it rises as they level up) and a delta would drift out of sync with that.
+-- Capped at 30 for now since that's roughly as far as the converted dungeon
+-- data currently goes; raise LOOKAHEAD_MAX once higher-level zones are added.
+local LOOKAHEAD_MAX = 30
+
+-- Every read/write below re-defaults defensively (via GetLookaheadMin() and
+-- "or" fallbacks) rather than trusting a one-time init -- in-game testing
+-- showed EverGearDB fields can still be nil the first time a handler fires
+-- in this client, so nothing here assumes a prior assignment stuck.
+local function GetLookaheadMin()
+    return EverGear:GetPlayerInfo().level or 1
+end
+
+local lookaheadRow = CreateFrame("Frame", nil, mainFrame)
+lookaheadRow:SetSize(200, 34)
+lookaheadRow:SetPoint("TOP", mainFrame, "TOP", 0, -60)
+
+local lookaheadLabel = lookaheadRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+lookaheadLabel:SetPoint("TOP", lookaheadRow, "TOP", 0, 0)
+lookaheadLabel:SetText("Look Ahead: Lvl --")
+
+local lookaheadSlider = CreateFrame("Slider", "EverGearLookaheadSlider", lookaheadRow, "BackdropTemplate")
+lookaheadSlider:SetOrientation("HORIZONTAL")
+lookaheadSlider:SetSize(170, 14)
+lookaheadSlider:SetPoint("TOP", lookaheadLabel, "BOTTOM", 0, -6)
+lookaheadSlider:SetHitRectInsets(0, 0, -6, -6)
+lookaheadSlider:SetThumbTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
+lookaheadSlider:SetBackdrop({
+    bgFile = "Interface\\Buttons\\WHITE8X8",
+    edgeFile = "Interface\\Buttons\\WHITE8X8",
+    edgeSize = 1,
+})
+lookaheadSlider:SetBackdropColor(0.06, 0.06, 0.08, 1)
+lookaheadSlider:SetBackdropBorderColor(0.6, 0.56, 0.42, 1)
+lookaheadSlider:SetValueStep(1)
+if lookaheadSlider.SetObeyStepOnDrag then
+    lookaheadSlider:SetObeyStepOnDrag(true)
+end
+
+-- Suppresses the OnValueChanged->RefreshUI round trip while we're the ones
+-- moving the slider programmatically (bounds sync on show/level-up), so it
+-- only fires RefreshUI in response to an actual player drag.
+local syncingSlider = false
+
+local function UpdateLookaheadLabel(value)
+    lookaheadLabel:SetText("Look Ahead: Lvl " .. tostring(value))
+end
+
+-- Recomputes the slider's min (current player level) and re-clamps the
+-- stored target level into [min, LOOKAHEAD_MAX] -- called on window show and
+-- after every refresh so leveling up during a session doesn't leave the
+-- slider's range stale.
+local function SyncLookaheadBounds()
+    local minLevel = GetLookaheadMin()
+    local maxLevel = math.max(minLevel, LOOKAHEAD_MAX)
+    local stored = EverGearDB.lookaheadLevel or minLevel
+    stored = math.max(minLevel, math.min(maxLevel, stored))
+    EverGearDB.lookaheadLevel = stored
+
+    syncingSlider = true
+    lookaheadSlider:SetMinMaxValues(minLevel, maxLevel)
+    lookaheadSlider:SetValue(stored)
+    syncingSlider = false
+    UpdateLookaheadLabel(stored)
+end
+
+lookaheadSlider:SetScript("OnValueChanged", function(self, value)
+    value = math.floor(value + 0.5)
+    UpdateLookaheadLabel(value)
+    if syncingSlider then return end
+    EverGearDB.lookaheadLevel = value
+    EverGear:RefreshUI()
+end)
+
+SyncLookaheadBounds()
+
 -- ===== Source-type filter checkboxes =====
 -- One checkbox per entry in EverGear.SOURCE_TYPE_FILTERS (Constants.lua) --
 -- add a row there, not here, when a new source type shows up in the data.
@@ -162,7 +247,7 @@ end
 -- mainFrame's actual width rather than a hardcoded number.
 local FILTER_SLOT_WIDTH = 92
 local FILTER_ROW_GAP = 26
-local FILTER_TOP_Y = -70
+local FILTER_TOP_Y = -104   -- shifted down to clear the look-ahead label+slider row
 local FILTER_ROW_1_COUNT = 3
 
 local function RepositionFilters()
@@ -329,6 +414,7 @@ RepositionAll()
 mainFrame:SetScript("OnShow", function()
     RepositionFilters()
     RepositionAll()
+    SyncLookaheadBounds()
 end)
 
 -- ===== Detail panel =====
@@ -498,6 +584,7 @@ end
 
 function EverGear:RefreshUI()
     detailPanel:Hide()
+    SyncLookaheadBounds()  -- re-clamps the slider if the player leveled up since it was last shown
 
     local gear = self:GetCurrentGear()
 

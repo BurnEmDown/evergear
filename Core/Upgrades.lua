@@ -315,6 +315,15 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     local role = self:GetRoleForSpec(playerInfo.classToken, EverGearDB.spec)
     local primaryStat = self:GetPrimaryStat(playerInfo.classToken, role)
 
+    -- Look-ahead: show items up to the slider's chosen level (set via UI.lua's
+    -- slider, player's current level - 30). EverGearDB.lookaheadLevel is an
+    -- ABSOLUTE target level, not a delta -- UI.lua keeps it clamped to at
+    -- least the player's current level, but never below it here either in
+    -- case that sync hasn't run yet (e.g. right after a level-up). This only
+    -- widens the minLevel filter below -- it doesn't change scoring or
+    -- class/weapon usability.
+    local effectiveLevel = math.max(playerInfo.level, EverGearDB.lookaheadLevel or playerInfo.level)
+
     local equippedItemId = self:GetItemIDFromLink(equippedItemLink)
     -- Prefer our own extracted data over the live API when we have it for the
     -- equipped item -- GetItemStats() isn't reliable for stats granted via an
@@ -333,7 +342,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     local candidates = {}
     for _, item in ipairs(self:GetItemsForSlot(realSlotToken)) do
         if item.id ~= equippedItemId
-            and (not item.minLevel or item.minLevel <= playerInfo.level)
+            and (not item.minLevel or item.minLevel <= effectiveLevel)
             and IsArmorTypeAllowed(item, playerInfo.classToken)
             and IsWeaponTypeAllowed(item, playerInfo.classToken)
         then
