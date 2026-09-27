@@ -30,7 +30,7 @@ local RIGHT_MARGIN = 24
 local TOP_Y = -10
 local ROW_SPACING = 48
 local ICON_SIZE = 37
-local TOP_INSET = 110   -- title + filter checkbox row
+local TOP_INSET = 134   -- title + spec dropdown + filter checkbox row
 local BOTTOM_INSET = 12
 
 -- Left column, top to bottom
@@ -125,6 +125,35 @@ title:SetText("EverGear")
 local closeButton = CreateFrame("Button", nil, mainFrame, "UIPanelCloseButton")
 closeButton:SetPoint("TOPRIGHT", -4, -4)
 
+-- ===== Spec dropdown =====
+-- Shows the real specs for the player's class (e.g. Arms/Fury/Protection for
+-- a Warrior); each maps to one of the 4 scoring roles Upgrades.lua understands
+-- (see EverGear.CLASS_SPECS in Upgrades.lua). This heavily affects
+-- suggestions since it picks which stats the scoring heuristic weights.
+EverGearDB.spec = EverGearDB.spec or EverGear:GetDefaultSpec(EverGear:GetPlayerInfo().classToken)
+
+local specDropdown = CreateFrame("Frame", "EverGearSpecDropdown", mainFrame, "UIDropDownMenuTemplate")
+specDropdown:SetPoint("TOP", mainFrame, "TOP", -8, -34)
+UIDropDownMenu_SetWidth(specDropdown, 150)
+
+local function SpecDropdown_OnClick(self)
+    EverGearDB.spec = self.value
+    UIDropDownMenu_SetSelectedValue(specDropdown, self.value)
+    EverGear:RefreshUI()
+end
+
+UIDropDownMenu_Initialize(specDropdown, function()
+    local specs = EverGear.CLASS_SPECS[EverGear:GetPlayerInfo().classToken] or {}
+    for _, spec in ipairs(specs) do
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = spec.name
+        info.value = spec.name
+        info.func = SpecDropdown_OnClick
+        UIDropDownMenu_AddButton(info)
+    end
+end)
+UIDropDownMenu_SetSelectedValue(specDropdown, EverGearDB.spec)
+
 -- ===== Source-type filter checkboxes =====
 -- One checkbox per entry in EverGear.SOURCE_TYPE_FILTERS (Constants.lua) --
 -- add a row there, not here, when a new source type shows up in the data.
@@ -152,7 +181,7 @@ end
 local FILTER_SLOT_WIDTH = 92
 local FILTER_ROW_GAP = 26
 local FILTER_SINGLE_ROW_MIN_WIDTH = 92 * #filterCheckboxes + 40
-local FILTER_TOP_Y = -46
+local FILTER_TOP_Y = -70
 local FILTER_WRAP_COLUMNS = 3
 
 local function RepositionFilters()
@@ -200,18 +229,21 @@ local leftItems, rightItems, bottomItems = {}, {}, {}
 -- Button frame plus a couple of textures/paths that have existed since
 -- Vanilla and are extremely unlikely to ever be removed.
 local function CreateItemIconFrame(name, parent, size)
-    local btn = CreateFrame("Button", name, parent)
+    -- Border is a plain 1px backdrop edge, not a texture -- "UI-Quickslot2"
+    -- (the first attempt) has most of its art as transparent padding around a
+    -- small ring, so scaling it to exactly the icon's bounds made the visible
+    -- ring render tiny and centered instead of framing the edge. A backdrop
+    -- edge sits at the true edge regardless of icon size.
+    local btn = CreateFrame("Button", name, parent, "BackdropTemplate")
     btn:SetSize(size, size)
+    btn:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+    btn:SetBackdropBorderColor(0, 0, 0, 1)
 
     local icon = btn:CreateTexture(nil, "BACKGROUND")
-    icon:SetAllPoints()
+    icon:SetPoint("TOPLEFT", 1, -1)
+    icon:SetPoint("BOTTOMRIGHT", -1, 1)
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)  -- trims the icon's own built-in border padding
     btn.icon = icon
-
-    local border = btn:CreateTexture(nil, "OVERLAY")
-    border:SetAllPoints()
-    border:SetTexture("Interface\\Buttons\\UI-Quickslot2")
-    btn.border = border
 
     local highlight = btn:CreateTexture(nil, "HIGHLIGHT")
     highlight:SetAllPoints()
@@ -479,9 +511,9 @@ function EverGear:RefreshUI()
 
     for _, slotToken in ipairs(slotOrder) do
         local btn = slotButtons[slotToken]
-        local itemId = gear[slotToken]
+        local itemLink = gear[slotToken]
 
-        local candidates, currentScore = self:GetUpgradesForSlot(slotToken, itemId)
+        local candidates, currentScore = self:GetUpgradesForSlot(slotToken, itemLink)
 
         local filtered = {}
         for _, candidate in ipairs(candidates) do
@@ -491,10 +523,10 @@ function EverGear:RefreshUI()
             end
         end
 
-        if itemId then
-            local _, _, _, _, _, _, _, _, _, itemTexture = SafeGetItemInfo(itemId)
-            SetIconTexture(btn, itemTexture or SafeGetItemIcon(itemId) or EverGear.EMPTY_SLOT_TEXTURES[slotToken])
-            btn.currentLink = BuildItemLink(itemId)
+        if itemLink then
+            local _, _, _, _, _, _, _, _, _, itemTexture = SafeGetItemInfo(itemLink)
+            SetIconTexture(btn, itemTexture or SafeGetItemIcon(itemLink) or EverGear.EMPTY_SLOT_TEXTURES[slotToken])
+            btn.currentLink = itemLink
         else
             SetIconTexture(btn, EverGear.EMPTY_SLOT_TEXTURES[slotToken])
             btn.currentLink = nil

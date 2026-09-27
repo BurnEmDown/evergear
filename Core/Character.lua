@@ -1,14 +1,16 @@
--- Reads the player's class/spec/level. EP stat-weight tables (per class/spec) will be
--- added here once EverGear has enough leveling data to make weighting meaningful;
--- until then, Upgrades.lua falls back to a simple ilvl/slot-appropriate-stat heuristic.
+-- Reads the player's class/spec/level, used by Upgrades.lua for role/stat
+-- weighting and class-usability checks (armor type, weapon type).
 
 EverGear = EverGear or {}
 
 function EverGear:GetPlayerInfo()
-    local _, class = UnitClass("player")
+    local _, classToken, classID = UnitClass("player")
     local level = UnitLevel("player")
+    local _, _, raceID = UnitRace("player")
     return {
-        class = class,
+        classToken = classToken,  -- e.g. "PALADIN" -- used for role/armor/weapon checks
+        classID = classID,
+        raceID = raceID,
         level = level,
     }
 end
