@@ -15,3 +15,8 @@ Core\Main.lua
 
 Data\Items_Stockade.lua
 Data\Items_HallOfThanes.lua
+Data\Items_RuinsOfLordaeron.lua
+Data\Items_RagefireChasm.lua
+Data\Items_TheDeadmines.lua
+Data\Items_WailingCaverns.lua
+Data\Items_ShadowfangKeep.lua
