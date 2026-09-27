@@ -89,11 +89,12 @@ EverGear.EMPTY_SLOT_TEXTURES = {
 -- Which known source.type values currently exist and how to label them in the
 -- filter row. Order here is display order. New types (raidDrop, vendor, etc.)
 -- just need a row added here -- everything else reads this list generically.
+-- Raid Drop deliberately omitted for now (not relevant until the addon has
+-- raid data) -- add it back here when that data exists.
 EverGear.SOURCE_TYPE_FILTERS = {
-    { key = "dungeonDrop", label = "Dungeon Drop" },
-    { key = "raidDrop",    label = "Raid Drop" },
     { key = "quest",       label = "Quest" },
     { key = "vendor",      label = "Vendor" },
-    { key = "worldDrop",   label = "World Drop" },
     { key = "craft",       label = "Craft" },
+    { key = "worldDrop",   label = "World Drop" },
+    { key = "dungeonDrop", label = "Dungeon Drop" },
 }

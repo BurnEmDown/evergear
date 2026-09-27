@@ -22,13 +22,16 @@
 --   never move up into the filter checkbox row even if the window is
 --   shrunk short. Only the SPACING between rows scales with height.
 
-local FRAME_WIDTH = 300
+local FRAME_WIDTH = 334
 local FRAME_HEIGHT = 560
 
 local LEFT_MARGIN = 24
 local RIGHT_MARGIN = 24
 local TOP_Y = -10
-local ROW_SPACING = 48
+-- Real PaperDollFrame slots sit almost flush against each other (~4px gap
+-- between 37px icons); the old 48px pitch read as a loose, spread-out list
+-- instead of the tight column the character screen has.
+local ROW_SPACING = 42
 local ICON_SIZE = 37
 local TOP_INSET = 134   -- title + spec dropdown + filter checkbox row
 local BOTTOM_INSET = 12
@@ -58,37 +61,31 @@ local EG_Filters = EverGearDB.filters
 
 local mainFrame = CreateFrame("Frame", "EverGearFrame", UIParent, "BackdropTemplate")
 
-local function Clamp(value, minValue, maxValue)
-    return math.max(minValue, math.min(maxValue, value))
-end
-
-local initialWidth = Clamp(EverGearDB.width or FRAME_WIDTH, 280, 460)
-local initialHeight = Clamp(EverGearDB.height or FRAME_HEIGHT, 560, 760)
-mainFrame:SetSize(initialWidth, initialHeight)
+-- Fixed size -- the window is no longer user-resizable, so there's nothing
+-- to clamp or persist beyond its screen position.
+mainFrame:SetSize(FRAME_WIDTH, FRAME_HEIGHT)
 
 if EverGearDB.point then
     mainFrame:SetPoint("TOPLEFT", UIParent, EverGearDB.relativePoint or "TOPLEFT", EverGearDB.x or 0, EverGearDB.y or 0)
 else
-    mainFrame:SetPoint("TOPLEFT", UIParent, "CENTER", -(initialWidth / 2), (initialHeight / 2))
+    mainFrame:SetPoint("TOPLEFT", UIParent, "CENTER", -(FRAME_WIDTH / 2), (FRAME_HEIGHT / 2))
 end
 mainFrame:SetMovable(true)
 mainFrame:EnableMouse(true)
 mainFrame:RegisterForDrag("LeftButton")
 
-local function SaveWindowPositionAndSize()
+local function SaveWindowPosition()
     local point, _, relativePoint, x, y = mainFrame:GetPoint(1)
     EverGearDB.point = point
     EverGearDB.relativePoint = relativePoint
     EverGearDB.x = x
     EverGearDB.y = y
-    EverGearDB.width = mainFrame:GetWidth()
-    EverGearDB.height = mainFrame:GetHeight()
 end
 
 mainFrame:SetScript("OnDragStart", mainFrame.StartMoving)
 mainFrame:SetScript("OnDragStop", function(self)
     self:StopMovingOrSizing()
-    SaveWindowPositionAndSize()
+    SaveWindowPosition()
 end)
 mainFrame:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
@@ -97,26 +94,7 @@ mainFrame:SetBackdrop({
     insets = { left = 11, right = 12, top = 12, bottom = 11 }
 })
 mainFrame:Hide()
-
-mainFrame:SetResizable(true)
-if mainFrame.SetResizeBounds then
-    mainFrame:SetResizeBounds(280, 560, 460, 760)
-else
-    mainFrame:SetMinResize(280, 560)
-    mainFrame:SetMaxResize(460, 760)
-end
-
-local resizeHandle = CreateFrame("Button", nil, mainFrame)
-resizeHandle:SetSize(16, 16)
-resizeHandle:SetPoint("BOTTOMRIGHT", -6, 6)
-resizeHandle:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
-resizeHandle:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
-resizeHandle:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
-resizeHandle:SetScript("OnMouseDown", function() mainFrame:StartSizing("BOTTOMRIGHT") end)
-resizeHandle:SetScript("OnMouseUp", function()
-    mainFrame:StopMovingOrSizing()
-    SaveWindowPositionAndSize()
-end)
+mainFrame:SetResizable(false)
 
 local title = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 title:SetPoint("TOP", 0, -16)
@@ -176,41 +154,38 @@ for _, entry in ipairs(EverGear.SOURCE_TYPE_FILTERS) do
     CreateFilterCheckbox("EverGearFilter_" .. entry.key, entry.label, entry.key)
 end
 
--- Filter layout: centered, collapses from a 3-column grid into a single row
--- once the window is wide enough to fit one. Recalculated on every resize.
+-- Filter layout: two fixed centered rows. Row 1 is Quest/Vendor/Craft (the
+-- first 3 entries in SOURCE_TYPE_FILTERS), row 2 is World Drop/Dungeon Drop
+-- (the last 2) -- each row centers independently rather than sharing one
+-- grid, since row 2 only has 2 items. The window no longer resizes, so this
+-- doesn't need to be recalculated dynamically, but it's still driven off
+-- mainFrame's actual width rather than a hardcoded number.
 local FILTER_SLOT_WIDTH = 92
 local FILTER_ROW_GAP = 26
-local FILTER_SINGLE_ROW_MIN_WIDTH = 92 * #filterCheckboxes + 40
 local FILTER_TOP_Y = -70
-local FILTER_WRAP_COLUMNS = 3
+local FILTER_ROW_1_COUNT = 3
 
 local function RepositionFilters()
     local width = mainFrame:GetWidth()
 
-    if width >= FILTER_SINGLE_ROW_MIN_WIDTH then
-        local totalWidth = #filterCheckboxes * FILTER_SLOT_WIDTH
+    local function centerRow(checkboxes, y)
+        local totalWidth = #checkboxes * FILTER_SLOT_WIDTH
         local startX = (width - totalWidth) / 2
-        for i, cb in ipairs(filterCheckboxes) do
+        for i, cb in ipairs(checkboxes) do
             cb:ClearAllPoints()
-            cb:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", startX + (i - 1) * FILTER_SLOT_WIDTH, FILTER_TOP_Y)
-        end
-    else
-        local columns = math.min(FILTER_WRAP_COLUMNS, #filterCheckboxes)
-        local totalWidth = columns * FILTER_SLOT_WIDTH
-        local startX = (width - totalWidth) / 2
-        for i, cb in ipairs(filterCheckboxes) do
-            local col = (i - 1) % columns
-            local row = math.floor((i - 1) / columns)
-            cb:ClearAllPoints()
-            cb:SetPoint(
-                "TOPLEFT", mainFrame, "TOPLEFT",
-                startX + col * FILTER_SLOT_WIDTH, FILTER_TOP_Y - row * FILTER_ROW_GAP
-            )
+            cb:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", startX + (i - 1) * FILTER_SLOT_WIDTH, y)
         end
     end
+
+    local row1, row2 = {}, {}
+    for i, cb in ipairs(filterCheckboxes) do
+        table.insert(i <= FILTER_ROW_1_COUNT and row1 or row2, cb)
+    end
+
+    centerRow(row1, FILTER_TOP_Y)
+    centerRow(row2, FILTER_TOP_Y - FILTER_ROW_GAP)
 end
 
-mainFrame:SetScript("OnSizeChanged", RepositionFilters)
 RepositionFilters()
 
 -- Content frame: everything below the filter row.
@@ -234,12 +209,24 @@ local function CreateItemIconFrame(name, parent, size)
     -- small ring, so scaling it to exactly the icon's bounds made the visible
     -- ring render tiny and centered instead of framing the edge. A backdrop
     -- edge sits at the true edge regardless of icon size.
+    --
+    -- The edge is a light gold-grey (matching the real PaperDollFrame's slot
+    -- borders) with a solid dark fill behind the icon, not just a black edge
+    -- with nothing behind it -- against this window's dark backdrop a black
+    -- border on a mostly-transparent square was nearly invisible for any slot
+    -- showing one of the muted EMPTY_SLOT_TEXTURES placeholders, so an empty
+    -- slot effectively vanished and only its floating badge number stood out.
     local btn = CreateFrame("Button", name, parent, "BackdropTemplate")
     btn:SetSize(size, size)
-    btn:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
-    btn:SetBackdropBorderColor(0, 0, 0, 1)
+    btn:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8X8",
+        edgeFile = "Interface\\Buttons\\WHITE8X8",
+        edgeSize = 1,
+    })
+    btn:SetBackdropColor(0.06, 0.06, 0.08, 1)
+    btn:SetBackdropBorderColor(0.6, 0.56, 0.42, 1)
 
-    local icon = btn:CreateTexture(nil, "BACKGROUND")
+    local icon = btn:CreateTexture(nil, "ARTWORK")
     icon:SetPoint("TOPLEFT", 1, -1)
     icon:SetPoint("BOTTOMRIGHT", -1, 1)
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)  -- trims the icon's own built-in border padding
@@ -263,9 +250,14 @@ local function CreateSlotButton(slotToken)
     local btn = CreateItemIconFrame("EverGearSlotButton_" .. slotToken, content, ICON_SIZE)
     btn.slotToken = slotToken
 
+    -- Bottom-right corner, like Blizzard's own item-count/durability overlays --
+    -- dead-centering it on the icon (the old approach) covered the item art
+    -- itself, which is the opposite of the clean look the real character
+    -- panel has (an icon you can actually see, with any overlay tucked into
+    -- a corner).
     local badge = btn:CreateFontString(nil, "OVERLAY")
-    badge:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-    badge:SetPoint("CENTER", btn, "CENTER", 0, 0)
+    badge:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+    badge:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -1, 1)
     btn.badge = badge
 
     btn:SetScript("OnEnter", function(self)
