@@ -11,6 +11,7 @@ Core\Character.lua
 Core\Equipment.lua
 Core\Upgrades.lua
 Core\UI.lua
+Core\MinimapButton.lua
 Core\Main.lua
 
 Data\Items_Stockade.lua

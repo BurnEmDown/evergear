@@ -154,11 +154,26 @@ end
 -- numeric (weapon damage range) -- never fed into the generic per-stat loop.
 local EXCLUDED_STAT_KEYS = { ARMOR = true, WEAPON_DPS = true, WEAPON_SPEED = true, WEAPON_DAMAGE = true }
 
+-- How much each of the 4 primary-ish stats (STR/AGI/INT/SPI) is worth to a
+-- role when it ISN'T that role's chosen primary stat. This used to be one
+-- flat 0.5 for all four regardless of role -- which meant a Retribution
+-- Paladin (Physical DPS, primary STRENGTH) saw INTELLECT and SPIRIT valued
+-- almost as highly as AGILITY, even though a melee DPS gets nothing from
+-- casting stats. That's what was pulling healing/caster gear up into
+-- "upgrade" suggestions it had no business being in. Tuned per role instead.
+local OFF_STAT_WEIGHT = {
+    ["Physical DPS"] = { STRENGTH = 0.15, AGILITY = 0.3,  INTELLECT = 0.05, SPIRIT = 0.05 },
+    ["Caster DPS"]   = { STRENGTH = 0.05, AGILITY = 0.05, INTELLECT = 0.3,  SPIRIT = 0.3 },
+    ["Healer"]       = { STRENGTH = 0.05, AGILITY = 0.05, INTELLECT = 0.3,  SPIRIT = 0.3 },
+    ["Tank"]         = { STRENGTH = 0.15, AGILITY = 0.25, INTELLECT = 0.05, SPIRIT = 0.05 },
+}
+
 -- Computes a single comparable score from a stats table (our own item.stats
 -- shape, or the live-read equivalent from NormalizeLiveStats below), plus
 -- armor value and weapon DPS (0 for non-weapon/non-armor items).
 local function ScoreItem(stats, primaryStat, role, armorValue, dps)
     local profile = GetRoleProfile(role)
+    local offStatWeights = OFF_STAT_WEIGHT[role] or OFF_STAT_WEIGHT["Physical DPS"]
     local score = 0
 
     for statName, value in pairs(stats or {}) do
@@ -170,8 +185,8 @@ local function ScoreItem(stats, primaryStat, role, armorValue, dps)
                 weight = profile.staminaWeight
             elseif profile.secondary[statName] then
                 weight = profile.secondary[statName]
-            elseif statName == "AGILITY" or statName == "STRENGTH" or statName == "INTELLECT" or statName == "SPIRIT" then
-                weight = 0.5  -- a primary-ish stat that isn't yours
+            elseif offStatWeights[statName] then
+                weight = offStatWeights[statName]
             else
                 weight = 0.3  -- unmapped fallback
             end
@@ -341,10 +356,19 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
 
     local candidates = {}
     for _, item in ipairs(self:GetItemsForSlot(realSlotToken)) do
+        local itemFaction = item.source and item.source.faction
+        -- Faction-locked quest rewards (item.source.faction) are only ever
+        -- obtainable by that faction -- skip them for the other one entirely
+        -- rather than suggesting an "upgrade" the player can never get. If
+        -- the player's own faction can't be read for some reason, don't
+        -- filter (better to over-show than silently hide real options).
+        local factionAllowed = (not itemFaction) or (not playerInfo.faction) or itemFaction == playerInfo.faction
+
         if item.id ~= equippedItemId
             and (not item.minLevel or item.minLevel <= effectiveLevel)
             and IsArmorTypeAllowed(item, playerInfo.classToken)
             and IsWeaponTypeAllowed(item, playerInfo.classToken)
+            and factionAllowed
         then
             local armorValue = (item.stats and item.stats.ARMOR) or 0
             local dpsValue = (item.stats and item.stats.WEAPON_DPS) or 0

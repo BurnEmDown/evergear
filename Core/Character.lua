@@ -7,10 +7,12 @@ function EverGear:GetPlayerInfo()
     local _, classToken, classID = UnitClass("player")
     local level = UnitLevel("player")
     local _, _, raceID = UnitRace("player")
+    local faction = UnitFactionGroup("player")  -- "Alliance" | "Horde" | "Neutral"/nil (e.g. some starting states)
     return {
         classToken = classToken,  -- e.g. "PALADIN" -- used for role/armor/weapon checks
         classID = classID,
         raceID = raceID,
         level = level,
+        faction = faction,
     }
 end
