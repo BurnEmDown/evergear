@@ -562,7 +562,14 @@ function EverGear:GetSourceSummary(item)
     if not source then return "Unknown source" end
 
     if source.type == "quest" then
-        return "Quest: " .. (source.quest or "Unknown quest")
+        -- Mirrors the dungeonDrop "Zone (Boss)" format below so both source
+        -- types read the same way at a glance -- zone first (where to go),
+        -- then what to do there.
+        local questName = source.quest or "Unknown quest"
+        if source.zone then
+            return source.zone .. " (Quest: " .. questName .. ")"
+        end
+        return "Quest: " .. questName
     elseif source.type == "dungeonDrop" or source.type == "raidDrop" then
         if source.boss then
             return (source.zone or "Unknown zone") .. " (" .. source.boss .. ")"

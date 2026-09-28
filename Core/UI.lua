@@ -50,6 +50,47 @@ for _, s in ipairs(leftColumn) do table.insert(slotOrder, s) end
 for _, s in ipairs(rightColumn) do table.insert(slotOrder, s) end
 for _, s in ipairs(bottomRow) do table.insert(slotOrder, s) end
 
+-- ===== Theme =====
+-- One shared palette so the gold/bronze fantasy look reads as one system
+-- instead of every panel picking its own ad-hoc colors. R/G/B triples
+-- (0-1 range, matching every WoW color API) unless noted otherwise.
+local THEME = {
+    gold        = { 1.00, 0.82, 0.20 },  -- headers, accents
+    goldDim     = { 0.78, 0.63, 0.24 },  -- secondary/label text
+    parchment   = { 0.90, 0.85, 0.72 },  -- body text on dark backgrounds
+    panelBg     = { 0.05, 0.05, 0.07, 0.85 },  -- recessed inset panels
+    panelBorder = { 0.55, 0.45, 0.20, 1.0 },
+    -- Status colors used on both the slot-button ring and its badge pill --
+    -- an actual upgrade is available, this slot is already best-in-slot, or
+    -- there's nothing to show (no upgrade, or filtered out).
+    statusUpgrade = { 0.20, 0.90, 0.25 },
+    statusBIS     = { 1.00, 0.82, 0.20 },
+    statusNone    = { 0.45, 0.42, 0.38 },
+}
+
+-- Standard WoW item-quality colors (Poor..Legendary), keyed by the quality
+-- index GetItemInfo()/C_Item.GetItemInfo() returns as their 3rd value.
+-- Blizzard exposes this as a live API (GetItemQualityColor /
+-- C_Item.GetItemQualityColor) but that call can be unavailable on some
+-- client builds -- this addon has already hit a couple of missing-API
+-- surprises on the WoW Forever beta client (see CreateItemIconFrame's and
+-- SafeGetItemInfo's comments), so a small hardcoded fallback table (these
+-- values never change patch to patch) is safer than relying on it outright.
+local QUALITY_COLORS = {
+    [0] = { 0.61, 0.61, 0.61 },  -- Poor
+    [1] = { 1.00, 1.00, 1.00 },  -- Common
+    [2] = { 0.12, 1.00, 0.00 },  -- Uncommon
+    [3] = { 0.00, 0.44, 0.87 },  -- Rare
+    [4] = { 0.64, 0.21, 0.93 },  -- Epic
+    [5] = { 1.00, 0.50, 0.00 },  -- Legendary
+}
+
+local function GetQualityColor(quality)
+    local c = quality and QUALITY_COLORS[quality]
+    if c then return c[1], c[2], c[3] end
+    return THEME.goldDim[1], THEME.goldDim[2], THEME.goldDim[3]
+end
+
 -- Persisted between sessions (filter choices, window position/size).
 --
 -- IMPORTANT: this client build has already shown SavedVariables fields
@@ -120,9 +161,38 @@ mainFrame:SetResizable(false)
 local title = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 title:SetPoint("TOP", 0, -16)
 title:SetText("EverGear")
+title:SetTextColor(unpack(THEME.gold))
+
+-- Addon's own icon (Icon.tga, see MinimapButton.lua for the same texture)
+-- beside the title instead of a bare text label -- kept to the title's left
+-- at the same vertical position (rather than stacked above it) so it adds
+-- branding without pushing every control below it further down.
+local titleIcon = mainFrame:CreateTexture(nil, "ARTWORK")
+titleIcon:SetSize(18, 18)
+titleIcon:SetPoint("RIGHT", title, "LEFT", -6, 0)
+titleIcon:SetTexture("Interface\\AddOns\\EverGear\\Icon")
 
 local closeButton = CreateFrame("Button", nil, mainFrame, "UIPanelCloseButton")
 closeButton:SetPoint("TOPRIGHT", -4, -4)
+
+-- Recessed panel behind the spec dropdown / look-ahead slider / filter
+-- checkboxes -- created before any of those (so it stays visually behind
+-- them as a plain child-draw-order backdrop, no explicit frame level
+-- juggling needed), giving the "controls" area its own visual boundary
+-- distinct from both the outer dialog frame and the paperdoll panel below
+-- it (matching the `content` panel's look), instead of every control
+-- floating directly on the plain tan dialog background.
+local controlsPanel = CreateFrame("Frame", nil, mainFrame, "BackdropTemplate")
+controlsPanel:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 10, -38)
+controlsPanel:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -10, -38)
+controlsPanel:SetPoint("BOTTOM", mainFrame, "TOP", 0, -(TOP_INSET - 4))
+controlsPanel:SetBackdrop({
+    bgFile = "Interface\\Buttons\\WHITE8X8",
+    edgeFile = "Interface\\Buttons\\WHITE8X8",
+    edgeSize = 1,
+})
+controlsPanel:SetBackdropColor(unpack(THEME.panelBg))
+controlsPanel:SetBackdropBorderColor(unpack(THEME.panelBorder))
 
 -- ===== Spec dropdown =====
 -- Shows the real specs for the player's class (e.g. Arms/Fury/Protection for
@@ -180,6 +250,7 @@ lookaheadRow:SetPoint("TOP", mainFrame, "TOP", 0, -60)
 local lookaheadLabel = lookaheadRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 lookaheadLabel:SetPoint("TOP", lookaheadRow, "TOP", 0, 0)
 lookaheadLabel:SetText("Current Level")
+lookaheadLabel:SetTextColor(unpack(THEME.goldDim))
 
 -- Reset button sits to the slider's left; shifting the slider right by half
 -- the button's own footprint (button width + gap) keeps the [button][slider]
@@ -286,7 +357,9 @@ local professionFilterPanel
 local function CreateFilterCheckbox(name, label, key)
     local cb = CreateFrame("CheckButton", name, mainFrame, "UICheckButtonTemplate")
     cb:SetChecked(GetSourceFilters()[key])
-    _G[name .. "Text"]:SetText(label)
+    local labelText = _G[name .. "Text"]
+    labelText:SetText(label)
+    labelText:SetTextColor(unpack(THEME.parchment))
     cb:SetScript("OnClick", function(self)
         GetSourceFilters()[key] = self:GetChecked()
         EverGear:RefreshUI()
@@ -334,9 +407,19 @@ end
 RepositionFilters()
 
 -- Content frame: everything below the filter row.
-local content = CreateFrame("Frame", nil, mainFrame)
-content:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 0, -TOP_INSET)
-content:SetPoint("BOTTOMRIGHT", mainFrame, "BOTTOMRIGHT", 0, BOTTOM_INSET)
+-- A recessed panel (dark fill + thin gold edge) instead of a bare
+-- transparent frame -- gives the paperdoll area its own visual boundary
+-- instead of everything floating directly on the outer dialog backdrop.
+local content = CreateFrame("Frame", nil, mainFrame, "BackdropTemplate")
+content:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 6, -TOP_INSET)
+content:SetPoint("BOTTOMRIGHT", mainFrame, "BOTTOMRIGHT", -6, BOTTOM_INSET)
+content:SetBackdrop({
+    bgFile = "Interface\\Buttons\\WHITE8X8",
+    edgeFile = "Interface\\Buttons\\WHITE8X8",
+    edgeSize = 1,
+})
+content:SetBackdropColor(unpack(THEME.panelBg))
+content:SetBackdropBorderColor(unpack(THEME.panelBorder))
 
 -- ===== Slot buttons =====
 
@@ -366,7 +449,7 @@ local function CreateItemIconFrame(name, parent, size)
     btn:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8X8",
         edgeFile = "Interface\\Buttons\\WHITE8X8",
-        edgeSize = 1,
+        edgeSize = 2,
     })
     btn:SetBackdropColor(0.06, 0.06, 0.08, 1)
     btn:SetBackdropBorderColor(0.6, 0.56, 0.42, 1)
@@ -399,10 +482,26 @@ local function CreateSlotButton(slotToken)
     -- dead-centering it on the icon (the old approach) covered the item art
     -- itself, which is the opposite of the clean look the real character
     -- panel has (an icon you can actually see, with any overlay tucked into
-    -- a corner).
-    local badge = btn:CreateFontString(nil, "OVERLAY")
-    badge:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
-    badge:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -1, 1)
+    -- a corner). A small rounded-looking pill behind the number (rather than
+    -- bare outlined text floating over the icon art) so the status reads at
+    -- a glance without needing to squint at faint outline-font digits over a
+    -- busy item icon -- same status color drives both the pill and the
+    -- slot's own border, so "this is an upgrade" is legible even before
+    -- reading the number.
+    local badgeBG = CreateFrame("Frame", nil, btn, "BackdropTemplate")
+    badgeBG:SetSize(24, 13)
+    badgeBG:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 2, -2)
+    badgeBG:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8X8",
+        edgeFile = "Interface\\Buttons\\WHITE8X8",
+        edgeSize = 1,
+    })
+    badgeBG:SetBackdropColor(0.05, 0.05, 0.06, 0.9)
+    btn.badgeBG = badgeBG
+
+    local badge = badgeBG:CreateFontString(nil, "OVERLAY")
+    badge:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+    badge:SetPoint("CENTER", badgeBG, "CENTER", 0, 0)
     btn.badge = badge
 
     btn:SetScript("OnEnter", function(self)
@@ -502,12 +601,21 @@ detailCloseButton:SetPoint("TOPRIGHT", -2, -2)
 local detailHeader = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 detailHeader:SetPoint("TOP", 0, -14)
 detailHeader:SetText("Suggested Upgrades")
+detailHeader:SetTextColor(unpack(THEME.gold))
+
+local detailHeaderDivider = detailPanel:CreateTexture(nil, "ARTWORK")
+detailHeaderDivider:SetHeight(1)
+detailHeaderDivider:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 14, -30)
+detailHeaderDivider:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -14, -30)
+detailHeaderDivider:SetTexture("Interface\\Buttons\\WHITE8X8")
+detailHeaderDivider:SetVertexColor(unpack(THEME.panelBorder))
 
 local detailEmptyMessage = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 detailEmptyMessage:SetPoint("TOPLEFT", 16, -40)
 detailEmptyMessage:SetPoint("RIGHT", -12, 0)
 detailEmptyMessage:SetJustifyH("LEFT")
 detailEmptyMessage:SetWordWrap(true)
+detailEmptyMessage:SetTextColor(unpack(THEME.parchment))
 detailEmptyMessage:Hide()
 
 local detailRows = {}
@@ -618,8 +726,19 @@ function EverGear:ShowUpgradeDetail(slotToken)
             SetIconTexture(row.icon, SafeGetItemIcon(candidate.item.id) or "Interface\\Icons\\INV_Misc_QuestionMark")
             row.icon.itemLink = itemLink
 
+            -- Quality-colored name + icon border (a live lookup -- our own
+            -- item DB doesn't carry rarity, but the client's item cache
+            -- does for any real item id/link). Falls back to the theme's
+            -- neutral gold-grey when the client hasn't cached this item yet
+            -- (a common cold-cache miss for anything not recently seen),
+            -- rather than leaving it uncolored.
+            local _, _, quality = SafeGetItemInfo(itemLink)
+            local qr, qg, qb = GetQualityColor(quality)
+            row.icon:SetBackdropBorderColor(qr, qg, qb, 1)
+
             local delta = math.floor((candidate.score - (btn.currentScore or 0)) + 0.5)
-            row.nameText:SetText(candidate.item.name .. "  |cff00ff00(+" .. delta .. ")|r")
+            local nameHex = string.format("%02x%02x%02x", qr * 255, qg * 255, qb * 255)
+            row.nameText:SetText("|cff" .. nameHex .. candidate.item.name .. "|r  |cff20e626(+" .. delta .. ")|r")
             row.sourceText:SetText(EverGear:GetSourceSummary(candidate.item))
 
             local textHeight = row.nameText:GetStringHeight() + 4 + row.sourceText:GetStringHeight()
@@ -715,6 +834,7 @@ weaponFilterCloseButton:SetPoint("TOPRIGHT", -2, -2)
 local weaponFilterHeader = weaponFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 weaponFilterHeader:SetPoint("TOP", 0, -14)
 weaponFilterHeader:SetText("Weapon Types")
+weaponFilterHeader:SetTextColor(unpack(THEME.gold))
 
 local weaponFilterCheckboxes = {}
 
@@ -840,6 +960,7 @@ professionFilterCloseButton:SetPoint("TOPRIGHT", -2, -2)
 local professionFilterHeader = professionFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 professionFilterHeader:SetPoint("TOP", 0, -14)
 professionFilterHeader:SetText("Professions")
+professionFilterHeader:SetTextColor(unpack(THEME.gold))
 
 local professionFilterCheckboxes = {}
 
@@ -942,21 +1063,30 @@ function EverGear:RefreshUI()
         btn.currentScore = currentScore
         btn.upgradeList = filtered
 
+        -- Status color drives both the badge pill and the slot's own border
+        -- ring, so the whole icon reads as "this needs attention" (green),
+        -- "you're set" (gold), or "nothing to see" (dim) even without
+        -- reading the badge text itself.
+        local statusColor
         if #candidates == 0 then
             btn.badge:SetText("BIS")
-            btn.badge:SetTextColor(1, 0.82, 0)
+            statusColor = THEME.statusBIS
             btn.isBIS = true
         elseif #filtered == 0 then
             btn.badge:SetText("--")
-            btn.badge:SetTextColor(0.6, 0.6, 0.6)
+            statusColor = THEME.statusNone
             btn.isBIS = false
         else
             local best = filtered[1]
             local delta = math.floor((best.score - currentScore) + 0.5)
             btn.badge:SetText("+" .. delta)
-            btn.badge:SetTextColor(0.1, 1, 0.1)
+            statusColor = THEME.statusUpgrade
             btn.isBIS = false
         end
+
+        btn.badge:SetTextColor(1, 1, 1)
+        btn.badgeBG:SetBackdropBorderColor(unpack(statusColor))
+        btn:SetBackdropBorderColor(statusColor[1], statusColor[2], statusColor[3], 0.9)
     end
 end
 
