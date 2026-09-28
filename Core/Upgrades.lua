@@ -386,6 +386,18 @@ local CLASS_CAN_USE_SHIELD = { WARRIOR = true, PALADIN = true, SHAMAN = true }
 EverGear.CLASS_USABLE_WEAPON_TYPES = CLASS_USABLE_WEAPON_TYPES
 EverGear.CLASS_CAN_USE_SHIELD = CLASS_CAN_USE_SHIELD
 
+-- Some items are restricted to specific classes regardless of armor/weapon
+-- type -- a caster relic like "Orb of Soran'ruk" (Warlock-only) has no armor
+-- type and no real weapon type to gate on, so without this it would be
+-- suggested to every class. item.classes is nil for anything unrestricted.
+local function IsClassAllowed(item, classToken)
+    if not item.classes then return true end
+    for _, allowedToken in ipairs(item.classes) do
+        if allowedToken == classToken then return true end
+    end
+    return false
+end
+
 local function IsArmorTypeAllowed(item, classToken)
     if not item.armorType then return true end  -- not armor -- handled elsewhere
     local rank = ARMOR_TYPE_ORDER[item.armorType]
@@ -525,6 +537,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
             and (not item.minLevel or item.minLevel <= effectiveLevel)
             and IsArmorTypeAllowed(item, playerInfo.classToken)
             and IsWeaponTypeAllowed(item, playerInfo.classToken)
+            and IsClassAllowed(item, playerInfo.classToken)
             and factionAllowed
             and weaponTypeAllowed
             and professionAllowed
