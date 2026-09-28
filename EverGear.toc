@@ -3,6 +3,7 @@
 ## Notes: Suggests gear upgrades while leveling in WoW Forever.
 ## Author: Amit Reuveni
 ## Version: 0.1.0
+## IconTexture: Interface\AddOns\EverGear\Icon
 ## SavedVariables: EverGearDB
 
 Core\Constants.lua

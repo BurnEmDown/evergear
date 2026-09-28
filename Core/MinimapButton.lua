@@ -18,14 +18,14 @@ button:RegisterForClicks("LeftButtonUp")
 button:RegisterForDrag("LeftButton")
 button:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
 
--- Icon: reuses a texture already proven to load fine in this client (it's
--- one of the EMPTY_SLOT_TEXTURES in Constants.lua), rather than guessing at
--- an icon path that might not exist here.
+-- Icon: the addon's own icon (Icon.tga, ships at the addon's root -- also
+-- used as ## IconTexture in the .toc), replacing the old EMPTY_SLOT_TEXTURES
+-- placeholder now that a real one exists. Drawn edge-to-edge with its own
+-- circular border baked in, so no TexCoord cropping needed here.
 local icon = button:CreateTexture(nil, "BACKGROUND")
 icon:SetSize(20, 20)
 icon:SetPoint("CENTER", 0, 0)
-icon:SetTexture(EverGear.EMPTY_SLOT_TEXTURES and EverGear.EMPTY_SLOT_TEXTURES.ChestSlot or "Interface\\PaperDollInfoFrame\\UI-PaperDoll-Slot-Chest")
-icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+icon:SetTexture("Interface\\AddOns\\EverGear\\Icon")
 
 -- Standard minimap-button ring border texture, same one Blizzard's own
 -- tracking/calendar buttons use.
