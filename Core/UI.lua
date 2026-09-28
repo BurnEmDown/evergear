@@ -51,13 +51,32 @@ for _, s in ipairs(rightColumn) do table.insert(slotOrder, s) end
 for _, s in ipairs(bottomRow) do table.insert(slotOrder, s) end
 
 -- Persisted between sessions (filter choices, window position/size).
-EverGearDB.filters = EverGearDB.filters or {}
-for _, entry in ipairs(EverGear.SOURCE_TYPE_FILTERS) do
-    if EverGearDB.filters[entry.key] == nil then
-        EverGearDB.filters[entry.key] = true
+--
+-- IMPORTANT: this client build has already shown SavedVariables fields
+-- coming back nil later despite being set once at file-load time (see
+-- UI.lua's look-ahead slider notes) -- the working theory is EverGearDB
+-- itself (or a nested table on it) can end up getting swapped for a
+-- different table object sometime after this file's top-level code runs,
+-- which would silently orphan any `local x = EverGearDB.someTable` alias
+-- captured at that early point: click handlers would go on writing into the
+-- orphaned table forever while every fresh `EverGearDB.someTable` read
+-- elsewhere (Upgrades.lua's filtering, in particular) sees a table that was
+-- never actually updated. A checkbox would then show as unchecked/updated
+-- in the UI while doing nothing at all to what's suggested. So none of the
+-- three filter tables below are captured as a plain local alias -- each is
+-- fetched fresh through a small Get*Filters() function on every single read
+-- and write, the same "never trust a one-time init" rule the look-ahead
+-- slider already follows.
+local function GetSourceFilters()
+    EverGearDB.filters = EverGearDB.filters or {}
+    for _, entry in ipairs(EverGear.SOURCE_TYPE_FILTERS) do
+        if EverGearDB.filters[entry.key] == nil then
+            EverGearDB.filters[entry.key] = true
+        end
     end
+    return EverGearDB.filters
 end
-local EG_Filters = EverGearDB.filters
+GetSourceFilters()  -- seed defaults now so they're set even before any checkbox is touched
 
 -- ===== Frame construction =====
 
@@ -256,12 +275,20 @@ SyncLookaheadBounds()
 
 local filterCheckboxes = {}
 
+-- Forward-declared: the weapon-type filter panel is built further down (after
+-- the detail panel it needs to hide/be hidden by), but ShowUpgradeDetail
+-- below needs to be able to close it, and Lua locals are resolved lexically
+-- -- so the name has to exist up here even though its value isn't set until
+-- later.
+local weaponFilterPanel
+local professionFilterPanel
+
 local function CreateFilterCheckbox(name, label, key)
     local cb = CreateFrame("CheckButton", name, mainFrame, "UICheckButtonTemplate")
-    cb:SetChecked(EG_Filters[key])
+    cb:SetChecked(GetSourceFilters()[key])
     _G[name .. "Text"]:SetText(label)
     cb:SetScript("OnClick", function(self)
-        EG_Filters[key] = self:GetChecked()
+        GetSourceFilters()[key] = self:GetChecked()
         EverGear:RefreshUI()
     end)
     table.insert(filterCheckboxes, cb)
@@ -557,6 +584,9 @@ function EverGear:ShowUpgradeDetail(slotToken)
     local btn = slotButtons[slotToken]
     if not btn then return end
 
+    if weaponFilterPanel then weaponFilterPanel:Hide() end
+    if professionFilterPanel then professionFilterPanel:Hide() end
+
     local candidates = btn.upgradeList or {}
     local shownCount = math.min(#candidates, MAX_DETAIL_CANDIDATES)
 
@@ -613,6 +643,271 @@ function EverGear:ShowUpgradeDetail(slotToken)
     detailPanel:Show()
 end
 
+-- ===== Weapon-type filter panel =====
+-- One flat checklist, one row per weapon type -- for the few types the data
+-- can tell 1H from 2H apart on (Axe/Mace/Sword; see Constants.lua's
+-- SPLIT_WEAPON_TYPES), that's two rows ("Axe (1H)" / "Axe (2H)") instead of a
+-- separate standalone "two-handed" toggle bolted on beside the list, so a
+-- Protection Warrior can uncheck just "Mace (2H)" and leave everything else
+-- (including 1H maces and shields) alone. Only weapon types the player's
+-- class can actually use get a row at all (via CLASS_USABLE_WEAPON_TYPES/
+-- CLASS_CAN_USE_SHIELD, exposed from Upgrades.lua), so e.g. a Mage never
+-- sees an "Axe" row either way. Everything shown by default; unchecking a
+-- row is what hides it (same "checked = shown" convention as the source-type
+-- filters above).
+-- See GetSourceFilters() above for why this is a function, not a captured
+-- local alias -- every read/write below goes through it fresh.
+local function GetWeaponFilters()
+    EverGearDB.weaponTypeFilter = EverGearDB.weaponTypeFilter or {}
+    return EverGearDB.weaponTypeFilter
+end
+
+-- Built once at load (class doesn't change mid-session): the ordered list of
+-- {key, label} rows the checklist and the "All"/"None"/"Usable Only" buttons
+-- operate over. Every weapon type gets a row for every class now -- WoW
+-- Forever doesn't gate weapon usability as strictly as real vanilla/TBC did,
+-- so a class that "shouldn't" have a type per the addon's own
+-- CLASS_USABLE_WEAPON_TYPES table can still end up needing it filterable.
+-- What DOES still depend on class is each row's INITIAL checked state (see
+-- the seeding loop below) and the "Usable Only" button.
+local weaponFilterEntries = {}
+for _, entry in ipairs(EverGear.WEAPON_TYPE_FILTER_LIST) do
+    if EverGear.SPLIT_WEAPON_TYPES[entry.key] then
+        table.insert(weaponFilterEntries, { key = entry.key .. ":1h", label = entry.label .. " (1H)" })
+        table.insert(weaponFilterEntries, { key = entry.key .. ":2h", label = entry.label .. " (2H)" })
+    else
+        table.insert(weaponFilterEntries, { key = entry.key, label = entry.label })
+    end
+end
+
+-- Seed each row's default checked state from class usability -- e.g. a
+-- Paladin starts with every ranged weapon type already unchecked -- but only
+-- the first time a key is ever seen (nil in the saved table). This never
+-- overwrites a choice the player already made, including a previous click
+-- of "Usable Only" below.
+do
+    local classToken = EverGear:GetPlayerInfo().classToken
+    local filters = GetWeaponFilters()
+    for _, entry in ipairs(weaponFilterEntries) do
+        if filters[entry.key] == nil then
+            filters[entry.key] = EverGear:IsWeaponFilterKeyUsable(entry.key, classToken)
+        end
+    end
+end
+
+local WEAPON_PANEL_WIDTH = 220
+local WEAPON_COLS = 2
+local WEAPON_COL_WIDTH = WEAPON_PANEL_WIDTH / WEAPON_COLS
+local WEAPON_ROW_HEIGHT = 22
+
+weaponFilterPanel = CreateFrame("Frame", "EverGearWeaponFilterPanel", mainFrame, "BackdropTemplate")
+weaponFilterPanel:SetBackdrop({
+    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+    tile = true, tileSize = 32, edgeSize = 32,
+    insets = { left = 11, right = 12, top = 12, bottom = 11 }
+})
+weaponFilterPanel:Hide()
+
+local weaponFilterCloseButton = CreateFrame("Button", nil, weaponFilterPanel, "UIPanelCloseButton")
+weaponFilterCloseButton:SetPoint("TOPRIGHT", -2, -2)
+
+local weaponFilterHeader = weaponFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+weaponFilterHeader:SetPoint("TOP", 0, -14)
+weaponFilterHeader:SetText("Weapon Types")
+
+local weaponFilterCheckboxes = {}
+
+for index, entry in ipairs(weaponFilterEntries) do
+    local name = "EverGearWeaponFilterCheck_" .. entry.key:gsub("[%s:]", "_")
+    local cb = CreateFrame("CheckButton", name, weaponFilterPanel, "UICheckButtonTemplate")
+    local col = (index - 1) % WEAPON_COLS
+    local row = math.floor((index - 1) / WEAPON_COLS)
+    cb:SetPoint("TOPLEFT", 12 + col * WEAPON_COL_WIDTH, -38 - row * WEAPON_ROW_HEIGHT)
+    _G[name .. "Text"]:SetText(entry.label)
+    cb:SetChecked(GetWeaponFilters()[entry.key] ~= false)
+    cb:SetScript("OnClick", function(self)
+        GetWeaponFilters()[entry.key] = self:GetChecked()
+        EverGear:RefreshUI()
+    end)
+    table.insert(weaponFilterCheckboxes, { cb = cb, key = entry.key })
+end
+
+local function RefreshWeaponFilterCheckboxes()
+    for _, entry in ipairs(weaponFilterCheckboxes) do
+        entry.cb:SetChecked(GetWeaponFilters()[entry.key] ~= false)
+    end
+end
+
+-- +26 over the plain grid height for the extra "Usable Only" button row.
+weaponFilterPanel:SetSize(WEAPON_PANEL_WIDTH, 92 + math.ceil(#weaponFilterEntries / WEAPON_COLS) * WEAPON_ROW_HEIGHT)
+
+local weaponFilterUsableButton = CreateFrame("Button", nil, weaponFilterPanel, "UIPanelButtonTemplate")
+weaponFilterUsableButton:SetSize(150, 20)
+weaponFilterUsableButton:SetPoint("BOTTOM", 0, 34)
+weaponFilterUsableButton:SetText("Usable Only")
+weaponFilterUsableButton:SetScript("OnClick", function()
+    local classToken = EverGear:GetPlayerInfo().classToken
+    local filters = GetWeaponFilters()
+    for _, entry in ipairs(weaponFilterEntries) do
+        filters[entry.key] = EverGear:IsWeaponFilterKeyUsable(entry.key, classToken)
+    end
+    RefreshWeaponFilterCheckboxes()
+    EverGear:RefreshUI()
+end)
+
+local weaponFilterAllButton = CreateFrame("Button", nil, weaponFilterPanel, "UIPanelButtonTemplate")
+weaponFilterAllButton:SetSize(70, 20)
+weaponFilterAllButton:SetPoint("BOTTOMLEFT", 10, 8)
+weaponFilterAllButton:SetText("All")
+weaponFilterAllButton:SetScript("OnClick", function()
+    for _, entry in ipairs(weaponFilterEntries) do GetWeaponFilters()[entry.key] = true end
+    RefreshWeaponFilterCheckboxes()
+    EverGear:RefreshUI()
+end)
+
+local weaponFilterNoneButton = CreateFrame("Button", nil, weaponFilterPanel, "UIPanelButtonTemplate")
+weaponFilterNoneButton:SetSize(70, 20)
+weaponFilterNoneButton:SetPoint("BOTTOMRIGHT", -10, 8)
+weaponFilterNoneButton:SetText("None")
+weaponFilterNoneButton:SetScript("OnClick", function()
+    for _, entry in ipairs(weaponFilterEntries) do GetWeaponFilters()[entry.key] = false end
+    RefreshWeaponFilterCheckboxes()
+    EverGear:RefreshUI()
+end)
+
+-- Small icon button (mirrors the close button's corner placement) that opens
+-- the panel to the side of the main window, same as the upgrade-detail panel
+-- does, so it never has to steal space from the fixed-size main window.
+local weaponFilterButton = CreateFrame("Button", "EverGearWeaponFilterButton", mainFrame)
+weaponFilterButton:SetSize(20, 20)
+-- -44 (not -30) so it clears the close button's own ~32px footprint at
+-- TOPRIGHT -4,-4 instead of overlapping its click area.
+weaponFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -8, -44)
+weaponFilterButton:SetNormalTexture("Interface\\Icons\\INV_Sword_27")
+weaponFilterButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+weaponFilterButton:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    GameTooltip:SetText("Weapon type filters")
+    GameTooltip:AddLine("Hide specific weapon types from suggestions.", 0.8, 0.8, 0.8, true)
+    GameTooltip:Show()
+end)
+weaponFilterButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+weaponFilterButton:SetScript("OnClick", function()
+    if weaponFilterPanel:IsShown() then
+        weaponFilterPanel:Hide()
+        return
+    end
+    detailPanel:Hide()
+    professionFilterPanel:Hide()
+    weaponFilterPanel:ClearAllPoints()
+    weaponFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
+    weaponFilterPanel:Show()
+end)
+
+-- ===== Profession filter panel =====
+-- Same button+popup checklist pattern as the weapon-type filter above, for
+-- crafted-item professions (see Constants.lua's PROFESSION_FILTER_LIST and
+-- source.profession in evergear-backend/schema.md). Every profession is
+-- available to any class in-game, so unlike the weapon-type list this one
+-- doesn't need to be narrowed per class -- it's the same fixed list for
+-- everyone. Shown by default; unchecking one hides that profession's
+-- crafted items specifically (e.g. only Blacksmithing checked hides
+-- Leatherworking/Tailoring/etc).
+-- See GetSourceFilters() above for why this is a function, not a captured
+-- local alias -- every read/write below goes through it fresh.
+local function GetProfessionFilters()
+    EverGearDB.professionFilter = EverGearDB.professionFilter or {}
+    return EverGearDB.professionFilter
+end
+
+local PROFESSION_PANEL_WIDTH = 170
+local PROFESSION_ROW_HEIGHT = 22
+
+professionFilterPanel = CreateFrame("Frame", "EverGearProfessionFilterPanel", mainFrame, "BackdropTemplate")
+professionFilterPanel:SetSize(PROFESSION_PANEL_WIDTH, 66 + #EverGear.PROFESSION_FILTER_LIST * PROFESSION_ROW_HEIGHT)
+professionFilterPanel:SetBackdrop({
+    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+    tile = true, tileSize = 32, edgeSize = 32,
+    insets = { left = 11, right = 12, top = 12, bottom = 11 }
+})
+professionFilterPanel:Hide()
+
+local professionFilterCloseButton = CreateFrame("Button", nil, professionFilterPanel, "UIPanelCloseButton")
+professionFilterCloseButton:SetPoint("TOPRIGHT", -2, -2)
+
+local professionFilterHeader = professionFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+professionFilterHeader:SetPoint("TOP", 0, -14)
+professionFilterHeader:SetText("Professions")
+
+local professionFilterCheckboxes = {}
+
+for index, profName in ipairs(EverGear.PROFESSION_FILTER_LIST) do
+    local name = "EverGearProfessionFilterCheck_" .. profName
+    local cb = CreateFrame("CheckButton", name, professionFilterPanel, "UICheckButtonTemplate")
+    cb:SetPoint("TOPLEFT", 14, -38 - (index - 1) * PROFESSION_ROW_HEIGHT)
+    _G[name .. "Text"]:SetText(profName)
+    cb:SetChecked(GetProfessionFilters()[profName] ~= false)
+    cb:SetScript("OnClick", function(self)
+        GetProfessionFilters()[profName] = self:GetChecked()
+        EverGear:RefreshUI()
+    end)
+    table.insert(professionFilterCheckboxes, { cb = cb, name = profName })
+end
+
+local function RefreshProfessionFilterCheckboxes()
+    for _, entry in ipairs(professionFilterCheckboxes) do
+        entry.cb:SetChecked(GetProfessionFilters()[entry.name] ~= false)
+    end
+end
+
+local professionFilterAllButton = CreateFrame("Button", nil, professionFilterPanel, "UIPanelButtonTemplate")
+professionFilterAllButton:SetSize(70, 20)
+professionFilterAllButton:SetPoint("BOTTOMLEFT", 10, 8)
+professionFilterAllButton:SetText("All")
+professionFilterAllButton:SetScript("OnClick", function()
+    for _, profName in ipairs(EverGear.PROFESSION_FILTER_LIST) do GetProfessionFilters()[profName] = true end
+    RefreshProfessionFilterCheckboxes()
+    EverGear:RefreshUI()
+end)
+
+local professionFilterNoneButton = CreateFrame("Button", nil, professionFilterPanel, "UIPanelButtonTemplate")
+professionFilterNoneButton:SetSize(70, 20)
+professionFilterNoneButton:SetPoint("BOTTOMRIGHT", -10, 8)
+professionFilterNoneButton:SetText("None")
+professionFilterNoneButton:SetScript("OnClick", function()
+    for _, profName in ipairs(EverGear.PROFESSION_FILTER_LIST) do GetProfessionFilters()[profName] = false end
+    RefreshProfessionFilterCheckboxes()
+    EverGear:RefreshUI()
+end)
+
+-- Small icon button, same corner-stacking pattern as the weapon-type button
+-- directly above it.
+local professionFilterButton = CreateFrame("Button", "EverGearProfessionFilterButton", mainFrame)
+professionFilterButton:SetSize(20, 20)
+professionFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -8, -68)
+professionFilterButton:SetNormalTexture("Interface\\Icons\\Trade_BlackSmithing")
+professionFilterButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+professionFilterButton:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    GameTooltip:SetText("Profession filters")
+    GameTooltip:AddLine("Hide crafted items from professions you don't want suggested.", 0.8, 0.8, 0.8, true)
+    GameTooltip:Show()
+end)
+professionFilterButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+professionFilterButton:SetScript("OnClick", function()
+    if professionFilterPanel:IsShown() then
+        professionFilterPanel:Hide()
+        return
+    end
+    detailPanel:Hide()
+    weaponFilterPanel:Hide()
+    professionFilterPanel:ClearAllPoints()
+    professionFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
+    professionFilterPanel:Show()
+end)
+
 -- ===== Refresh / toggle =====
 
 function EverGear:RefreshUI()
@@ -630,7 +925,7 @@ function EverGear:RefreshUI()
         local filtered = {}
         for _, candidate in ipairs(candidates) do
             local sourceType = candidate.item.source and candidate.item.source.type
-            if EG_Filters[sourceType] ~= false then
+            if GetSourceFilters()[sourceType] ~= false then
                 table.insert(filtered, candidate)
             end
         end

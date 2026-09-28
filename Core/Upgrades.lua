@@ -109,40 +109,114 @@ end
 -- data yet (Hall of Thanes/The Stockade only have primary stats + a few
 -- caster stats), so verify/correct these key names against a real example
 -- the first time one of these stats actually appears in Data/*.lua.
+-- Caster-exclusive secondary stats (spell power/healing, mana regen, spell
+-- hit/crit/haste, spell penetration) -- worth exactly 0 to a melee role
+-- (Physical DPS/Tank), which has no mana bar and no spells to cast. And the
+-- reverse: melee-exclusive stats (attack power, physical hit/crit/haste,
+-- expertise, armor penetration, and the tank-defense cluster) are worth 0 to
+-- a caster role (Caster DPS/Healer). Both groups are listed explicitly with
+-- a weight of 0 in every profile below, rather than left out, specifically
+-- so they can NEVER fall through to the generic "unmapped stat" fallback
+-- further down and accidentally get counted as real value -- which is
+-- exactly how a Warrior ended up seeing a weak spell-power mace outscore a
+-- much better weapon: Physical DPS explicitly weighted SPELL_POWER at 0.1
+-- (nonzero!), and Tank didn't mention it at all, so it fell through to the
+-- 0.3-per-point fallback meant for stats no profile has ever heard of yet.
+local CASTER_ONLY_STATS = {
+    SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0,
+    SPELL_CRIT_RATING = 0, SPELL_HASTE_RATING = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0,
+    -- Vanilla-era stat-name variant of SPELL_POWER (pre-unification, tracker
+    -- data still uses this key for older items -- see "Scepter of the
+    -- Abandoned", a weak mace that scored artificially high for a Warrior
+    -- because SPELL_DAMAGE fell through to the generic unmapped fallback
+    -- below instead of being recognized as a caster-only stat). Also its
+    -- damage-school-specific siblings, which only matter to a spellcaster.
+    SPELL_DAMAGE = 0, FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0,
+    FROST_DAMAGE = 0, NATURE_DAMAGE = 0,
+}
+local MELEE_ONLY_STATS = {
+    ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
+    EXPERTISE_RATING = 0, ARMOR_PENETRATION_RATING = 0,
+    DEFENSE_RATING = 0, DODGE_RATING = 0, PARRY_RATING = 0, BLOCK_RATING = 0, BLOCK_VALUE = 0,
+    -- Melee/physical-only stats: bonus physical damage, conditional attack
+    -- power (vs a creature type), ranged attack power (bows/guns/thrown --
+    -- still a physical weapon, just not melee range), and the old flat
+    -- "Defense" skill stat (distinct from DEFENSE_RATING) -- none of these
+    -- do anything for a caster who never swings a weapon.
+    PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0,
+    ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0, DEFENSE = 0,
+}
+-- Stats worth roughly the same to every role -- small utility value (resist
+-- gear, slow-effect resistance) that isn't exclusive to any one role, so it's
+-- given a modest flat weight everywhere rather than 0 in half the profiles
+-- (which would just recreate the same "unmapped stat" trap for the other
+-- half) or left to the 0.3 fallback (which both over- and under-values it
+-- depending on role).
+local UNIVERSAL_STATS = {
+    ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1,
+    NATURE_RESISTANCE = 0.1, SHADOW_RESISTANCE = 0.1,
+    MOVEMENT_IMPAIRING_REDUCTION = 0.2,
+    -- Flat damage-taken reduction from spells -- a defensive stat useful to
+    -- every role (a caster tanking a debuff, a healer avoiding a one-shot,
+    -- and especially a tank), not exclusive to casters despite the name.
+    SPELL_DAMAGE_REDUCTION = 0.3,
+}
+
+-- Shallow-merges any number of stat-weight tables into a new table, later
+-- tables overriding earlier ones -- used below so each role profile is
+-- "everything irrelevant is 0, then here's what actually matters", instead
+-- of relying on omission (which is what created the bug above).
+local function MergeWeights(...)
+    local out = {}
+    for _, tbl in ipairs({ ... }) do
+        for k, v in pairs(tbl) do out[k] = v end
+    end
+    return out
+end
+
 local ROLE_PROFILES = {
     ["Physical DPS"] = {
         staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-        secondary = {
+        secondary = MergeWeights(CASTER_ONLY_STATS, UNIVERSAL_STATS, {
             ATTACK_POWER = 0.5, HIT_RATING = 0.8, CRIT_RATING = 0.6, HASTE_RATING = 0.5,
             EXPERTISE_RATING = 0.6, ARMOR_PENETRATION_RATING = 0.5, RESILIENCE_RATING = 0.3,
             DODGE_RATING = 0.2, DEFENSE_RATING = 0.2, PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0.1,
-            SPELL_POWER = 0.1, MANA_REGEN = 0.1, SPELL_PENETRATION = 0.05,
-        },
+            PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15,
+            ATTACK_POWER_VS_UNDEAD = 0.15, RANGED_ATTACK_POWER = 0.4, DEFENSE = 0.1,
+            THREAT_REDUCTION = 0.2,
+        }),
     },
     ["Caster DPS"] = {
         staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-        secondary = {
+        secondary = MergeWeights(MELEE_ONLY_STATS, UNIVERSAL_STATS, {
             SPELL_POWER = 0.8, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
             MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3,
-            ATTACK_POWER = 0.05, HIT_RATING = 0.05, CRIT_RATING = 0.1, HASTE_RATING = 0.1,
-        },
+            SPELL_DAMAGE = 0.8, FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4,
+            FROST_DAMAGE = 0.4, NATURE_DAMAGE = 0.4,
+            THREAT_REDUCTION = 0.2,
+        }),
     },
     ["Healer"] = {
         staminaWeight = 1.2, armorWeight = 0.08, dpsWeight = 0.1,
-        secondary = {
+        secondary = MergeWeights(MELEE_ONLY_STATS, UNIVERSAL_STATS, {
             SPIRIT = 2.0,  -- overrides the generic non-primary-stat fallback weight below
             SPELL_POWER = 0.8, SPELL_HEALING = 0.8, SPELL_HIT_RATING = 0.5, SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4,
             MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05, RESILIENCE_RATING = 0.2,
-        },
+            SPELL_DAMAGE = 0.4,  -- healing power matters far more than raw spell damage to this role
+            THREAT_REDUCTION = 0.2,
+        }),
     },
     ["Tank"] = {
         staminaWeight = 2.5, armorWeight = 0.3, dpsWeight = 1.0,
-        secondary = {
+        secondary = MergeWeights(CASTER_ONLY_STATS, UNIVERSAL_STATS, {
             DEFENSE_RATING = 1.0, DODGE_RATING = 0.8, PARRY_RATING = 0.7, BLOCK_RATING = 0.6, BLOCK_VALUE = 0.5,
             RESILIENCE_RATING = 0.2,
             ATTACK_POWER = 0.2, HIT_RATING = 0.3, CRIT_RATING = 0.2, HASTE_RATING = 0.1,
             EXPERTISE_RATING = 0.3, ARMOR_PENETRATION_RATING = 0.05,
-        },
+            DEFENSE = 1.0, PHYSICAL_DAMAGE = 0.1, ATTACK_POWER_VS_BEASTS = 0.05,
+            ATTACK_POWER_VS_HUMANOIDS = 0.05, ATTACK_POWER_VS_UNDEAD = 0.05, RANGED_ATTACK_POWER = 0.05,
+            THREAT_REDUCTION = 0,  -- a tank wants threat, not less of it
+        }),
     },
 }
 
@@ -152,7 +226,13 @@ end
 
 -- Stat keys that are handled separately (armor/dps/weapon speed) or aren't
 -- numeric (weapon damage range) -- never fed into the generic per-stat loop.
-local EXCLUDED_STAT_KEYS = { ARMOR = true, WEAPON_DPS = true, WEAPON_SPEED = true, WEAPON_DAMAGE = true }
+-- HERBALISM/LOCKPICKING are profession-skill bonuses (gathering/utility, not
+-- combat) -- never worth anything to any of the 4 combat role profiles, so
+-- excluded outright rather than left to fall through to the 0.3 fallback.
+local EXCLUDED_STAT_KEYS = {
+    ARMOR = true, WEAPON_DPS = true, WEAPON_SPEED = true, WEAPON_DAMAGE = true,
+    HERBALISM = true, LOCKPICKING = true,
+}
 
 -- How much each of the 4 primary-ish stats (STR/AGI/INT/SPI) is worth to a
 -- role when it ISN'T that role's chosen primary stat. This used to be one
@@ -300,6 +380,12 @@ local CLASS_USABLE_WEAPON_TYPES = {
 
 local CLASS_CAN_USE_SHIELD = { WARRIOR = true, PALADIN = true, SHAMAN = true }
 
+-- Exposed so UI.lua can build the weapon-type filter checklist from the same
+-- per-class whitelist used for usability checks below, rather than keeping a
+-- second copy that could drift out of sync.
+EverGear.CLASS_USABLE_WEAPON_TYPES = CLASS_USABLE_WEAPON_TYPES
+EverGear.CLASS_CAN_USE_SHIELD = CLASS_CAN_USE_SHIELD
+
 local function IsArmorTypeAllowed(item, classToken)
     if not item.armorType then return true end  -- not armor -- handled elsewhere
     local rank = ARMOR_TYPE_ORDER[item.armorType]
@@ -307,10 +393,57 @@ local function IsArmorTypeAllowed(item, classToken)
     return rank <= (CLASS_MAX_ARMOR[classToken] or 4)
 end
 
+-- One filter map for every weapon-type checkbox, instead of a separate
+-- "exclude two-handed" toggle bolted on beside it -- for the handful of types
+-- the data can tell 1H/2H apart on (Constants.lua's SPLIT_WEAPON_TYPES), the
+-- filter key includes that suffix (e.g. "axe:2h"), matching how real WoW item
+-- subclass IDs already split those into distinct subclasses. Every other type
+-- (Dagger, Staff, Bow, ...) just uses its bare weaponType as the key. UI.lua
+-- builds the checklist using this exact same key scheme so a checkbox and
+-- what it filters can never drift apart.
+function EverGear:GetWeaponFilterKey(item)
+    if not item.weaponType then return nil end
+    if EverGear.SPLIT_WEAPON_TYPES[item.weaponType] and item.isTwoHand ~= nil then
+        return item.weaponType .. (item.isTwoHand and ":2h" or ":1h")
+    end
+    return item.weaponType
+end
+
+-- Whether a weapon-type filter key (the same keys the checklist and
+-- GetWeaponFilterKey use, including a ":1h"/":2h" suffix) is actually usable
+-- by a given class at all. This does NOT gate what gets suggested by
+-- itself -- IsWeaponTypeAllowed below still does that, independently of
+-- whatever the player later does with the checkbox -- it's only used to
+-- pick each row's initial checked state (unusable = off by default, e.g. a
+-- Paladin starts with every ranged weapon type unchecked) and to recompute
+-- that same state on demand via the filter panel's "Usable Only" button.
+function EverGear:IsWeaponFilterKeyUsable(filterKey, classToken)
+    local baseType = filterKey:match("^(.-):[12]h$") or filterKey
+    if baseType == "shield" then
+        return CLASS_CAN_USE_SHIELD[classToken] == true
+    end
+    if baseType == "offhand" then
+        return true  -- relic-style items -- see IsWeaponTypeAllowed below
+    end
+    local whitelist = CLASS_USABLE_WEAPON_TYPES[classToken]
+    return whitelist ~= nil and whitelist[baseType] == true
+end
+
 local function IsWeaponTypeAllowed(item, classToken)
     if not item.weaponType then return true end  -- not a weapon/shield
     if item.weaponType == "shield" then
         return CLASS_CAN_USE_SHIELD[classToken] == true
+    end
+    if item.weaponType == "offhand" then
+        -- A relic-style held-in-off-hand item (Libram/Idol/Totem/Orb/etc) --
+        -- not gated by CLASS_USABLE_WEAPON_TYPES at all, since that table is
+        -- only ever populated with real weapon subtypes and has no "offhand"
+        -- key for any class -- treating it like the others would hide these
+        -- items from EVERY class. The real per-class restriction for these
+        -- (a Warlock-only Orb, say) lives in the source data's dropped
+        -- other_stats.classes field, which the converter doesn't thread
+        -- through yet -- a known gap, not something this filter should mask.
+        return true
     end
     local whitelist = CLASS_USABLE_WEAPON_TYPES[classToken]
     if not whitelist then return true end
@@ -354,6 +487,24 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     end
     local currentScore = ScoreItem(equippedStats, primaryStat, role, equippedArmor, equippedDPS)
 
+    -- Player-chosen weapon-type opt-outs (e.g. a tank who never wants
+    -- two-handers suggested even though their class/spec can technically use
+    -- them) -- set via UI.lua's weapon-type filter panel. Off by default for
+    -- everyone; a class-usable weapon type only ever gets hidden if the
+    -- player explicitly unchecked it. Missing from the table (never touched
+    -- by the player, or a class/spec that's never seen this weapon type
+    -- before) means "shown" -- only an explicit false hides it.
+    local weaponTypeFilter = EverGearDB.weaponTypeFilter or {}
+
+    -- Same idea for crafted items: EverGearDB.professionFilter[profName] ==
+    -- false hides that profession's items specifically (e.g. only
+    -- Blacksmithing checked hides Leatherworking/Tailoring/etc crafted
+    -- suggestions), set via UI.lua's profession filter panel. Only ever
+    -- checked for source.type == "craft" items that actually name a
+    -- profession -- everything else (dungeon drops, quests, vendor items)
+    -- is untouched by this filter regardless of its state.
+    local professionFilter = EverGearDB.professionFilter or {}
+
     local candidates = {}
     for _, item in ipairs(self:GetItemsForSlot(realSlotToken)) do
         local itemFaction = item.source and item.source.faction
@@ -364,11 +515,19 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
         -- filter (better to over-show than silently hide real options).
         local factionAllowed = (not itemFaction) or (not playerInfo.faction) or itemFaction == playerInfo.faction
 
+        local filterKey = self:GetWeaponFilterKey(item)
+        local weaponTypeAllowed = (not filterKey) or (weaponTypeFilter[filterKey] ~= false)
+
+        local itemProfession = item.source and item.source.type == "craft" and item.source.profession
+        local professionAllowed = (not itemProfession) or (professionFilter[itemProfession] ~= false)
+
         if item.id ~= equippedItemId
             and (not item.minLevel or item.minLevel <= effectiveLevel)
             and IsArmorTypeAllowed(item, playerInfo.classToken)
             and IsWeaponTypeAllowed(item, playerInfo.classToken)
             and factionAllowed
+            and weaponTypeAllowed
+            and professionAllowed
         then
             local armorValue = (item.stats and item.stats.ARMOR) or 0
             local dpsValue = (item.stats and item.stats.WEAPON_DPS) or 0
@@ -401,7 +560,7 @@ function EverGear:GetSourceSummary(item)
     elseif source.type == "worldDrop" then
         return "World Drop" .. (source.zone and (" - " .. source.zone) or "")
     elseif source.type == "craft" then
-        return "Crafted"
+        return "Crafted" .. (source.profession and (" (" .. source.profession .. ")") or "")
     end
     return "Unknown source"
 end

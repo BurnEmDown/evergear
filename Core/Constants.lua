@@ -98,3 +98,55 @@ EverGear.SOURCE_TYPE_FILTERS = {
     { key = "worldDrop",   label = "World Drop" },
     { key = "dungeonDrop", label = "Dungeon Drop" },
 }
+
+-- Every weapon/shield subtype the backend's converter can tag an item with
+-- (see evergear-backend's KNOWN_WEAPON_TYPES), in display order. Drives the
+-- single weapon-type filter checklist in UI.lua -- Upgrades.lua's
+-- CLASS_USABLE_WEAPON_TYPES narrows this down to only the types a given
+-- class/spec can actually equip, so e.g. a Mage never sees an "Axe"
+-- checkbox it has no use for either way.
+EverGear.WEAPON_TYPE_FILTER_LIST = {
+    { key = "axe",          label = "Axe" },
+    { key = "mace",         label = "Mace" },
+    { key = "sword",        label = "Sword" },
+    { key = "dagger",       label = "Dagger" },
+    { key = "fist weapon",  label = "Fist Weapon" },
+    { key = "polearm",      label = "Polearm" },
+    { key = "staff",        label = "Staff" },
+    { key = "wand",         label = "Wand" },
+    { key = "bow",          label = "Bow" },
+    { key = "gun",          label = "Gun" },
+    { key = "crossbow",     label = "Crossbow" },
+    { key = "thrown",       label = "Thrown" },
+    { key = "shield",       label = "Shield" },
+    -- Synthetic type (see evergear-backend's convert_to_canonical.py) for
+    -- Libram/Idol/Totem/Orb-style held-in-off-hand items that aren't a real
+    -- weapon or shield -- occupies the same slot as Shield, so it needs its
+    -- own row rather than being lumped in with (or invisible to) that filter.
+    { key = "offhand",      label = "Off Hand" },
+}
+
+-- Professions that actually produce equippable gear -- gathering professions
+-- (Herbalism, Mining, Skinning) and consumable-only ones (Alchemy, Cooking,
+-- First Aid, Fishing) are left out since they never show up as an item
+-- source here either way. Jewelcrafting is left out too -- it doesn't exist
+-- as a profession in WoW Forever at all. Drives the profession filter
+-- checklist in UI.lua, same button+panel pattern as the weapon-type filter.
+-- Every profession shown by default; unchecking one hides crafted items
+-- tagged with it (see source.profession in evergear-backend/schema.md) --
+-- e.g. checking only Blacksmithing hides Leatherworking/Tailoring/etc
+-- crafted suggestions.
+EverGear.PROFESSION_FILTER_LIST = {
+    "Blacksmithing", "Leatherworking", "Tailoring",
+    "Engineering", "Enchanting",
+}
+
+-- Weapon types where the addon's data actually distinguishes one-handed from
+-- two-handed (via item.isTwoHand -- see evergear-backend/schema.md), the same
+-- way real WoW item subclass IDs split "Axe" into two separate subclasses.
+-- For these, the filter checklist below shows two rows ("Axe (1H)" / "Axe
+-- (2H)") instead of one, so e.g. a Protection Warrior can uncheck just
+-- "Mace (2H)" and keep 1H maces + shields showing. Every other type here is
+-- inherently only ever one length (Dagger, Staff, Bow, ...), so it gets a
+-- single row.
+EverGear.SPLIT_WEAPON_TYPES = { axe = true, mace = true, sword = true }

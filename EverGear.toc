@@ -21,3 +21,6 @@ Data\Items_RagefireChasm.lua
 Data\Items_TheDeadmines.lua
 Data\Items_WailingCaverns.lua
 Data\Items_ShadowfangKeep.lua
+Data\Items_BlackfathomDeeps.lua
+Data\Items_Gnomeregan.lua
+Data\Items_ScarletMonasteryGraveyard.lua
