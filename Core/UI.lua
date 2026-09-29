@@ -1098,12 +1098,35 @@ function EverGear:RefreshUI()
     end
 end
 
+-- Re-applies every persisted filter value (source-type, weapon-type,
+-- profession) to its checkbox's visual checked state. The checkboxes are
+-- only ever created once at addon load and set their own SavedVariables on
+-- click, so this doesn't fix a real desync in the stored data -- it exists
+-- so a checkbox can never visually drift from what's actually being
+-- filtered on, however that happened (a stale SavedVariables read, a
+-- checkbox toggled through some path that skipped its OnClick, etc.).
+-- Called every time the window opens, right before RefreshUI, so what the
+-- player sees checked always matches what RefreshUI is about to filter by.
+local function SyncFilterCheckboxes()
+    for i, cb in ipairs(filterCheckboxes) do
+        local entry = EverGear.SOURCE_TYPE_FILTERS[i]
+        cb:SetChecked(GetSourceFilters()[entry.key] ~= false)
+    end
+    for _, entry in ipairs(weaponFilterCheckboxes) do
+        entry.cb:SetChecked(GetWeaponFilters()[entry.key] ~= false)
+    end
+    for _, entry in ipairs(professionFilterCheckboxes) do
+        entry.cb:SetChecked(GetProfessionFilters()[entry.name] ~= false)
+    end
+end
+
 EverGear.Frame = mainFrame
 
 function EverGear:ToggleUI()
     if mainFrame:IsShown() then
         mainFrame:Hide()
     else
+        SyncFilterCheckboxes()
         self:RefreshUI()
         mainFrame:Show()
     end
