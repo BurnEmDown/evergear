@@ -24,11 +24,13 @@
 
 local FRAME_WIDTH = 334
 -- +34 over the original 560 to give the new look-ahead row its own space
--- without squeezing the bottom weapon row's margin. +10, then +10 again, on
--- top of that (and the matching +20 total on TOP_INSET below) to give the
--- filter-checkbox panel more breathing room -- the two grow together so the
--- paperdoll content area below it keeps the exact same size.
-local FRAME_HEIGHT = 614
+-- without squeezing the bottom weapon row's margin. +10, +10, then +5 more
+-- on top of that (and the matching +25 total on TOP_INSET below) to give
+-- the filter-checkbox panel more breathing room -- the two grow together so
+-- the paperdoll content area below it keeps the exact same size on the TOP
+-- side. BOTTOM_INSET growing below does NOT get matched here on purpose --
+-- that one's meant to actually shrink the content area, not preserve it.
+local FRAME_HEIGHT = 619
 
 local LEFT_MARGIN = 24
 local RIGHT_MARGIN = 24
@@ -38,8 +40,11 @@ local TOP_Y = -10
 -- instead of the tight column the character screen has.
 local ROW_SPACING = 42
 local ICON_SIZE = 37
-local TOP_INSET = 188   -- title + spec dropdown + look-ahead row + filter checkbox rows
-local BOTTOM_INSET = 12
+local TOP_INSET = 193   -- title + spec dropdown + look-ahead row + filter checkbox rows
+-- +15 over the original 12 to shorten the content/paperdoll panel from the
+-- bottom (window size itself is untouched -- see FRAME_HEIGHT above -- so
+-- this just leaves 15px more plain window background below the panel).
+local BOTTOM_INSET = 27
 
 -- Left column, top to bottom
 local leftColumn = { "HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", "WristSlot" }
@@ -437,13 +442,16 @@ content:SetBackdropBorderColor(unpack(THEME.panelBorder))
 -- Nudged up by its own text height on top of the base 6px margin (rather
 -- than a second hardcoded pixel guess) so it clears the window's bottom
 -- edge/border regardless of what font size GameFontDisable resolves to.
+-- +15 more on top of that to follow `content`'s bottom edge, which moved up
+-- 15px (BOTTOM_INSET 12 -> 27 above) -- keeps the same small overlap with
+-- content's corner that the frame-level fix above accounts for.
 local versionFrame = CreateFrame("Frame", nil, mainFrame)
 versionFrame:SetFrameLevel(content:GetFrameLevel() + 1)
 versionFrame:SetAllPoints(mainFrame)
 local versionText = versionFrame:CreateFontString(nil, "OVERLAY", "GameFontDisable")
 versionText:SetText("v" .. EverGear.VERSION)
 versionText:SetTextColor(unpack(THEME.goldDim))
-versionText:SetPoint("BOTTOMLEFT", 10, 6 + versionText:GetStringHeight())
+versionText:SetPoint("BOTTOMLEFT", 10, 21 + versionText:GetStringHeight())
 
 -- ===== Slot buttons =====
 
@@ -1005,10 +1013,11 @@ professionFilterHeader:SetTextColor(unpack(THEME.gold))
 -- Small header label above the BoE-only column so the checkbox's purpose is
 -- clear without needing to hover every row for the tooltip.
 local professionFilterBoEHeader = professionFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
--- Above the checkbox column (PROFESSION_TOP_Y + 18, i.e. 18px higher up /
+-- Above the checkbox column (PROFESSION_TOP_Y + 13, i.e. 13px higher up /
 -- less negative than the first row), not below it -- and below the main
--- title header at -4, so both have real breathing room around them.
-professionFilterBoEHeader:SetPoint("TOPRIGHT", -12, PROFESSION_TOP_Y + 18)
+-- title header at -4, so both have real breathing room around them. (+18
+-- originally, dropped 5px along with the checkboxes themselves below.)
+professionFilterBoEHeader:SetPoint("TOPRIGHT", -12, PROFESSION_TOP_Y + 13)
 professionFilterBoEHeader:SetText("BoE Only")
 professionFilterBoEHeader:SetTextColor(unpack(THEME.goldDim))
 
@@ -1037,7 +1046,8 @@ for index, profName in ipairs(EverGear.PROFESSION_FILTER_LIST) do
     local boeName = "EverGearProfessionBoECheck_" .. profName
     local boeCb = CreateFrame("CheckButton", boeName, professionFilterPanel, "UICheckButtonTemplate")
     boeCb:SetSize(18, 18)
-    boeCb:SetPoint("TOPRIGHT", -14, rowY + 2)
+    -- rowY + 2 originally, dropped 5px to rowY - 3 (matches the header above).
+    boeCb:SetPoint("TOPRIGHT", -14, rowY - 3)
     _G[boeName .. "Text"]:SetText("")
     boeCb:SetChecked(GetProfessionBoEOnly()[profName] == true)
     boeCb:SetScript("OnEnter", function(self)
