@@ -452,7 +452,7 @@ versionFrame:SetAllPoints(mainFrame)
 local versionText = versionFrame:CreateFontString(nil, "OVERLAY", "GameFontDisable")
 versionText:SetText("v" .. EverGear.VERSION)
 versionText:SetTextColor(unpack(THEME.goldDim))
-versionText:SetPoint("BOTTOMLEFT", 10, 21 + versionText:GetStringHeight())
+versionText:SetPoint("BOTTOMLEFT", 10, versionText:GetStringHeight())
 
 -- ===== Slot buttons =====
 
@@ -487,9 +487,18 @@ local function CreateItemIconFrame(name, parent, size)
     btn:SetBackdropColor(0.06, 0.06, 0.08, 1)
     btn:SetBackdropBorderColor(0.6, 0.56, 0.42, 1)
 
+    -- Inset matches edgeSize exactly (2px) so the icon sits fully inside the
+    -- backdrop edge with no overlap. A smaller inset (1px, the original value)
+    -- left the icon's texture overlapping half the border's width by design,
+    -- which is fine horizontally but not vertically: WoW's texture-height
+    -- rounding can push a texture's rendered height a fraction of a pixel
+    -- past its anchor points, and with only 1px of border showing that was
+    -- enough to fully paint over the border's top/bottom edge on some rows.
+    -- Matching the inset to edgeSize removes the overlap entirely instead of
+    -- relying on sub-pixel rounding staying in our favor.
     local icon = btn:CreateTexture(nil, "ARTWORK")
-    icon:SetPoint("TOPLEFT", 1, -1)
-    icon:SetPoint("BOTTOMRIGHT", -1, 1)
+    icon:SetPoint("TOPLEFT", 2, -2)
+    icon:SetPoint("BOTTOMRIGHT", -2, 2)
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)  -- trims the icon's own built-in border padding
     btn.icon = icon
 
