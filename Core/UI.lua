@@ -186,10 +186,11 @@ closeButton:SetPoint("TOPRIGHT", -4, -4)
 -- it (matching the `content` panel's look), instead of every control
 -- floating directly on the plain tan dialog background.
 local controlsPanel = CreateFrame("Frame", nil, mainFrame, "BackdropTemplate")
--- x insets 10 -> 0 on both sides: +10px width on the left and +10px on the
--- right (total +20px wider) versus the original 10px-in-from-each-edge fit.
-controlsPanel:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 0, -38)
-controlsPanel:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", 0, -38)
+-- x insets matched exactly to `content` (the suggestions/paperdoll panel
+-- below it) -- 6px from each edge -- so the two panels line up flush on
+-- both the left and right, same width, instead of drifting independently.
+controlsPanel:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 6, -38)
+controlsPanel:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -6, -38)
 controlsPanel:SetPoint("BOTTOM", mainFrame, "TOP", 0, -(TOP_INSET - 4))
 controlsPanel:SetBackdrop({
     bgFile = "Interface\\Buttons\\WHITE8X8",
@@ -976,12 +977,15 @@ end
 -- without crowding the profession name/checkbox already there.
 local PROFESSION_PANEL_WIDTH = 220
 local PROFESSION_ROW_HEIGHT = 22
--- Panel contents (header, rows, All/None buttons) all shifted up 10px from
--- their original position -- see each element's y offset below.
-local PROFESSION_TOP_Y = -28
+-- First checkbox row's y offset -- below both the main "Professions" title
+-- and the "BoE Only" column header (see their own y offsets just below),
+-- with a genuine gap to each rather than crowding them.
+local PROFESSION_TOP_Y = -36
 
 professionFilterPanel = CreateFrame("Frame", "EverGearProfessionFilterPanel", mainFrame, "BackdropTemplate")
-professionFilterPanel:SetSize(PROFESSION_PANEL_WIDTH, 66 + #EverGear.PROFESSION_FILTER_LIST * PROFESSION_ROW_HEIGHT)
+-- +10 over the original 66 base for extra room around the new "BoE Only"
+-- column header above the checkboxes.
+professionFilterPanel:SetSize(PROFESSION_PANEL_WIDTH, 76 + #EverGear.PROFESSION_FILTER_LIST * PROFESSION_ROW_HEIGHT)
 professionFilterPanel:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
     edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
@@ -1001,8 +1005,11 @@ professionFilterHeader:SetTextColor(unpack(THEME.gold))
 -- Small header label above the BoE-only column so the checkbox's purpose is
 -- clear without needing to hover every row for the tooltip.
 local professionFilterBoEHeader = professionFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-professionFilterBoEHeader:SetPoint("TOPRIGHT", -16, PROFESSION_TOP_Y - 6)
-professionFilterBoEHeader:SetText("BoE")
+-- Above the checkbox column (PROFESSION_TOP_Y + 18, i.e. 18px higher up /
+-- less negative than the first row), not below it -- and below the main
+-- title header at -4, so both have real breathing room around them.
+professionFilterBoEHeader:SetPoint("TOPRIGHT", -12, PROFESSION_TOP_Y + 18)
+professionFilterBoEHeader:SetText("BoE Only")
 professionFilterBoEHeader:SetTextColor(unpack(THEME.goldDim))
 
 local professionFilterCheckboxes = {}
@@ -1059,7 +1066,7 @@ end
 
 local professionFilterAllButton = CreateFrame("Button", nil, professionFilterPanel, "UIPanelButtonTemplate")
 professionFilterAllButton:SetSize(70, 20)
-professionFilterAllButton:SetPoint("BOTTOMLEFT", 10, 18)
+professionFilterAllButton:SetPoint("BOTTOMLEFT", 10, 13)
 professionFilterAllButton:SetText("All")
 professionFilterAllButton:SetScript("OnClick", function()
     for _, profName in ipairs(EverGear.PROFESSION_FILTER_LIST) do GetProfessionFilters()[profName] = true end
@@ -1069,7 +1076,7 @@ end)
 
 local professionFilterNoneButton = CreateFrame("Button", nil, professionFilterPanel, "UIPanelButtonTemplate")
 professionFilterNoneButton:SetSize(70, 20)
-professionFilterNoneButton:SetPoint("BOTTOMRIGHT", -10, 18)
+professionFilterNoneButton:SetPoint("BOTTOMRIGHT", -10, 13)
 professionFilterNoneButton:SetText("None")
 professionFilterNoneButton:SetScript("OnClick", function()
     for _, profName in ipairs(EverGear.PROFESSION_FILTER_LIST) do GetProfessionFilters()[profName] = false end
