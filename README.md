@@ -36,6 +36,16 @@ Copy this folder to:
 D:\World of Warcraft\_classic_beta_\Interface\AddOns\EverGear
 ```
 
+## Versioning
+
+`EverGear.VERSION` (`Core/Constants.lua`) is shown in small text bottom-left of the
+addon's main window. Policy, effective 2026-09-29:
+
+- Every shipped change bumps the **patch** digit (0.0.1 → 0.0.2 → 0.0.3 …), no matter
+  how small the change.
+- Moving to **0.1.0** or **1.0.0** is the user's call alone. Claude may suggest when it
+  seems like the right moment, but must never bump a minor/major version on its own.
+
 ## Note on the .toc Interface version
 
 `## Interface: 11507` is a placeholder guess for a Classic-era-based client. Once you're

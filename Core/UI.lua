@@ -175,6 +175,14 @@ titleIcon:SetTexture("Interface\\AddOns\\EverGear\\Icon")
 local closeButton = CreateFrame("Button", nil, mainFrame, "UIPanelCloseButton")
 closeButton:SetPoint("TOPRIGHT", -4, -4)
 
+-- Small version stamp, bottom-left of the window -- see Constants.lua's
+-- EverGear.VERSION for the bump policy (every shipped change bumps the
+-- patch digit; only the user decides when to move to 0.1.0/1.0.0).
+local versionText = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontDisable")
+versionText:SetPoint("BOTTOMLEFT", 10, 6)
+versionText:SetText("v" .. EverGear.VERSION)
+versionText:SetTextColor(unpack(THEME.goldDim))
+
 -- Recessed panel behind the spec dropdown / look-ahead slider / filter
 -- checkboxes -- created before any of those (so it stays visually behind
 -- them as a plain child-draw-order backdrop, no explicit frame level
