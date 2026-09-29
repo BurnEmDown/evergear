@@ -537,6 +537,15 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     -- is untouched by this filter regardless of its state.
     local professionFilter = EverGearDB.professionFilter or {}
 
+    -- "BoE only" per profession (EverGearDB.professionBoEOnly[profName] ==
+    -- true, set via the same profession filter panel) -- for browsing a
+    -- profession's crafted items when the player doesn't actually have that
+    -- profession, so only pieces they could actually acquire (buy/trade for)
+    -- get suggested. Off by default for everyone. item.bindType == "BoE" is
+    -- required exactly, not "~= BoP" -- an unconfirmed item (bindType nil,
+    -- see Constants.lua) is deliberately excluded rather than assumed BoE.
+    local professionBoEOnly = EverGearDB.professionBoEOnly or {}
+
     local candidates = {}
     for _, item in ipairs(self:GetItemsForSlot(realSlotToken)) do
         local itemFaction = item.source and item.source.faction
@@ -552,6 +561,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
 
         local itemProfession = item.source and item.source.type == "craft" and item.source.profession
         local professionAllowed = (not itemProfession) or (professionFilter[itemProfession] ~= false)
+        local boeAllowed = (not itemProfession) or (not professionBoEOnly[itemProfession]) or item.bindType == "BoE"
 
         if item.id ~= equippedItemId
             and (not item.minLevel or item.minLevel <= effectiveLevel)
@@ -561,6 +571,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
             and factionAllowed
             and weaponTypeAllowed
             and professionAllowed
+            and boeAllowed
         then
             local armorValue = (item.stats and item.stats.ARMOR) or 0
             local dpsValue = (item.stats and item.stats.WEAPON_DPS) or 0

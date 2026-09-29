@@ -6,7 +6,7 @@ EverGear.ADDON_NAME = "EverGear"
 -- change, no matter how small -- 0.0.1 -> 0.0.2 -> 0.0.3, etc. Moving to
 -- 0.1.0 or 1.0.0 is the user's call alone; Claude may suggest it's time,
 -- but must never bump a minor/major version on its own initiative.
-EverGear.VERSION = "0.0.3"
+EverGear.VERSION = "0.0.4"
 
 -- Populated later from Data\*.lua files. Each entry keyed by numeric item id.
 -- Canonical item shape (mirrors evergear-backend/schema.md):
@@ -22,6 +22,16 @@ EverGear.VERSION = "0.0.3"
 --   ilvl = 5,
 --   minLevel = 3,
 --   confirmed = true,           -- false = seen on a tracker site but not yet in-game verified
+--   bindType = "BoE",           -- "BoE" / "BoP" / "BoU" / nil (unconfirmed -- treated as NOT
+--                                -- BoE by the "BoE only" profession filter in UI.lua, never
+--                                -- assumed). Currently only populated for crafted items:
+--                                -- foreverdb.net doesn't expose bind type in static HTML for
+--                                -- ANY item (confirmed absent, not just for new items), so real
+--                                -- item ids (< 100000) are seeded "BoE" on the well-established
+--                                -- Classic/TBC-era rule that ordinary trainer-taught leveling
+--                                -- profession gear is virtually always Bind on Equip -- WoW
+--                                -- Forever's own custom items (id >= 200000) are NOT assumed
+--                                -- and stay nil until verified in-game.
 --   source = {
 --     type = "dungeonDrop",     -- worldDrop | dungeonDrop | raidDrop | quest | vendor | craft
 --     zone = "The Stockade",

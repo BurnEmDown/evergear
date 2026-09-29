@@ -24,11 +24,11 @@
 
 local FRAME_WIDTH = 334
 -- +34 over the original 560 to give the new look-ahead row its own space
--- without squeezing the bottom weapon row's margin. +10 more on top of that
--- (and the matching +10 on TOP_INSET below) to give the filter-checkbox
--- panel more breathing room -- the two grow together so the paperdoll
--- content area below it keeps the exact same size.
-local FRAME_HEIGHT = 604
+-- without squeezing the bottom weapon row's margin. +10, then +10 again, on
+-- top of that (and the matching +20 total on TOP_INSET below) to give the
+-- filter-checkbox panel more breathing room -- the two grow together so the
+-- paperdoll content area below it keeps the exact same size.
+local FRAME_HEIGHT = 614
 
 local LEFT_MARGIN = 24
 local RIGHT_MARGIN = 24
@@ -38,7 +38,7 @@ local TOP_Y = -10
 -- instead of the tight column the character screen has.
 local ROW_SPACING = 42
 local ICON_SIZE = 37
-local TOP_INSET = 178   -- title + spec dropdown + look-ahead row + filter checkbox rows
+local TOP_INSET = 188   -- title + spec dropdown + look-ahead row + filter checkbox rows
 local BOTTOM_INSET = 12
 
 -- Left column, top to bottom
@@ -178,17 +178,6 @@ titleIcon:SetTexture("Interface\\AddOns\\EverGear\\Icon")
 local closeButton = CreateFrame("Button", nil, mainFrame, "UIPanelCloseButton")
 closeButton:SetPoint("TOPRIGHT", -4, -4)
 
--- Small version stamp, bottom-left of the window -- see Constants.lua's
--- EverGear.VERSION for the bump policy (every shipped change bumps the
--- patch digit; only the user decides when to move to 0.1.0/1.0.0).
--- Nudged up by its own text height on top of the base 6px margin (rather
--- than a second hardcoded pixel guess) so it clears the window's bottom
--- edge/border regardless of what font size GameFontDisable resolves to.
-local versionText = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontDisable")
-versionText:SetText("v" .. EverGear.VERSION)
-versionText:SetTextColor(unpack(THEME.goldDim))
-versionText:SetPoint("BOTTOMLEFT", 10, 6 + versionText:GetStringHeight())
-
 -- Recessed panel behind the spec dropdown / look-ahead slider / filter
 -- checkboxes -- created before any of those (so it stays visually behind
 -- them as a plain child-draw-order backdrop, no explicit frame level
@@ -197,8 +186,10 @@ versionText:SetPoint("BOTTOMLEFT", 10, 6 + versionText:GetStringHeight())
 -- it (matching the `content` panel's look), instead of every control
 -- floating directly on the plain tan dialog background.
 local controlsPanel = CreateFrame("Frame", nil, mainFrame, "BackdropTemplate")
-controlsPanel:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 10, -38)
-controlsPanel:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -10, -38)
+-- x insets 10 -> 0 on both sides: +10px width on the left and +10px on the
+-- right (total +20px wider) versus the original 10px-in-from-each-edge fit.
+controlsPanel:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 0, -38)
+controlsPanel:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", 0, -38)
 controlsPanel:SetPoint("BOTTOM", mainFrame, "TOP", 0, -(TOP_INSET - 4))
 controlsPanel:SetBackdrop({
     bgFile = "Interface\\Buttons\\WHITE8X8",
@@ -434,6 +425,24 @@ content:SetBackdrop({
 })
 content:SetBackdropColor(unpack(THEME.panelBg))
 content:SetBackdropBorderColor(unpack(THEME.panelBorder))
+
+-- Small version stamp, bottom-left of the window -- see Constants.lua's
+-- EverGear.VERSION for the bump policy (every shipped change bumps the
+-- patch digit; only the user decides when to move to 0.1.0/1.0.0).
+-- On its own frame, explicitly leveled above `content` (a plain FontString
+-- parented straight to mainFrame rendered BEHIND content here, since a
+-- child frame's own level -- content is mainFrame's level+1 -- wins over
+-- draw-layer ordering across different frames regardless of OVERLAY/etc).
+-- Nudged up by its own text height on top of the base 6px margin (rather
+-- than a second hardcoded pixel guess) so it clears the window's bottom
+-- edge/border regardless of what font size GameFontDisable resolves to.
+local versionFrame = CreateFrame("Frame", nil, mainFrame)
+versionFrame:SetFrameLevel(content:GetFrameLevel() + 1)
+versionFrame:SetAllPoints(mainFrame)
+local versionText = versionFrame:CreateFontString(nil, "OVERLAY", "GameFontDisable")
+versionText:SetText("v" .. EverGear.VERSION)
+versionText:SetTextColor(unpack(THEME.goldDim))
+versionText:SetPoint("BOTTOMLEFT", 10, 6 + versionText:GetStringHeight())
 
 -- ===== Slot buttons =====
 
@@ -956,8 +965,20 @@ local function GetProfessionFilters()
     return EverGearDB.professionFilter
 end
 
-local PROFESSION_PANEL_WIDTH = 170
+-- "BoE only" per profession -- see Upgrades.lua's professionBoEOnly comment
+-- for the filtering behavior. Off (false/nil) by default for everyone.
+local function GetProfessionBoEOnly()
+    EverGearDB.professionBoEOnly = EverGearDB.professionBoEOnly or {}
+    return EverGearDB.professionBoEOnly
+end
+
+-- +50 over the original 170 to fit the new per-row "BoE only" checkbox
+-- without crowding the profession name/checkbox already there.
+local PROFESSION_PANEL_WIDTH = 220
 local PROFESSION_ROW_HEIGHT = 22
+-- Panel contents (header, rows, All/None buttons) all shifted up 10px from
+-- their original position -- see each element's y offset below.
+local PROFESSION_TOP_Y = -28
 
 professionFilterPanel = CreateFrame("Frame", "EverGearProfessionFilterPanel", mainFrame, "BackdropTemplate")
 professionFilterPanel:SetSize(PROFESSION_PANEL_WIDTH, 66 + #EverGear.PROFESSION_FILTER_LIST * PROFESSION_ROW_HEIGHT)
@@ -973,16 +994,26 @@ local professionFilterCloseButton = CreateFrame("Button", nil, professionFilterP
 professionFilterCloseButton:SetPoint("TOPRIGHT", -2, -2)
 
 local professionFilterHeader = professionFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-professionFilterHeader:SetPoint("TOP", 0, -14)
+professionFilterHeader:SetPoint("TOP", 0, -4)
 professionFilterHeader:SetText("Professions")
 professionFilterHeader:SetTextColor(unpack(THEME.gold))
 
+-- Small header label above the BoE-only column so the checkbox's purpose is
+-- clear without needing to hover every row for the tooltip.
+local professionFilterBoEHeader = professionFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+professionFilterBoEHeader:SetPoint("TOPRIGHT", -16, PROFESSION_TOP_Y - 6)
+professionFilterBoEHeader:SetText("BoE")
+professionFilterBoEHeader:SetTextColor(unpack(THEME.goldDim))
+
 local professionFilterCheckboxes = {}
+local professionBoECheckboxes = {}
 
 for index, profName in ipairs(EverGear.PROFESSION_FILTER_LIST) do
+    local rowY = PROFESSION_TOP_Y - (index - 1) * PROFESSION_ROW_HEIGHT
+
     local name = "EverGearProfessionFilterCheck_" .. profName
     local cb = CreateFrame("CheckButton", name, professionFilterPanel, "UICheckButtonTemplate")
-    cb:SetPoint("TOPLEFT", 14, -38 - (index - 1) * PROFESSION_ROW_HEIGHT)
+    cb:SetPoint("TOPLEFT", 14, rowY)
     _G[name .. "Text"]:SetText(profName)
     cb:SetChecked(GetProfessionFilters()[profName] ~= false)
     cb:SetScript("OnClick", function(self)
@@ -990,17 +1021,45 @@ for index, profName in ipairs(EverGear.PROFESSION_FILTER_LIST) do
         EverGear:RefreshUI()
     end)
     table.insert(professionFilterCheckboxes, { cb = cb, name = profName })
+
+    -- Per-row "BoE only" checkbox, right-aligned in its own column -- when
+    -- checked, only that profession's confirmed-BoE items are suggested
+    -- (see Upgrades.lua), for browsing crafted gear from a profession the
+    -- player doesn't actually have. Small (18x18, vs the ~26px default) so
+    -- it reads as a secondary control next to the main profession checkbox.
+    local boeName = "EverGearProfessionBoECheck_" .. profName
+    local boeCb = CreateFrame("CheckButton", boeName, professionFilterPanel, "UICheckButtonTemplate")
+    boeCb:SetSize(18, 18)
+    boeCb:SetPoint("TOPRIGHT", -14, rowY + 2)
+    _G[boeName .. "Text"]:SetText("")
+    boeCb:SetChecked(GetProfessionBoEOnly()[profName] == true)
+    boeCb:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+        GameTooltip:SetText("BoE Only")
+        GameTooltip:AddLine("Only suggest " .. profName .. " items confirmed Bind on Equip --", 0.8, 0.8, 0.8, true)
+        GameTooltip:AddLine("for checking crafted gear from a profession you don't have.", 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    boeCb:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    boeCb:SetScript("OnClick", function(self)
+        GetProfessionBoEOnly()[profName] = self:GetChecked()
+        EverGear:RefreshUI()
+    end)
+    table.insert(professionBoECheckboxes, { cb = boeCb, name = profName })
 end
 
 local function RefreshProfessionFilterCheckboxes()
     for _, entry in ipairs(professionFilterCheckboxes) do
         entry.cb:SetChecked(GetProfessionFilters()[entry.name] ~= false)
     end
+    for _, entry in ipairs(professionBoECheckboxes) do
+        entry.cb:SetChecked(GetProfessionBoEOnly()[entry.name] == true)
+    end
 end
 
 local professionFilterAllButton = CreateFrame("Button", nil, professionFilterPanel, "UIPanelButtonTemplate")
 professionFilterAllButton:SetSize(70, 20)
-professionFilterAllButton:SetPoint("BOTTOMLEFT", 10, 8)
+professionFilterAllButton:SetPoint("BOTTOMLEFT", 10, 18)
 professionFilterAllButton:SetText("All")
 professionFilterAllButton:SetScript("OnClick", function()
     for _, profName in ipairs(EverGear.PROFESSION_FILTER_LIST) do GetProfessionFilters()[profName] = true end
@@ -1010,7 +1069,7 @@ end)
 
 local professionFilterNoneButton = CreateFrame("Button", nil, professionFilterPanel, "UIPanelButtonTemplate")
 professionFilterNoneButton:SetSize(70, 20)
-professionFilterNoneButton:SetPoint("BOTTOMRIGHT", -10, 8)
+professionFilterNoneButton:SetPoint("BOTTOMRIGHT", -10, 18)
 professionFilterNoneButton:SetText("None")
 professionFilterNoneButton:SetScript("OnClick", function()
     for _, profName in ipairs(EverGear.PROFESSION_FILTER_LIST) do GetProfessionFilters()[profName] = false end
@@ -1124,6 +1183,9 @@ local function SyncFilterCheckboxes()
     end
     for _, entry in ipairs(professionFilterCheckboxes) do
         entry.cb:SetChecked(GetProfessionFilters()[entry.name] ~= false)
+    end
+    for _, entry in ipairs(professionBoECheckboxes) do
+        entry.cb:SetChecked(GetProfessionBoEOnly()[entry.name] == true)
     end
 end
 
