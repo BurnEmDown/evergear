@@ -118,13 +118,14 @@ end
 -- and write, the same "never trust a one-time init" rule the look-ahead
 -- slider already follows.
 local function GetSourceFilters()
-    EverGearDB.filters = EverGearDB.filters or {}
+    local charDB = EverGear:GetCharDB()
+    charDB.filters = charDB.filters or {}
     for _, entry in ipairs(EverGear.SOURCE_TYPE_FILTERS) do
-        if EverGearDB.filters[entry.key] == nil then
-            EverGearDB.filters[entry.key] = true
+        if charDB.filters[entry.key] == nil then
+            charDB.filters[entry.key] = true
         end
     end
-    return EverGearDB.filters
+    return charDB.filters
 end
 GetSourceFilters()  -- seed defaults now so they're set even before any checkbox is touched
 
@@ -211,14 +212,14 @@ controlsPanel:SetBackdropBorderColor(unpack(THEME.panelBorder))
 -- a Warrior); each maps to one of the 4 scoring roles Upgrades.lua understands
 -- (see EverGear.CLASS_SPECS in Upgrades.lua). This heavily affects
 -- suggestions since it picks which stats the scoring heuristic weights.
-EverGearDB.spec = EverGearDB.spec or EverGear:GetDefaultSpec(EverGear:GetPlayerInfo().classToken)
+EverGear:GetCharDB().spec = EverGear:GetCharDB().spec or EverGear:GetDefaultSpec(EverGear:GetPlayerInfo().classToken)
 
 local specDropdown = CreateFrame("Frame", "EverGearSpecDropdown", mainFrame, "UIDropDownMenuTemplate")
 specDropdown:SetPoint("TOP", mainFrame, "TOP", -8, -34)
 UIDropDownMenu_SetWidth(specDropdown, 150)
 
 local function SpecDropdown_OnClick(self)
-    EverGearDB.spec = self.value
+    EverGear:GetCharDB().spec = self.value
     UIDropDownMenu_SetSelectedValue(specDropdown, self.value)
     EverGear:RefreshUI()
 end
@@ -233,7 +234,7 @@ UIDropDownMenu_Initialize(specDropdown, function()
         UIDropDownMenu_AddButton(info)
     end
 end)
-UIDropDownMenu_SetSelectedValue(specDropdown, EverGearDB.spec)
+UIDropDownMenu_SetSelectedValue(specDropdown, EverGear:GetCharDB().spec)
 
 -- ===== Look-ahead slider =====
 -- Lets the player preview upgrades above their current level (e.g. "what
@@ -331,9 +332,10 @@ end
 local function SyncLookaheadBounds()
     local minLevel = GetLookaheadMin()
     local maxLevel = math.max(minLevel, LOOKAHEAD_MAX)
-    local stored = EverGearDB.lookaheadLevel or minLevel
+    local charDB = EverGear:GetCharDB()
+    local stored = charDB.lookaheadLevel or minLevel
     stored = math.max(minLevel, math.min(maxLevel, stored))
-    EverGearDB.lookaheadLevel = stored
+    charDB.lookaheadLevel = stored
 
     syncingSlider = true
     lookaheadSlider:SetMinMaxValues(minLevel, maxLevel)
@@ -346,7 +348,7 @@ lookaheadSlider:SetScript("OnValueChanged", function(self, value)
     value = math.floor(value + 0.5)
     UpdateLookaheadLabel(value)
     if syncingSlider then return end
-    EverGearDB.lookaheadLevel = value
+    EverGear:GetCharDB().lookaheadLevel = value
     EverGear:RefreshUI()
 end)
 
@@ -819,8 +821,9 @@ end
 -- See GetSourceFilters() above for why this is a function, not a captured
 -- local alias -- every read/write below goes through it fresh.
 local function GetWeaponFilters()
-    EverGearDB.weaponTypeFilter = EverGearDB.weaponTypeFilter or {}
-    return EverGearDB.weaponTypeFilter
+    local charDB = EverGear:GetCharDB()
+    charDB.weaponTypeFilter = charDB.weaponTypeFilter or {}
+    return charDB.weaponTypeFilter
 end
 
 -- Built once at load (class doesn't change mid-session): the ordered list of
@@ -980,15 +983,17 @@ end)
 -- See GetSourceFilters() above for why this is a function, not a captured
 -- local alias -- every read/write below goes through it fresh.
 local function GetProfessionFilters()
-    EverGearDB.professionFilter = EverGearDB.professionFilter or {}
-    return EverGearDB.professionFilter
+    local charDB = EverGear:GetCharDB()
+    charDB.professionFilter = charDB.professionFilter or {}
+    return charDB.professionFilter
 end
 
 -- "BoE only" per profession -- see Upgrades.lua's professionBoEOnly comment
 -- for the filtering behavior. Off (false/nil) by default for everyone.
 local function GetProfessionBoEOnly()
-    EverGearDB.professionBoEOnly = EverGearDB.professionBoEOnly or {}
-    return EverGearDB.professionBoEOnly
+    local charDB = EverGear:GetCharDB()
+    charDB.professionBoEOnly = charDB.professionBoEOnly or {}
+    return charDB.professionBoEOnly
 end
 
 -- +50 over the original 170 to fit the new per-row "BoE only" checkbox

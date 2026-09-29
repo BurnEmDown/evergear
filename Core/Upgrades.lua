@@ -492,7 +492,8 @@ end
 --                  (0 if the slot is empty).
 function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     local playerInfo = self:GetPlayerInfo()
-    local role = self:GetRoleForSpec(playerInfo.classToken, EverGearDB.spec)
+    local charDB = self:GetCharDB()
+    local role = self:GetRoleForSpec(playerInfo.classToken, charDB.spec)
     local primaryStat = self:GetPrimaryStat(playerInfo.classToken, role)
 
     -- Look-ahead: show items up to the slider's chosen level (set via UI.lua's
@@ -502,7 +503,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     -- case that sync hasn't run yet (e.g. right after a level-up). This only
     -- widens the minLevel filter below -- it doesn't change scoring or
     -- class/weapon usability.
-    local effectiveLevel = math.max(playerInfo.level, EverGearDB.lookaheadLevel or playerInfo.level)
+    local effectiveLevel = math.max(playerInfo.level, charDB.lookaheadLevel or playerInfo.level)
 
     local equippedItemId = self:GetItemIDFromLink(equippedItemLink)
     -- Prefer our own extracted data over the live API when we have it for the
@@ -526,7 +527,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     -- player explicitly unchecked it. Missing from the table (never touched
     -- by the player, or a class/spec that's never seen this weapon type
     -- before) means "shown" -- only an explicit false hides it.
-    local weaponTypeFilter = EverGearDB.weaponTypeFilter or {}
+    local weaponTypeFilter = charDB.weaponTypeFilter or {}
 
     -- Same idea for crafted items: EverGearDB.professionFilter[profName] ==
     -- false hides that profession's items specifically (e.g. only
@@ -535,7 +536,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     -- checked for source.type == "craft" items that actually name a
     -- profession -- everything else (dungeon drops, quests, vendor items)
     -- is untouched by this filter regardless of its state.
-    local professionFilter = EverGearDB.professionFilter or {}
+    local professionFilter = charDB.professionFilter or {}
 
     -- "BoE only" per profession (EverGearDB.professionBoEOnly[profName] ==
     -- true, set via the same profession filter panel) -- for browsing a
@@ -544,7 +545,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     -- get suggested. Off by default for everyone. item.bindType == "BoE" is
     -- required exactly, not "~= BoP" -- an unconfirmed item (bindType nil,
     -- see Constants.lua) is deliberately excluded rather than assumed BoE.
-    local professionBoEOnly = EverGearDB.professionBoEOnly or {}
+    local professionBoEOnly = charDB.professionBoEOnly or {}
 
     local candidates = {}
     for _, item in ipairs(self:GetItemsForSlot(realSlotToken)) do
