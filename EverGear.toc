@@ -34,3 +34,11 @@ Data\Items_ElwynnForest.lua
 Data\Items_Durotar.lua
 Data\Items_Westfall.lua
 Data\Items_Mulgore.lua
+Data\Items_TheBarrens.lua
+Data\Items_SilverpineForest.lua
+Data\Items_LochModan.lua
+Data\Items_Darkshore.lua
+Data\Items_RedridgeMountains.lua
+Data\Items_Teldrassil.lua
+Data\Items_DunMorogh.lua
+Data\Items_TirisfalGlades.lua
