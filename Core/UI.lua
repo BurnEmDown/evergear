@@ -24,13 +24,16 @@
 
 local FRAME_WIDTH = 334
 -- +34 over the original 560 to give the new look-ahead row its own space
--- without squeezing the bottom weapon row's margin. +10, +10, then +5 more
--- on top of that (and the matching +25 total on TOP_INSET below) to give
--- the filter-checkbox panel more breathing room -- the two grow together so
--- the paperdoll content area below it keeps the exact same size on the TOP
--- side. BOTTOM_INSET growing below does NOT get matched here on purpose --
--- that one's meant to actually shrink the content area, not preserve it.
-local FRAME_HEIGHT = 619
+-- without squeezing the bottom weapon row's margin. +10, +10, +5, then +5
+-- more on top of that (and the matching +30 total on TOP_INSET below) to
+-- give the filter-checkbox panel more breathing room -- the two grow
+-- together so the paperdoll content area below it keeps the exact same size
+-- on the TOP side. BOTTOM_INSET growing further down does NOT get matched
+-- here on purpose -- that one shrinks the content area rather than
+-- preserving it. Separately, -15 to shrink the overall window itself from
+-- the bottom (a plain window resize, independent of the TOP_INSET/
+-- BOTTOM_INSET insets above).
+local FRAME_HEIGHT = 609
 
 local LEFT_MARGIN = 24
 local RIGHT_MARGIN = 24
@@ -40,7 +43,7 @@ local TOP_Y = -10
 -- instead of the tight column the character screen has.
 local ROW_SPACING = 42
 local ICON_SIZE = 37
-local TOP_INSET = 193   -- title + spec dropdown + look-ahead row + filter checkbox rows
+local TOP_INSET = 198   -- title + spec dropdown + look-ahead row + filter checkbox rows
 -- +15 over the original 12 to shorten the content/paperdoll panel from the
 -- bottom (window size itself is untouched -- see FRAME_HEIGHT above -- so
 -- this just leaves 15px more plain window background below the panel).
@@ -1013,11 +1016,11 @@ professionFilterHeader:SetTextColor(unpack(THEME.gold))
 -- Small header label above the BoE-only column so the checkbox's purpose is
 -- clear without needing to hover every row for the tooltip.
 local professionFilterBoEHeader = professionFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
--- Above the checkbox column (PROFESSION_TOP_Y + 13, i.e. 13px higher up /
+-- Above the checkbox column (PROFESSION_TOP_Y + 8, i.e. 8px higher up /
 -- less negative than the first row), not below it -- and below the main
 -- title header at -4, so both have real breathing room around them. (+18
--- originally, dropped 5px along with the checkboxes themselves below.)
-professionFilterBoEHeader:SetPoint("TOPRIGHT", -12, PROFESSION_TOP_Y + 13)
+-- originally, dropped 5px twice along with the checkboxes themselves below.)
+professionFilterBoEHeader:SetPoint("TOPRIGHT", -12, PROFESSION_TOP_Y + 8)
 professionFilterBoEHeader:SetText("BoE Only")
 professionFilterBoEHeader:SetTextColor(unpack(THEME.goldDim))
 
@@ -1046,8 +1049,8 @@ for index, profName in ipairs(EverGear.PROFESSION_FILTER_LIST) do
     local boeName = "EverGearProfessionBoECheck_" .. profName
     local boeCb = CreateFrame("CheckButton", boeName, professionFilterPanel, "UICheckButtonTemplate")
     boeCb:SetSize(18, 18)
-    -- rowY + 2 originally, dropped 5px to rowY - 3 (matches the header above).
-    boeCb:SetPoint("TOPRIGHT", -14, rowY - 3)
+    -- rowY + 2 originally, dropped 5px twice to rowY - 8 (matches the header above).
+    boeCb:SetPoint("TOPRIGHT", -14, rowY - 8)
     _G[boeName .. "Text"]:SetText("")
     boeCb:SetChecked(GetProfessionBoEOnly()[profName] == true)
     boeCb:SetScript("OnEnter", function(self)
