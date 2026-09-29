@@ -23,17 +23,14 @@
 --   shrunk short. Only the SPACING between rows scales with height.
 
 local FRAME_WIDTH = 334
--- +34 over the original 560 to give the new look-ahead row its own space
--- without squeezing the bottom weapon row's margin. +10, +10, +5, then +5
--- more on top of that (and the matching +30 total on TOP_INSET below) to
--- give the filter-checkbox panel more breathing room -- the two grow
--- together so the paperdoll content area below it keeps the exact same size
--- on the TOP side. BOTTOM_INSET growing further down does NOT get matched
--- here on purpose -- that one shrinks the content area rather than
--- preserving it. Separately, -15 to shrink the overall window itself from
--- the bottom (a plain window resize, independent of the TOP_INSET/
--- BOTTOM_INSET insets above).
-local FRAME_HEIGHT = 609
+-- Window height. Hand-tuned (along with TOP_INSET/BOTTOM_INSET just below)
+-- to fit the taller controls panel at the top and the "BoE Only" column in
+-- the profession filter, while keeping the paperdoll content area and the
+-- bottom margin below it reasonably sized. Change this and TOP_INSET/
+-- BOTTOM_INSET together, not in isolation -- see content's own anchors
+-- further down for how the three relate (content height = FRAME_HEIGHT -
+-- TOP_INSET - BOTTOM_INSET).
+local FRAME_HEIGHT = 595
 
 local LEFT_MARGIN = 24
 local RIGHT_MARGIN = 24
@@ -43,11 +40,12 @@ local TOP_Y = -10
 -- instead of the tight column the character screen has.
 local ROW_SPACING = 42
 local ICON_SIZE = 37
-local TOP_INSET = 198   -- title + spec dropdown + look-ahead row + filter checkbox rows
--- +15 over the original 12 to shorten the content/paperdoll panel from the
--- bottom (window size itself is untouched -- see FRAME_HEIGHT above -- so
--- this just leaves 15px more plain window background below the panel).
-local BOTTOM_INSET = 27
+-- Distance from the window's top edge to where the paperdoll content panel
+-- starts: title + spec dropdown + look-ahead row + filter checkbox rows.
+local TOP_INSET = 190
+-- Distance from the window's bottom edge to where the paperdoll content
+-- panel ends -- the plain window background left below it.
+local BOTTOM_INSET = 7
 
 -- Left column, top to bottom
 local leftColumn = { "HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", "WristSlot" }
