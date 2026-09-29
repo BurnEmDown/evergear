@@ -359,6 +359,17 @@ local CLASS_MAX_ARMOR = {
     PRIEST = 1, MAGE = 1, WARLOCK = 1,
 }
 
+-- Classic armor proficiency: Warriors/Paladins don't train Plate, and
+-- Hunters/Shamans don't train Mail, until level 40 -- before that they're
+-- capped one armor tier below CLASS_MAX_ARMOR's eventual max (Warriors/
+-- Paladins wear Mail, Hunters/Shamans wear Leather). Rogues/Druids/casters
+-- never gain a higher tier, so they're absent here and unaffected.
+local ARMOR_PROFICIENCY_UNLOCK_LEVEL = 40
+local CLASS_ARMOR_UNLOCK_LEVEL = {
+    WARRIOR = ARMOR_PROFICIENCY_UNLOCK_LEVEL, PALADIN = ARMOR_PROFICIENCY_UNLOCK_LEVEL,
+    HUNTER = ARMOR_PROFICIENCY_UNLOCK_LEVEL, SHAMAN = ARMOR_PROFICIENCY_UNLOCK_LEVEL,
+}
+
 -- Best-effort per-class weapon-type whitelist (TBC-era classic weapon
 -- skills), translated from item subclass IDs to our data's lowercase weapon-
 -- type strings. wowtbc.gg's raw item data doesn't distinguish one-hand from
@@ -398,11 +409,20 @@ local function IsClassAllowed(item, classToken)
     return false
 end
 
-local function IsArmorTypeAllowed(item, classToken)
+local function IsArmorTypeAllowed(item, classToken, level)
     if not item.armorType then return true end  -- not armor -- handled elsewhere
     local rank = ARMOR_TYPE_ORDER[item.armorType]
     if not rank then return true end
-    return rank <= (CLASS_MAX_ARMOR[classToken] or 4)
+    local maxRank = CLASS_MAX_ARMOR[classToken] or 4
+    -- The class's eventual top tier is locked out below the proficiency
+    -- level (see CLASS_ARMOR_UNLOCK_LEVEL) -- checked against `level`, the
+    -- caller's effective/look-ahead level, so looking ahead to 40+ correctly
+    -- reveals it (including strong sub-40 items in that tier, per design).
+    local unlockLevel = CLASS_ARMOR_UNLOCK_LEVEL[classToken]
+    if unlockLevel and rank == maxRank and (level or 0) < unlockLevel then
+        maxRank = maxRank - 1
+    end
+    return rank <= maxRank
 end
 
 -- One filter map for every weapon-type checkbox, instead of a separate
@@ -535,7 +555,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
 
         if item.id ~= equippedItemId
             and (not item.minLevel or item.minLevel <= effectiveLevel)
-            and IsArmorTypeAllowed(item, playerInfo.classToken)
+            and IsArmorTypeAllowed(item, playerInfo.classToken, effectiveLevel)
             and IsWeaponTypeAllowed(item, playerInfo.classToken)
             and IsClassAllowed(item, playerInfo.classToken)
             and factionAllowed
