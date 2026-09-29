@@ -29,3 +29,8 @@ Data\Items_Crafted_Blacksmithing.lua
 Data\Items_Crafted_Engineering.lua
 Data\Items_Crafted_Leatherworking.lua
 Data\Items_Crafted_Tailoring.lua
+
+Data\Items_ElwynnForest.lua
+Data\Items_Durotar.lua
+Data\Items_Westfall.lua
+Data\Items_Mulgore.lua
