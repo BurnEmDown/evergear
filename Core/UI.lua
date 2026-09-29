@@ -24,8 +24,11 @@
 
 local FRAME_WIDTH = 334
 -- +34 over the original 560 to give the new look-ahead row its own space
--- without squeezing the bottom weapon row's margin.
-local FRAME_HEIGHT = 594
+-- without squeezing the bottom weapon row's margin. +10 more on top of that
+-- (and the matching +10 on TOP_INSET below) to give the filter-checkbox
+-- panel more breathing room -- the two grow together so the paperdoll
+-- content area below it keeps the exact same size.
+local FRAME_HEIGHT = 604
 
 local LEFT_MARGIN = 24
 local RIGHT_MARGIN = 24
@@ -35,7 +38,7 @@ local TOP_Y = -10
 -- instead of the tight column the character screen has.
 local ROW_SPACING = 42
 local ICON_SIZE = 37
-local TOP_INSET = 168   -- title + spec dropdown + look-ahead row + filter checkbox rows
+local TOP_INSET = 178   -- title + spec dropdown + look-ahead row + filter checkbox rows
 local BOTTOM_INSET = 12
 
 -- Left column, top to bottom
@@ -178,10 +181,13 @@ closeButton:SetPoint("TOPRIGHT", -4, -4)
 -- Small version stamp, bottom-left of the window -- see Constants.lua's
 -- EverGear.VERSION for the bump policy (every shipped change bumps the
 -- patch digit; only the user decides when to move to 0.1.0/1.0.0).
+-- Nudged up by its own text height on top of the base 6px margin (rather
+-- than a second hardcoded pixel guess) so it clears the window's bottom
+-- edge/border regardless of what font size GameFontDisable resolves to.
 local versionText = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontDisable")
-versionText:SetPoint("BOTTOMLEFT", 10, 6)
 versionText:SetText("v" .. EverGear.VERSION)
 versionText:SetTextColor(unpack(THEME.goldDim))
+versionText:SetPoint("BOTTOMLEFT", 10, 6 + versionText:GetStringHeight())
 
 -- Recessed panel behind the spec dropdown / look-ahead slider / filter
 -- checkboxes -- created before any of those (so it stays visually behind
@@ -910,8 +916,9 @@ end)
 local weaponFilterButton = CreateFrame("Button", "EverGearWeaponFilterButton", mainFrame)
 weaponFilterButton:SetSize(20, 20)
 -- -44 (not -30) so it clears the close button's own ~32px footprint at
--- TOPRIGHT -4,-4 instead of overlapping its click area.
-weaponFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -8, -44)
+-- TOPRIGHT -4,-4 instead of overlapping its click area. -16 (not -8) on x so
+-- it isn't flush against the window's right edge/border.
+weaponFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -44)
 weaponFilterButton:SetNormalTexture("Interface\\Icons\\INV_Sword_27")
 weaponFilterButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 weaponFilterButton:SetScript("OnEnter", function(self)
@@ -1012,10 +1019,10 @@ professionFilterNoneButton:SetScript("OnClick", function()
 end)
 
 -- Small icon button, same corner-stacking pattern as the weapon-type button
--- directly above it.
+-- directly above it (including its -16 x offset, so both line up flush).
 local professionFilterButton = CreateFrame("Button", "EverGearProfessionFilterButton", mainFrame)
 professionFilterButton:SetSize(20, 20)
-professionFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -8, -68)
+professionFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -68)
 professionFilterButton:SetNormalTexture("Interface\\Icons\\Trade_BlackSmithing")
 professionFilterButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 professionFilterButton:SetScript("OnEnter", function(self)
