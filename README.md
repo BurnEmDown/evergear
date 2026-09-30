@@ -51,3 +51,30 @@ addon's main window. Policy, effective 2026-09-29:
 `## Interface: 16001` -- confirmed in-game via `/run print(select(4, GetBuildInfo()))`
 on 2026-09-30, matching client version 1.30.1.10124. If WoW Forever ships a client
 update, re-run that command and update this value if it changes.
+
+## Releasing
+
+The `.toc`'s `## Version:` line is `@project-version@`, a keyword the
+[BigWigsMods packager](https://github.com/BigWigsMods/packager) substitutes for the
+real version at package time, rather than a number hand-edited to match
+`EverGear.VERSION`. `.github/workflows/release.yml` runs the packager automatically
+whenever a tag is pushed to this repo:
+
+1. Bump `EverGear.VERSION` in `Core/Constants.lua` and add its `CHANGELOG.md` entry, as
+   usual.
+2. Commit, then tag that commit to match -- e.g. for `EverGear.VERSION = "0.0.12"`:
+   ```
+   git tag v0.0.12
+   git push origin v0.0.12
+   ```
+3. The workflow builds a release zip with `@project-version@` replaced by the tag name,
+   and uploads it to CurseForge/WoWInterface/Wago for whichever of the `CF_API_KEY`,
+   `WOWI_API_TOKEN`, `WAGO_API_TOKEN` repo secrets are set (Settings → Secrets and
+   variables → Actions) -- it silently skips any target that isn't configured yet, so
+   this is safe to leave partially set up. Once the addon has a CurseForge project, also
+   add `## X-Curse-Project-ID: <id>` to the `.toc` so the packager knows which project to
+   upload to.
+
+A zip delivered directly in chat (rather than via a pushed tag) still has the literal
+`@project-version@` string substituted for the real version number before it's handed
+over, so it's always correct to install even outside the tagged-release flow.

@@ -2,7 +2,7 @@
 ## Title: EverGear
 ## Notes: Suggests gear upgrades while leveling in WoW Forever.
 ## Author: Amit Reuveni
-## Version: 0.1.0
+## Version: @project-version@
 ## IconTexture: Interface\AddOns\EverGear\Icon
 ## X-License: All Rights Reserved
 ## SavedVariables: EverGearDB
