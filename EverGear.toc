@@ -4,6 +4,7 @@
 ## Author: Amit Reuveni
 ## Version: 0.1.0
 ## IconTexture: Interface\AddOns\EverGear\Icon
+## X-License: All Rights Reserved
 ## SavedVariables: EverGearDB
 
 Core\Constants.lua
