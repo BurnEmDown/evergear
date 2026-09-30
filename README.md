@@ -48,6 +48,6 @@ addon's main window. Policy, effective 2026-09-29:
 
 ## Note on the .toc Interface version
 
-`## Interface: 11507` is a placeholder guess for a Classic-era-based client. Once you're
-in the WoW Forever beta client, run `/run print(select(4, GetBuildInfo()))` in-game and
-update the `.toc` if it differs.
+`## Interface: 16001` -- confirmed in-game via `/run print(select(4, GetBuildInfo()))`
+on 2026-09-30, matching client version 1.30.1.10124. If WoW Forever ships a client
+update, re-run that command and update this value if it changes.

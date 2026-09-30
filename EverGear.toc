@@ -1,4 +1,4 @@
-## Interface: 11507
+## Interface: 16001
 ## Title: EverGear
 ## Notes: Suggests gear upgrades while leveling in WoW Forever.
 ## Author: Amit Reuveni
