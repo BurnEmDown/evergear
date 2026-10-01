@@ -136,7 +136,7 @@ EverGear.SPEC_PROFILES = {
     WARRIOR = {
         ["Arms"] = {  -- role: Physical DPS
             staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 0.15, AGILITY = 0.3, INTELLECT = 0.05, SPIRIT = 0.1 },
+            offStat = { AGILITY = 0.3, INTELLECT = 0.05, SPIRIT = 0.1 },
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -156,7 +156,7 @@ EverGear.SPEC_PROFILES = {
         },
         ["Fury"] = {  -- role: Physical DPS
             staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 0.15, AGILITY = 0.3, INTELLECT = 0.05, SPIRIT = 0.1 },
+            offStat = { AGILITY = 0.3, INTELLECT = 0.05, SPIRIT = 0.1 },
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -176,7 +176,7 @@ EverGear.SPEC_PROFILES = {
         },
         ["Protection"] = {  -- role: Tank
             staminaWeight = 2.5, armorWeight = 0.3, dpsWeight = 1.0,
-            offStat = { STRENGTH = 0.15, AGILITY = 0.3, INTELLECT = 0.05, SPIRIT = 0.1 },
+            offStat = { AGILITY = 0.3, INTELLECT = 0.05, SPIRIT = 0.1 },
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -504,7 +504,7 @@ EverGear.SPEC_PROFILES = {
     MAGE = {
         ["Arcane"] = {  -- role: Caster DPS
             staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.1 },
+            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.1 },
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -527,7 +527,7 @@ EverGear.SPEC_PROFILES = {
         },
         ["Fire"] = {  -- role: Caster DPS
             staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.1 },
+            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.1 },
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -550,7 +550,7 @@ EverGear.SPEC_PROFILES = {
         },
         ["Frost"] = {  -- role: Caster DPS
             staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.1 },
+            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.1 },
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -575,7 +575,7 @@ EverGear.SPEC_PROFILES = {
     WARLOCK = {
         ["Affliction"] = {  -- role: Caster DPS
             staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0.05, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.3 },
+            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.01 },
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -587,15 +587,17 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Caster DPS-specific stats
-                SPELL_POWER = 0.8, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 0.8,
-                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
+                SPELL_POWER = 1, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
+                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 1,
+                -- Shadow is this spec's nuke school; Fire is not used, so it stays
+                -- at the universal flat default rather than being boosted.
+                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.7, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
                 NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
             },
         },
         ["Demonology"] = {  -- role: Caster DPS
             staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0.05, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.3 },
+            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.01 },
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -607,15 +609,17 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Caster DPS-specific stats
-                SPELL_POWER = 0.8, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 0.8,
-                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
+                SPELL_POWER = 1, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
+                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 1,
+                -- Fire and Shadow are both relevant nuke schools for Demonology's kit,
+                -- so both get the boosted weight instead of the universal 0.4.
+                FIRE_DAMAGE = 0.7, SHADOW_DAMAGE = 0.7, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
                 NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
             },
         },
         ["Destruction"] = {  -- role: Caster DPS
             staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0.05, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.3 },
+            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.01 },
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -627,9 +631,11 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Caster DPS-specific stats
-                SPELL_POWER = 0.8, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 0.8,
-                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
+                SPELL_POWER = 1, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
+                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 1,
+                -- Fire and Shadow are both relevant nuke schools for Destruction's kit,
+                -- so both get the boosted weight instead of the universal 0.4.
+                FIRE_DAMAGE = 0.7, SHADOW_DAMAGE = 0.7, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
                 NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
             },
         },
