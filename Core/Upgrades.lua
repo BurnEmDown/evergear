@@ -96,7 +96,9 @@ local CLASS_ROLE_PRIMARY_STAT = {
     SHAMAN  = { ["Physical DPS"] = "STRENGTH", ["Caster DPS"] = "INTELLECT", ["Healer"] = "SPIRIT" },
     MAGE    = { ["Caster DPS"] = "INTELLECT" },
     WARLOCK = { ["Caster DPS"] = "INTELLECT" },
-    DRUID   = { ["Physical DPS"] = "AGILITY", ["Caster DPS"] = "INTELLECT", ["Healer"] = "INTELLECT", ["Tank"] = "AGILITY" },
+    -- Druid's Healer role (Restoration) is Spirit-primary, same departure as
+    -- Priest/Shaman's healer roles.
+    DRUID   = { ["Physical DPS"] = "AGILITY", ["Caster DPS"] = "INTELLECT", ["Healer"] = "SPIRIT", ["Tank"] = "AGILITY" },
 }
 
 function EverGear:GetPrimaryStat(classToken, role)
@@ -655,7 +657,7 @@ EverGear.SPEC_PROFILES = {
     DRUID = {
         ["Balance"] = {  -- role: Caster DPS
             staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0.05, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.3 },
+            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.5 },
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -669,13 +671,16 @@ EverGear.SPEC_PROFILES = {
                 -- Caster DPS-specific stats
                 SPELL_POWER = 0.8, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
                 MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 0.8,
-                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
-                NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                -- Nature and Arcane Damage weighted above the other schools --
+                -- Balance's kit spans both (Starfire is Arcane, Wrath/Moonfire
+                -- are Nature).
+                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.7, FROST_DAMAGE = 0.4,
+                NATURE_DAMAGE = 0.7, THREAT_REDUCTION = 0.2,
             },
         },
         ["Feral (DPS)"] = {  -- role: Physical DPS
             staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 0.15, AGILITY = 0.3, INTELLECT = 0.05, SPIRIT = 0.05 },
+            offStat = { STRENGTH = 1, INTELLECT = 0.05, SPIRIT = 0.05 },
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -688,14 +693,14 @@ EverGear.SPEC_PROFILES = {
                 -- Physical DPS-specific stats
                 ATTACK_POWER = 0.5, HIT_RATING = 0.8, CRIT_RATING = 0.6, HASTE_RATING = 0.5,
                 EXPERTISE_RATING = 0.6, ARMOR_PENETRATION_RATING = 0.5, RESILIENCE_RATING = 0.3, DODGE_RATING = 0.2,
-                PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0.1,
+                PARRY_RATING = 0.2, BLOCK_RATING = 0, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
-                RANGED_ATTACK_POWER = 0.4, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                RANGED_ATTACK_POWER = 0, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
             },
         },
         ["Feral (Tank)"] = {  -- role: Tank
             staminaWeight = 2.5, armorWeight = 0.3, dpsWeight = 1.0,
-            offStat = { STRENGTH = 0.15, AGILITY = 0.25, INTELLECT = 0.05, SPIRIT = 0.05 },
+            offStat = { STRENGTH = 2, INTELLECT = 0.05, SPIRIT = 0.05 },
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -706,16 +711,16 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Tank-specific stats
-                DODGE_RATING = 0.8, PARRY_RATING = 0.7, BLOCK_RATING = 0.6,
-                BLOCK_VALUE = 0.5, RESILIENCE_RATING = 0.2, ATTACK_POWER = 0.2, HIT_RATING = 0.3,
+                DODGE_RATING = 0.8, PARRY_RATING = 0.7, BLOCK_RATING = 0,
+                BLOCK_VALUE = 0, RESILIENCE_RATING = 0.2, ATTACK_POWER = 0.2, HIT_RATING = 0.3,
                 CRIT_RATING = 0.2, HASTE_RATING = 0.1, EXPERTISE_RATING = 0.3, ARMOR_PENETRATION_RATING = 0.05,
                 DEFENSE = 1.0, PHYSICAL_DAMAGE = 0.1, ATTACK_POWER_VS_BEASTS = 0.05, ATTACK_POWER_VS_HUMANOIDS = 0.05,
-                ATTACK_POWER_VS_UNDEAD = 0.05, RANGED_ATTACK_POWER = 0.05, THREAT_REDUCTION = 0,
+                ATTACK_POWER_VS_UNDEAD = 0.05, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
             },
         },
-        ["Restoration"] = {  -- role: Healer
+        ["Restoration"] = {  -- role: Healer (Spirit-primary for Druid -- see CLASS_ROLE_PRIMARY_STAT)
             staminaWeight = 1.2, armorWeight = 0.08, dpsWeight = 0.1,
-            offStat = { STRENGTH = 0.05, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.3 },
+            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 0.5 },
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -726,8 +731,9 @@ EverGear.SPEC_PROFILES = {
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Healer-specific stats
-                SPIRIT = 2.0, SPELL_POWER = 0.8, SPELL_HEALING = 0.8, SPELL_HIT_RATING = 0.5,
+                -- Healer-specific stats (Spirit itself hits the primary-stat 3.0
+                -- weight now, so it's deliberately not repeated here)
+                SPELL_POWER = 0.8, SPELL_HEALING = 1.2, SPELL_HIT_RATING = 0.5,
                 SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
                 RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
             },
