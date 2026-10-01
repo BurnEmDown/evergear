@@ -90,7 +90,10 @@ local CLASS_ROLE_PRIMARY_STAT = {
     -- Priest's Healer role is Spirit-primary (not Intellect, unlike every
     -- other healer role) -- Discipline/Holy specifically, per the author.
     PRIEST  = { ["Caster DPS"] = "INTELLECT", ["Healer"] = "SPIRIT" },
-    SHAMAN  = { ["Physical DPS"] = "AGILITY", ["Caster DPS"] = "INTELLECT", ["Healer"] = "INTELLECT" },
+    -- Shaman's Physical DPS role (Enhancement) is Strength-primary here, and
+    -- its Healer role (Restoration) is Spirit-primary -- both deliberate
+    -- departures from the other classes sharing those same role names.
+    SHAMAN  = { ["Physical DPS"] = "STRENGTH", ["Caster DPS"] = "INTELLECT", ["Healer"] = "SPIRIT" },
     MAGE    = { ["Caster DPS"] = "INTELLECT" },
     WARLOCK = { ["Caster DPS"] = "INTELLECT" },
     DRUID   = { ["Physical DPS"] = "AGILITY", ["Caster DPS"] = "INTELLECT", ["Healer"] = "INTELLECT", ["Tank"] = "AGILITY" },
@@ -463,13 +466,15 @@ EverGear.SPEC_PROFILES = {
                 -- Caster DPS-specific stats
                 SPELL_POWER = 0.8, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
                 MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 0.8,
+                -- Nature Damage weighted well above the other schools -- it's
+                -- Elemental's actual nuke school (Lightning Bolt/Chain Lightning).
                 FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
-                NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                NATURE_DAMAGE = 1, THREAT_REDUCTION = 0.2,
             },
         },
-        ["Enhancement"] = {  -- role: Physical DPS
+        ["Enhancement"] = {  -- role: Physical DPS (Strength-primary for Shaman -- see CLASS_ROLE_PRIMARY_STAT)
             staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 0.15, AGILITY = 0.3, INTELLECT = 0.05, SPIRIT = 0.05 },
+            offStat = { AGILITY = 1, INTELLECT = 0.3, SPIRIT = 0.3 },
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -487,9 +492,9 @@ EverGear.SPEC_PROFILES = {
                 RANGED_ATTACK_POWER = 0.4, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
             },
         },
-        ["Restoration"] = {  -- role: Healer
+        ["Restoration"] = {  -- role: Healer (Spirit-primary for Shaman -- see CLASS_ROLE_PRIMARY_STAT)
             staminaWeight = 1.2, armorWeight = 0.08, dpsWeight = 0.1,
-            offStat = { STRENGTH = 0.05, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.3 },
+            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 1 },
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -500,8 +505,9 @@ EverGear.SPEC_PROFILES = {
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Healer-specific stats
-                SPIRIT = 2.0, SPELL_POWER = 0.8, SPELL_HEALING = 0.8, SPELL_HIT_RATING = 0.5,
+                -- Healer-specific stats (Spirit itself hits the primary-stat 3.0
+                -- weight now, so it's deliberately not repeated here)
+                SPELL_POWER = 0.8, SPELL_HEALING = 1.2, SPELL_HIT_RATING = 0.5,
                 SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
                 RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
             },
