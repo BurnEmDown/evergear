@@ -87,7 +87,9 @@ local CLASS_ROLE_PRIMARY_STAT = {
     PALADIN = { ["Physical DPS"] = "STRENGTH", ["Tank"] = "STRENGTH", ["Healer"] = "INTELLECT" },
     HUNTER  = { ["Physical DPS"] = "AGILITY" },
     ROGUE   = { ["Physical DPS"] = "AGILITY" },
-    PRIEST  = { ["Caster DPS"] = "INTELLECT", ["Healer"] = "INTELLECT" },
+    -- Priest's Healer role is Spirit-primary (not Intellect, unlike every
+    -- other healer role) -- Discipline/Holy specifically, per the author.
+    PRIEST  = { ["Caster DPS"] = "INTELLECT", ["Healer"] = "SPIRIT" },
     SHAMAN  = { ["Physical DPS"] = "AGILITY", ["Caster DPS"] = "INTELLECT", ["Healer"] = "INTELLECT" },
     MAGE    = { ["Caster DPS"] = "INTELLECT" },
     WARLOCK = { ["Caster DPS"] = "INTELLECT" },
@@ -381,9 +383,9 @@ EverGear.SPEC_PROFILES = {
         },
     },
     PRIEST = {
-        ["Discipline"] = {  -- role: Healer
+        ["Discipline"] = {  -- role: Healer (Spirit-primary for Priest -- see CLASS_ROLE_PRIMARY_STAT)
             staminaWeight = 1.2, armorWeight = 0.08, dpsWeight = 0.1,
-            offStat = { STRENGTH = 0.05, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.3 },
+            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 1 },
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -394,15 +396,16 @@ EverGear.SPEC_PROFILES = {
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Healer-specific stats
-                SPIRIT = 2.0, SPELL_POWER = 0.8, SPELL_HEALING = 0.8, SPELL_HIT_RATING = 0.5,
+                -- Healer-specific stats (Spirit itself hits the primary-stat 3.0
+                -- weight now, so it's deliberately not repeated here)
+                SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_RATING = 0.5,
                 SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
                 RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
             },
         },
-        ["Holy"] = {  -- role: Healer
+        ["Holy"] = {  -- role: Healer (Spirit-primary for Priest -- see CLASS_ROLE_PRIMARY_STAT)
             staminaWeight = 1.2, armorWeight = 0.08, dpsWeight = 0.1,
-            offStat = { STRENGTH = 0.05, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.3 },
+            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 1 },
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -413,15 +416,16 @@ EverGear.SPEC_PROFILES = {
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Healer-specific stats
-                SPIRIT = 2.0, SPELL_POWER = 0.8, SPELL_HEALING = 0.8, SPELL_HIT_RATING = 0.5,
+                -- Healer-specific stats (Spirit itself hits the primary-stat 3.0
+                -- weight now, so it's deliberately not repeated here)
+                SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_RATING = 0.5,
                 SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
                 RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
             },
         },
         ["Shadow"] = {  -- role: Caster DPS
             staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0.05, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.3 },
+            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 1 },
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -433,9 +437,11 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Caster DPS-specific stats
-                SPELL_POWER = 0.8, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
+                SPELL_POWER = 1.2, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
                 MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 0.8,
-                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
+                -- Shadow Damage weighted well above the other schools -- it's
+                -- this spec's entire kit (Mind Flay/Shadow Word: Pain/etc).
+                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 1, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
                 NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
             },
         },
