@@ -198,7 +198,7 @@ EverGear.SPEC_PROFILES = {
     PALADIN = {
         ["Holy"] = {  -- role: Healer
             staminaWeight = 1.2, armorWeight = 0.08, dpsWeight = 0.1,
-            offStat = { STRENGTH = 0.05, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.3 },
+            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 0.3 },
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -210,17 +210,17 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Healer-specific stats
-                SPIRIT = 2.0, SPELL_POWER = 0.8, SPELL_HEALING = 0.8, SPELL_HIT_RATING = 0.5,
+                SPIRIT = 1, SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_RATING = 0.5,
                 SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
                 RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
             },
         },
         ["Protection"] = {  -- role: Tank
             staminaWeight = 2.5, armorWeight = 0.3, dpsWeight = 1.0,
-            offStat = { STRENGTH = 0.15, AGILITY = 0.25, INTELLECT = 0.05, SPIRIT = 0.05 },
+            offStat = { STRENGTH = 0.5, AGILITY = 0.5, INTELLECT = 0.25, SPIRIT = 0.05 },
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
+                SPELL_POWER = 1.2, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
                 SPELL_HASTE_RATING = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
@@ -232,15 +232,15 @@ EverGear.SPEC_PROFILES = {
                 BLOCK_VALUE = 0.5, RESILIENCE_RATING = 0.2, ATTACK_POWER = 0.2, HIT_RATING = 0.3,
                 CRIT_RATING = 0.2, HASTE_RATING = 0.1, EXPERTISE_RATING = 0.3, ARMOR_PENETRATION_RATING = 0.05,
                 DEFENSE = 1.0, PHYSICAL_DAMAGE = 0.1, ATTACK_POWER_VS_BEASTS = 0.05, ATTACK_POWER_VS_HUMANOIDS = 0.05,
-                ATTACK_POWER_VS_UNDEAD = 0.05, RANGED_ATTACK_POWER = 0.05, THREAT_REDUCTION = 0,
+                ATTACK_POWER_VS_UNDEAD = 0.05, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
             },
         },
         ["Retribution"] = {  -- role: Physical DPS
             staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 0.15, AGILITY = 0.3, INTELLECT = 0.05, SPIRIT = 0.05 },
+            offStat = { STRENGTH = 3, AGILITY = 1, INTELLECT = 0.1, SPIRIT = 0.1 },
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
+                SPELL_POWER = 0.5, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
                 SPELL_HASTE_RATING = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
@@ -248,11 +248,11 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Physical DPS-specific stats
-                ATTACK_POWER = 0.5, HIT_RATING = 0.8, CRIT_RATING = 0.6, HASTE_RATING = 0.5,
+                ATTACK_POWER = 1, HIT_RATING = 0.8, CRIT_RATING = 0.6, HASTE_RATING = 0.5,
                 EXPERTISE_RATING = 0.6, ARMOR_PENETRATION_RATING = 0.5, RESILIENCE_RATING = 0.3, DODGE_RATING = 0.2,
                 PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0.1,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
-                RANGED_ATTACK_POWER = 0.4, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                RANGED_ATTACK_POWER = 0, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
             },
         },
     },
