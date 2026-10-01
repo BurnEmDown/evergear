@@ -504,7 +504,7 @@ EverGear.SPEC_PROFILES = {
     MAGE = {
         ["Arcane"] = {  -- role: Caster DPS
             staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0.05, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.3 },
+            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.1 },
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -516,15 +516,18 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Caster DPS-specific stats
-                SPELL_POWER = 0.8, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 0.8,
-                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
+                SPELL_POWER = 1, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
+                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 1,
+                -- ARCANE_DAMAGE weighted higher than the other schools -- Arcane is
+                -- this spec's actual nuke school, so +Arcane spell damage items are
+                -- worth more to it than the flat 0.4 every caster gets by default.
+                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.7, FROST_DAMAGE = 0.4,
                 NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
             },
         },
         ["Fire"] = {  -- role: Caster DPS
             staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0.05, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.3 },
+            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.1 },
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -536,15 +539,18 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Caster DPS-specific stats
-                SPELL_POWER = 0.8, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 0.8,
-                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
+                SPELL_POWER = 1, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
+                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 1,
+                -- FIRE_DAMAGE weighted higher than the other schools -- Fire is this
+                -- spec's actual nuke school, so +Fire spell damage items are worth
+                -- more to it than the flat 0.4 every caster gets by default.
+                FIRE_DAMAGE = 0.7, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
                 NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
             },
         },
         ["Frost"] = {  -- role: Caster DPS
             staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0.05, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.3 },
+            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.1 },
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -556,9 +562,12 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Caster DPS-specific stats
-                SPELL_POWER = 0.8, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 0.8,
-                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
+                SPELL_POWER = 1, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
+                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 1,
+                -- FROST_DAMAGE weighted higher than the other schools -- Frost is
+                -- this spec's actual nuke school, so +Frost spell damage items are
+                -- worth more to it than the flat 0.4 every caster gets by default.
+                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.7,
                 NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
             },
         },
