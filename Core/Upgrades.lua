@@ -159,6 +159,7 @@ EverGear.SPEC_PROFILES = {
                 PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0.1,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
                 RANGED_ATTACK_POWER = 0.1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Fury"] = {  -- role: Physical DPS
@@ -179,6 +180,7 @@ EverGear.SPEC_PROFILES = {
                 PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0.1,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
                 RANGED_ATTACK_POWER = 0.1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Protection"] = {  -- role: Tank
@@ -199,6 +201,7 @@ EverGear.SPEC_PROFILES = {
                 CRIT_RATING = 0.2, HASTE_RATING = 0.1, EXPERTISE_RATING = 0.3, ARMOR_PENETRATION_RATING = 0.05,
                 DEFENSE = 1.0, PHYSICAL_DAMAGE = 0.1, ATTACK_POWER_VS_BEASTS = 0.05, ATTACK_POWER_VS_HUMANOIDS = 0.05,
                 ATTACK_POWER_VS_UNDEAD = 0.05, RANGED_ATTACK_POWER = 0.05, THREAT_REDUCTION = 0,
+                HP5 = 0.4, MP5 = 0,
             },
         },
     },
@@ -220,6 +223,7 @@ EverGear.SPEC_PROFILES = {
                 SPIRIT = 1, SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_RATING = 0.5,
                 SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
                 RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0.6,
             },
         },
         ["Protection"] = {  -- role: Tank
@@ -240,6 +244,7 @@ EverGear.SPEC_PROFILES = {
                 CRIT_RATING = 0.2, HASTE_RATING = 0.1, EXPERTISE_RATING = 0.3, ARMOR_PENETRATION_RATING = 0.05,
                 DEFENSE = 1.0, PHYSICAL_DAMAGE = 0.1, ATTACK_POWER_VS_BEASTS = 0.05, ATTACK_POWER_VS_HUMANOIDS = 0.05,
                 ATTACK_POWER_VS_UNDEAD = 0.05, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
+                HP5 = 0.4, MP5 = 0,
             },
         },
         ["Retribution"] = {  -- role: Physical DPS
@@ -260,6 +265,7 @@ EverGear.SPEC_PROFILES = {
                 PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0.1,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
                 RANGED_ATTACK_POWER = 0, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0,
             },
         },
     },
@@ -282,6 +288,7 @@ EverGear.SPEC_PROFILES = {
                 PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.4, ATTACK_POWER_VS_HUMANOIDS = 0.4, ATTACK_POWER_VS_UNDEAD = 0.4,
                 RANGED_ATTACK_POWER = 1.5, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0.4,
             },
         },
         ["Marksmanship"] = {  -- role: Physical DPS
@@ -302,6 +309,7 @@ EverGear.SPEC_PROFILES = {
                 PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.4, ATTACK_POWER_VS_HUMANOIDS = 0.4, ATTACK_POWER_VS_UNDEAD = 0.4,
                 RANGED_ATTACK_POWER = 1.5, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0.4,
             },
         },
         ["Survival"] = {  -- role: Physical DPS
@@ -322,6 +330,7 @@ EverGear.SPEC_PROFILES = {
                 PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.4, ATTACK_POWER_VS_HUMANOIDS = 0.4, ATTACK_POWER_VS_UNDEAD = 0.4,
                 RANGED_ATTACK_POWER = 1.5, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0.4,
             },
         },
     },
@@ -344,6 +353,7 @@ EverGear.SPEC_PROFILES = {
                 PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
                 RANGED_ATTACK_POWER = 0.1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Combat"] = {  -- role: Physical DPS
@@ -364,6 +374,7 @@ EverGear.SPEC_PROFILES = {
                 PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
                 RANGED_ATTACK_POWER = 0.1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Subtlety"] = {  -- role: Physical DPS
@@ -384,6 +395,7 @@ EverGear.SPEC_PROFILES = {
                 PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
                 RANGED_ATTACK_POWER = 0.1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0,
             },
         },
     },
@@ -406,6 +418,7 @@ EverGear.SPEC_PROFILES = {
                 SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_RATING = 0.5,
                 SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
                 RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0.6,
             },
         },
         ["Holy"] = {  -- role: Healer (Spirit-primary for Priest -- see CLASS_ROLE_PRIMARY_STAT)
@@ -426,6 +439,7 @@ EverGear.SPEC_PROFILES = {
                 SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_RATING = 0.5,
                 SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
                 RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0.6,
             },
         },
         ["Shadow"] = {  -- role: Caster DPS
@@ -448,6 +462,7 @@ EverGear.SPEC_PROFILES = {
                 -- this spec's entire kit (Mind Flay/Shadow Word: Pain/etc).
                 FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 1, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
                 NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0.5,
             },
         },
     },
@@ -472,6 +487,7 @@ EverGear.SPEC_PROFILES = {
                 -- Elemental's actual nuke school (Lightning Bolt/Chain Lightning).
                 FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
                 NATURE_DAMAGE = 1, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0.5,
             },
         },
         ["Enhancement"] = {  -- role: Physical DPS (Strength-primary for Shaman -- see CLASS_ROLE_PRIMARY_STAT)
@@ -492,6 +508,7 @@ EverGear.SPEC_PROFILES = {
                 PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0.1,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
                 RANGED_ATTACK_POWER = 0.4, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0.4,
             },
         },
         ["Restoration"] = {  -- role: Healer (Spirit-primary for Shaman -- see CLASS_ROLE_PRIMARY_STAT)
@@ -512,6 +529,7 @@ EverGear.SPEC_PROFILES = {
                 SPELL_POWER = 0.8, SPELL_HEALING = 1.2, SPELL_HIT_RATING = 0.5,
                 SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
                 RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0.6,
             },
         },
     },
@@ -537,6 +555,7 @@ EverGear.SPEC_PROFILES = {
                 -- worth more to it than the flat 0.4 every caster gets by default.
                 FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.7, FROST_DAMAGE = 0.4,
                 NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0.5,
             },
         },
         ["Fire"] = {  -- role: Caster DPS
@@ -560,6 +579,7 @@ EverGear.SPEC_PROFILES = {
                 -- more to it than the flat 0.4 every caster gets by default.
                 FIRE_DAMAGE = 0.7, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
                 NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0.5,
             },
         },
         ["Frost"] = {  -- role: Caster DPS
@@ -583,6 +603,7 @@ EverGear.SPEC_PROFILES = {
                 -- worth more to it than the flat 0.4 every caster gets by default.
                 FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.7,
                 NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0.5,
             },
         },
     },
@@ -607,6 +628,7 @@ EverGear.SPEC_PROFILES = {
                 -- at the universal flat default rather than being boosted.
                 FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.7, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
                 NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                HP5 = 0.2, MP5 = 0.5,
             },
         },
         ["Demonology"] = {  -- role: Caster DPS
@@ -629,6 +651,7 @@ EverGear.SPEC_PROFILES = {
                 -- so both get the boosted weight instead of the universal 0.4.
                 FIRE_DAMAGE = 0.7, SHADOW_DAMAGE = 0.7, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
                 NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                HP5 = 0.2, MP5 = 0.5,
             },
         },
         ["Destruction"] = {  -- role: Caster DPS
@@ -651,6 +674,7 @@ EverGear.SPEC_PROFILES = {
                 -- so both get the boosted weight instead of the universal 0.4.
                 FIRE_DAMAGE = 0.7, SHADOW_DAMAGE = 0.7, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
                 NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                HP5 = 0.2, MP5 = 0.5,
             },
         },
     },
@@ -676,6 +700,7 @@ EverGear.SPEC_PROFILES = {
                 -- are Nature).
                 FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.7, FROST_DAMAGE = 0.4,
                 NATURE_DAMAGE = 0.7, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0.5,
             },
         },
         ["Feral (DPS)"] = {  -- role: Physical DPS
@@ -696,6 +721,7 @@ EverGear.SPEC_PROFILES = {
                 PARRY_RATING = 0.2, BLOCK_RATING = 0, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
                 RANGED_ATTACK_POWER = 0, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Feral (Tank)"] = {  -- role: Tank
@@ -716,6 +742,7 @@ EverGear.SPEC_PROFILES = {
                 CRIT_RATING = 0.2, HASTE_RATING = 0.1, EXPERTISE_RATING = 0.3, ARMOR_PENETRATION_RATING = 0.05,
                 DEFENSE = 1.0, PHYSICAL_DAMAGE = 0.1, ATTACK_POWER_VS_BEASTS = 0.05, ATTACK_POWER_VS_HUMANOIDS = 0.05,
                 ATTACK_POWER_VS_UNDEAD = 0.05, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
+                HP5 = 0.4, MP5 = 0,
             },
         },
         ["Restoration"] = {  -- role: Healer (Spirit-primary for Druid -- see CLASS_ROLE_PRIMARY_STAT)
@@ -736,6 +763,7 @@ EverGear.SPEC_PROFILES = {
                 SPELL_POWER = 0.8, SPELL_HEALING = 1.2, SPELL_HIT_RATING = 0.5,
                 SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
                 RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                HP5 = 0, MP5 = 0.6,
             },
         },
     },
