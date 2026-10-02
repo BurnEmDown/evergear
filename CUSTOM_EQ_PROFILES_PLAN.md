@@ -63,6 +63,23 @@ work starts on M1.
    class+spec combo (matching how `SPEC_PROFILES` itself is already keyed),
    not one set of weights shared across a whole class's specs. Flag if the
    intent was actually class-wide.
+6. **"Copy to..." works across any class+spec, not just same-class.**
+   Confirmed: "copy my Fury Warrior EQ profile to Arms Warrior." The two
+   specs don't share the same key set (`offStat` varies by spec -- e.g.
+   Fury's is `{AGILITY, INTELLECT, SPIRIT}`, Protection's is
+   `{STRENGTH, AGILITY, INTELLECT}`), so a straight table copy can't just
+   overwrite the target wholesale. The merge rule: start from the target
+   spec's own builtin defaults (so every key the target actually uses gets
+   *some* sane value), then overwrite with whatever keys the source profile
+   defines. A key the source doesn't have (because it wasn't relevant to
+   the source spec) falls back to the target's own default rather than
+   silently becoming 0. The 4 scalars (`primaryStatWeight`/`staminaWeight`/
+   `armorWeight`/`dpsWeight`) always copy straight across -- they're
+   meta-weights ("how much do I value my own primary stat"), not tied to
+   which literal stat is primary, so there's nothing spec-specific to
+   reconcile there. Nothing restricts the target to the same class --
+   cross-class copies (e.g. Fury Warrior -> Frost Mage) go through the same
+   merge and work out fine mechanically, if a little unusual as a choice.
 
 ## Weight fields covered by a profile
 
@@ -98,6 +115,13 @@ New `Core/EQProfiles.lua`:
 - `EverGear:ClampWeight(value)` -- shared rounding/clamping helper (round to
   nearest 0.1, clamp to [0, 5]) used by both the UI input filter and
   JSON import validation, so both paths enforce the same rule.
+- `EverGear:CopyProfile(fromClass, fromSpec, fromProfileId, toClass, toSpec, newName)`
+  -- builds the new profile by starting from `toSpec`'s builtin defaults
+  (covers every key the target actually uses) and overwriting with every
+  key present in the source profile (see assumption 6's merge rule), then
+  creates it as a new custom profile on the target class+spec. Works for
+  same-spec, same-class/different-spec, and cross-class alike -- it's the
+  same merge either way.
 - Rewire `GetScoringProfile` (Upgrades.lua) and `ScoreItem`'s hardcoded
   `3.0` to go through this module instead of reading `SPEC_PROFILES`
   directly.
@@ -133,7 +157,11 @@ New `Core/EQProfiles.lua`:
 New second window (own `CreateFrame`, same visual theme as the main
 window), opened via a small button next to the new Profile dropdown:
 - Profile list for the current class+spec with **New**, **Duplicate**,
-  **Rename**, **Delete** (Delete disabled/greyed on `Default`).
+  **Rename**, **Delete** (Delete disabled/greyed on `Default`), and
+  **Copy to...** (opens a small class+spec picker -- defaults to every
+  other spec of the current class, with a toggle/section to pick a
+  different class entirely -- then runs `CopyProfile` and switches the
+  editor to the newly created copy on that target spec).
 - A scrollable grid of label + numeric EditBox pairs, one per weight field
   (grouped under headers: Core / Off-stats / Secondary stats), generated
   from the field list in M1 -- not hand-laid-out per stat.
