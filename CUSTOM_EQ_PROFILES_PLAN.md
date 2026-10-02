@@ -285,3 +285,34 @@ SPIRIT` to the generic 0.3 fallback instead of the real value. Fixed to
 `SPIRIT = 1` in `Core/Upgrades.lua`, and the stray duplicate `SPIRIT = 1`
 removed from Paladin Holy's `secondary` table (it's exclusively in `stats`
 now, like every other main stat).
+
+## Resistances moved to their own bottom category
+
+Secondary stats were sorted Physical Damage -> Spell Damage -> Defensive ->
+Other, with the five resistance stats (Arcane/Fire/Frost/Nature/Shadow)
+bucketed under "Defensive". Per user feedback, resistances are now their
+own category, placed last -- after "Other", not just after "Defensive" --
+since the player wants them dropped to the very bottom of the list
+regardless of what else is unsorted. `SECONDARY_CATEGORY_ORDER` in
+`Core/EQProfiles.lua` is now `{ "Physical Damage", "Spell Damage",
+"Defensive", "Other", "Resistances" }`.
+
+## Profile editor window is no longer draggable
+
+`EverGearProfileEditor` (Core/ProfileEditor.lua) used to be independently
+movable (`SetMovable(true)` + drag scripts), which meant it could be
+dragged away from the main window and left stranded anywhere on screen.
+Per user feedback, only the main window (`EverGearFrame`) should be
+draggable; every secondary window should just follow it. The editor is
+already anchored to `EverGearFrame` (`TOPRIGHT` to the main window's
+`TOPLEFT`) every time it's opened (`ToggleProfileEditor`), and WoW anchors
+are live -- a frame anchored to another keeps tracking its position
+automatically. The only thing breaking that was the editor's own drag
+handling, which detaches a frame from its anchor once the player drags it.
+Removed `SetMovable`/`EnableMouse`-for-dragging/`RegisterForDrag`/
+`OnDragStart`/`OnDragStop` from the editor frame (kept plain
+`EnableMouse(true)` so clicks on its backdrop still don't fall through) --
+now it simply can't be dragged, and will always follow the main window
+when that one's moved. The detail/upgrade-suggestions panel and the
+"Copy to..." popup were both already non-movable, so no change was needed
+there.

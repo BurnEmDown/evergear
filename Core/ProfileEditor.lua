@@ -59,11 +59,12 @@ local workingWeights
 local editorFrame = CreateFrame("Frame", "EverGearProfileEditor", UIParent, "BackdropTemplate")
 editorFrame:SetSize(EDITOR_WIDTH, EDITOR_HEIGHT)
 editorFrame:SetPoint("CENTER")
-editorFrame:SetMovable(true)
+-- Deliberately NOT movable/draggable -- this is a secondary window that
+-- should always stay anchored to (and follow) the main window, per user
+-- feedback that dragging it away from EverGearFrame was possible and
+-- shouldn't be. EnableMouse(true) is kept so clicks on the backdrop don't
+-- fall through to whatever's behind it; it's independent of Movable/drag.
 editorFrame:EnableMouse(true)
-editorFrame:RegisterForDrag("LeftButton")
-editorFrame:SetScript("OnDragStart", editorFrame.StartMoving)
-editorFrame:SetScript("OnDragStop", editorFrame.StopMovingOrSizing)
 editorFrame:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
     edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",

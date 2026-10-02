@@ -466,7 +466,11 @@ function EverGear:GetWeightFieldLayout(weights)
     -- rather than being silently dropped -- same spirit as this whole
     -- function already being generated from whatever keys actually exist
     -- instead of a hand-maintained list.
-    local SECONDARY_CATEGORY_ORDER = { "Physical Damage", "Spell Damage", "Defensive", "Other" }
+    -- Resistances sit in their own category, last of all -- per user
+    -- feedback, below even "Other" (they used to live inside "Defensive",
+    -- but the player wants them dropped to the very bottom of the list
+    -- rather than mixed in with mitigation/avoidance stats).
+    local SECONDARY_CATEGORY_ORDER = { "Physical Damage", "Spell Damage", "Defensive", "Other", "Resistances" }
     local SECONDARY_STAT_CATEGORY = {
         -- Physical Damage
         ATTACK_POWER = "Physical Damage", RANGED_ATTACK_POWER = "Physical Damage",
@@ -481,14 +485,16 @@ function EverGear:GetWeightFieldLayout(weights)
         SPELL_PENETRATION = "Spell Damage", SPELL_DAMAGE = "Spell Damage", FIRE_DAMAGE = "Spell Damage",
         SHADOW_DAMAGE = "Spell Damage", ARCANE_DAMAGE = "Spell Damage", FROST_DAMAGE = "Spell Damage",
         NATURE_DAMAGE = "Spell Damage", MP5 = "Spell Damage",
-        -- Defensive (mitigation/avoidance, resistances, and HP5/threat
-        -- reduction -- survivability, not offense)
+        -- Defensive (mitigation/avoidance, and HP5/threat reduction --
+        -- survivability, not offense; resistances used to live here too,
+        -- see "Resistances" below)
         DODGE_RATING = "Defensive", PARRY_RATING = "Defensive", BLOCK_RATING = "Defensive",
         BLOCK_VALUE = "Defensive", RESILIENCE_RATING = "Defensive", DEFENSE = "Defensive",
-        ARCANE_RESISTANCE = "Defensive", FIRE_RESISTANCE = "Defensive", FROST_RESISTANCE = "Defensive",
-        NATURE_RESISTANCE = "Defensive", SHADOW_RESISTANCE = "Defensive",
         MOVEMENT_IMPAIRING_REDUCTION = "Defensive", SPELL_DAMAGE_REDUCTION = "Defensive",
         HP5 = "Defensive", THREAT_REDUCTION = "Defensive",
+        -- Resistances (last of all -- see comment on SECONDARY_CATEGORY_ORDER)
+        ARCANE_RESISTANCE = "Resistances", FIRE_RESISTANCE = "Resistances", FROST_RESISTANCE = "Resistances",
+        NATURE_RESISTANCE = "Resistances", SHADOW_RESISTANCE = "Resistances",
     }
     local SECONDARY_CATEGORY_RANK = {}
     for i, name in ipairs(SECONDARY_CATEGORY_ORDER) do SECONDARY_CATEGORY_RANK[name] = i end
