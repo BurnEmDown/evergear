@@ -195,6 +195,10 @@ scrollFrame:SetScript("OnSizeChanged", function(self, width, height)
 end)
 
 local ROW_HEIGHT = 18
+-- Extra vertical gap between consecutive stat rows within a section (on top
+-- of ROW_HEIGHT itself) -- added per user feedback that the grid felt too
+-- cramped, starting with 1px to see how that reads before going further.
+local ROW_GAP = 1
 local SECTION_GAP = 6
 local gridRowPool = {}
 
@@ -366,7 +370,7 @@ RefreshWeightGrid = function()
             row.editBox:SetAlpha(isReadOnly and 0.6 or 1.0)
             row.editBox:Show()
             row:Show()
-            y = y - ROW_HEIGHT
+            y = y - ROW_HEIGHT - ROW_GAP
         end
         y = y - SECTION_GAP
     end
