@@ -262,11 +262,11 @@ UIDropDownMenu_SetSelectedValue(specDropdown, EverGear:GetCharDB().spec)
 EverGear:GetCharDB().profileId = EverGear:GetCharDB().profileId or "default"
 
 local profileDropdown = CreateFrame("Frame", "EverGearProfileDropdown", mainFrame, "UIDropDownMenuTemplate")
--- -14, not -4 -- dropped 10px per user feedback on the M3 layout. Anchored
--- directly off specDropdown (not chained through profileLabel below) so
--- this offset alone determines its position -- the label is purely cosmetic
--- and doesn't feed into anything else's layout math.
-profileDropdown:SetPoint("TOP", specDropdown, "BOTTOM", 0, -14)
+-- +1, not -14 -- raised 15px per user feedback. Anchored directly off
+-- specDropdown (not chained through profileLabel below) so this offset
+-- alone determines its position -- the label is purely cosmetic and
+-- doesn't feed into anything else's layout math.
+profileDropdown:SetPoint("TOP", specDropdown, "BOTTOM", 0, 1)
 UIDropDownMenu_SetWidth(profileDropdown, 150)
 
 -- Small label above the dropdown -- unlike the spec dropdown (self-evident
