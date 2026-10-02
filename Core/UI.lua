@@ -163,6 +163,19 @@ mainFrame:SetScript("OnDragStop", function(self)
     self:StopMovingOrSizing()
     SaveWindowPosition()
 end)
+-- Closes the EQ profile editor (Core/ProfileEditor.lua) along with the main
+-- window -- that window is parented to UIParent, not mainFrame (it has to
+-- outlive a RefreshUI-driven re-anchor and sit beside mainFrame rather than
+-- inside it), so it doesn't auto-hide with mainFrame the way a true child
+-- frame would. Fires for every path that hides mainFrame (its own close
+-- button, ToggleUI, /reload while shown, etc), not just one of them, since
+-- it's a frame script rather than something wired into a specific button.
+-- EverGearProfileEditor is that frame's own global name (ProfileEditor.lua
+-- loads before this file in the .toc, so it already exists here); guarded
+-- in case that ever isn't true.
+mainFrame:SetScript("OnHide", function()
+    if EverGearProfileEditor then EverGearProfileEditor:Hide() end
+end)
 mainFrame:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
     edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
