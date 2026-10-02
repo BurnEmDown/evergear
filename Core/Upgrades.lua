@@ -77,35 +77,14 @@ function EverGear:GetRoleForSpec(classToken, specName)
     return specs[1].role
 end
 
-local CLASS_FALLBACK_STAT = {
-    WARRIOR = "STRENGTH", PALADIN = "STRENGTH", HUNTER = "AGILITY", ROGUE = "AGILITY",
-    PRIEST = "INTELLECT", SHAMAN = "INTELLECT", MAGE = "INTELLECT", WARLOCK = "INTELLECT", DRUID = "INTELLECT",
-}
-
-local CLASS_ROLE_PRIMARY_STAT = {
-    WARRIOR = { ["Physical DPS"] = "STRENGTH", ["Tank"] = "STRENGTH" },
-    PALADIN = { ["Physical DPS"] = "STRENGTH", ["Tank"] = "STRENGTH", ["Healer"] = "INTELLECT" },
-    HUNTER  = { ["Physical DPS"] = "AGILITY" },
-    ROGUE   = { ["Physical DPS"] = "AGILITY" },
-    -- Priest's Healer role is Spirit-primary (not Intellect, unlike every
-    -- other healer role) -- Discipline/Holy specifically, per the author.
-    PRIEST  = { ["Caster DPS"] = "INTELLECT", ["Healer"] = "SPIRIT" },
-    -- Shaman's Physical DPS role (Enhancement) is Strength-primary here, and
-    -- its Healer role (Restoration) is Spirit-primary -- both deliberate
-    -- departures from the other classes sharing those same role names.
-    SHAMAN  = { ["Physical DPS"] = "STRENGTH", ["Caster DPS"] = "INTELLECT", ["Healer"] = "SPIRIT" },
-    MAGE    = { ["Caster DPS"] = "INTELLECT" },
-    WARLOCK = { ["Caster DPS"] = "INTELLECT" },
-    -- Druid's Healer role (Restoration) is Spirit-primary, same departure as
-    -- Priest/Shaman's healer roles.
-    DRUID   = { ["Physical DPS"] = "AGILITY", ["Caster DPS"] = "INTELLECT", ["Healer"] = "SPIRIT", ["Tank"] = "AGILITY" },
-}
-
-function EverGear:GetPrimaryStat(classToken, role)
-    local roleMap = CLASS_ROLE_PRIMARY_STAT[classToken]
-    if roleMap and roleMap[role] then return roleMap[role] end
-    return CLASS_FALLBACK_STAT[classToken] or "STAMINA"
-end
+-- There used to be a CLASS_ROLE_PRIMARY_STAT table + GetPrimaryStat(classToken,
+-- role) here, used by ScoreItem to decide which one stat got a profile's
+-- generic `primaryStatWeight`. Removed per user feedback -- it made a
+-- profile's grid show an opaque "Primary Stat" row with no indication of
+-- which actual stat it affected. Every spec below now just names its own
+-- stats directly in its `stats` table (e.g. a Warrior's is
+-- `{ STRENGTH = 3.0, ... }`), so there's no separate "which stat is
+-- primary" lookup left to do -- see SPEC_PROFILES and ScoreItem below.
 
 -- Per-class-spec scoring profile: which secondary stats matter, plus how
 -- much Stamina/armor/weapon-DPS/off-stats (STR/AGI/INT/SPI when not the
@@ -142,8 +121,7 @@ end
 EverGear.SPEC_PROFILES = {
     WARRIOR = {
         ["Arms"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { AGILITY = 0.3, INTELLECT = 0.05, SPIRIT = 0.1 },
+            stats = { STRENGTH = 3.0, AGILITY = 0.3, STAMINA = 1.5, INTELLECT = 0.05, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -163,8 +141,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Fury"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { AGILITY = 0.3, INTELLECT = 0.05, SPIRIT = 0.1 },
+            stats = { STRENGTH = 3.0, AGILITY = 0.3, STAMINA = 1.5, INTELLECT = 0.05, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -184,8 +161,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Protection"] = {  -- role: Tank
-            staminaWeight = 2.5, armorWeight = 0.3, dpsWeight = 1.0,
-            offStat = { AGILITY = 0.3, INTELLECT = 0.05, SPIRIT = 0.1 },
+            stats = { STRENGTH = 3.0, AGILITY = 0.3, STAMINA = 2.5, INTELLECT = 0.05, SPIRIT = 0.1 }, armorWeight = 0.3, dpsWeight = 1.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -207,8 +183,7 @@ EverGear.SPEC_PROFILES = {
     },
     PALADIN = {
         ["Holy"] = {  -- role: Healer
-            staminaWeight = 1.2, armorWeight = 0.08, dpsWeight = 0.1,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 0.3 },
+            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.2, INTELLECT = 3.0, SPIRIT = 0.3 }, armorWeight = 0.08, dpsWeight = 0.1,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -227,8 +202,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Protection"] = {  -- role: Tank
-            staminaWeight = 2.5, armorWeight = 0.3, dpsWeight = 1.0,
-            offStat = { STRENGTH = 0.5, AGILITY = 0.5, INTELLECT = 0.25, SPIRIT = 0.05 },
+            stats = { STRENGTH = 3.0, AGILITY = 0.5, STAMINA = 2.5, INTELLECT = 0.25, SPIRIT = 0.05 }, armorWeight = 0.3, dpsWeight = 1.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 1.2, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -248,8 +222,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Retribution"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 3, AGILITY = 1, INTELLECT = 0.1, SPIRIT = 0.1 },
+            stats = { STRENGTH = 3.0, AGILITY = 1, STAMINA = 1.5, INTELLECT = 0.1, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0.5, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -271,8 +244,7 @@ EverGear.SPEC_PROFILES = {
     },
     HUNTER = {
         ["Beast Mastery"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 1, INTELLECT = 0.2, SPIRIT = 0.1 },
+            stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.2, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -292,8 +264,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Marksmanship"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 1, INTELLECT = 0.2, SPIRIT = 0.1 },
+            stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.2, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -313,8 +284,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Survival"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 1, INTELLECT = 0.2, SPIRIT = 0.1 },
+            stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.2, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -336,8 +306,7 @@ EverGear.SPEC_PROFILES = {
     },
     ROGUE = {
         ["Assassination"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 1, INTELLECT = 0.05, SPIRIT = 0.1 },
+            stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.05, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -357,8 +326,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Combat"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 1, INTELLECT = 0.05, SPIRIT = 0.1 },
+            stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.05, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -378,8 +346,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Subtlety"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 1, INTELLECT = 0.05, SPIRIT = 0.1 },
+            stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.05, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -401,8 +368,7 @@ EverGear.SPEC_PROFILES = {
     },
     PRIEST = {
         ["Discipline"] = {  -- role: Healer (Spirit-primary for Priest -- see CLASS_ROLE_PRIMARY_STAT)
-            staminaWeight = 1.2, armorWeight = 0.08, dpsWeight = 0.1,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 1 },
+            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.2, INTELLECT = 1, SPIRIT = 3.0 }, armorWeight = 0.08, dpsWeight = 0.1,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -413,8 +379,8 @@ EverGear.SPEC_PROFILES = {
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Healer-specific stats (Spirit itself hits the primary-stat 3.0
-                -- weight now, so it's deliberately not repeated here)
+                -- Healer-specific stats (Spirit's own weight lives in this
+                -- spec's `stats` table above, alongside every other main stat)
                 SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_RATING = 0.5,
                 SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
                 RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
@@ -422,8 +388,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Holy"] = {  -- role: Healer (Spirit-primary for Priest -- see CLASS_ROLE_PRIMARY_STAT)
-            staminaWeight = 1.2, armorWeight = 0.08, dpsWeight = 0.1,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 1 },
+            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.2, INTELLECT = 1, SPIRIT = 3.0 }, armorWeight = 0.08, dpsWeight = 0.1,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -434,8 +399,8 @@ EverGear.SPEC_PROFILES = {
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Healer-specific stats (Spirit itself hits the primary-stat 3.0
-                -- weight now, so it's deliberately not repeated here)
+                -- Healer-specific stats (Spirit's own weight lives in this
+                -- spec's `stats` table above, alongside every other main stat)
                 SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_RATING = 0.5,
                 SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
                 RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
@@ -443,8 +408,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Shadow"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 1 },
+            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 1 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -468,8 +432,7 @@ EverGear.SPEC_PROFILES = {
     },
     SHAMAN = {
         ["Elemental"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0.05, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.3 },
+            stats = { STRENGTH = 0.05, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.3 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -491,8 +454,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Enhancement"] = {  -- role: Physical DPS (Strength-primary for Shaman -- see CLASS_ROLE_PRIMARY_STAT)
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { AGILITY = 1, INTELLECT = 0.3, SPIRIT = 0.3 },
+            stats = { STRENGTH = 3.0, AGILITY = 1, STAMINA = 1.5, INTELLECT = 0.3, SPIRIT = 0.3 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -512,8 +474,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Restoration"] = {  -- role: Healer (Spirit-primary for Shaman -- see CLASS_ROLE_PRIMARY_STAT)
-            staminaWeight = 1.2, armorWeight = 0.08, dpsWeight = 0.1,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 1 },
+            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.2, INTELLECT = 1, SPIRIT = 3.0 }, armorWeight = 0.08, dpsWeight = 0.1,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -524,8 +485,8 @@ EverGear.SPEC_PROFILES = {
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Healer-specific stats (Spirit itself hits the primary-stat 3.0
-                -- weight now, so it's deliberately not repeated here)
+                -- Healer-specific stats (Spirit's own weight lives in this
+                -- spec's `stats` table above, alongside every other main stat)
                 SPELL_POWER = 0.8, SPELL_HEALING = 1.2, SPELL_HIT_RATING = 0.5,
                 SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
                 RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
@@ -535,8 +496,7 @@ EverGear.SPEC_PROFILES = {
     },
     MAGE = {
         ["Arcane"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.1 },
+            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.1 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -559,8 +519,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Fire"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.1 },
+            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.1 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -583,8 +542,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Frost"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.1 },
+            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.1 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -609,8 +567,7 @@ EverGear.SPEC_PROFILES = {
     },
     WARLOCK = {
         ["Affliction"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.01 },
+            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.01 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -632,8 +589,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Demonology"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.01 },
+            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.01 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -655,8 +611,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Destruction"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.01 },
+            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.01 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -680,8 +635,7 @@ EverGear.SPEC_PROFILES = {
     },
     DRUID = {
         ["Balance"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.5 },
+            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.5 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -704,8 +658,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Feral (DPS)"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 1, INTELLECT = 0.05, SPIRIT = 0.05 },
+            stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.05, SPIRIT = 0.05 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -725,8 +678,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Feral (Tank)"] = {  -- role: Tank
-            staminaWeight = 2.5, armorWeight = 0.3, dpsWeight = 1.0,
-            offStat = { STRENGTH = 2, INTELLECT = 0.05, SPIRIT = 0.05 },
+            stats = { STRENGTH = 2, AGILITY = 3.0, STAMINA = 2.5, INTELLECT = 0.05, SPIRIT = 0.05 }, armorWeight = 0.3, dpsWeight = 1.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
@@ -746,8 +698,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Restoration"] = {  -- role: Healer (Spirit-primary for Druid -- see CLASS_ROLE_PRIMARY_STAT)
-            staminaWeight = 1.2, armorWeight = 0.08, dpsWeight = 0.1,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 0.5 },
+            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.2, INTELLECT = 0.5, SPIRIT = 3.0 }, armorWeight = 0.08, dpsWeight = 0.1,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -758,8 +709,8 @@ EverGear.SPEC_PROFILES = {
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Healer-specific stats (Spirit itself hits the primary-stat 3.0
-                -- weight now, so it's deliberately not repeated here)
+                -- Healer-specific stats (Spirit's own weight lives in this
+                -- spec's `stats` table above, alongside every other main stat)
                 SPELL_POWER = 0.8, SPELL_HEALING = 1.2, SPELL_HIT_RATING = 0.5,
                 SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
                 RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
@@ -779,42 +730,37 @@ local EXCLUDED_STAT_KEYS = {
     HERBALISM = true, LOCKPICKING = true,
 }
 
--- Looks up the final scoring profile + off-stat weights for a specific
--- class+spec's ACTIVE profile (EverGear:GetActiveProfile, Core/EQProfiles.lua)
--- -- either the read-only builtin from EverGear.SPEC_PROFILES, or the
--- player's own custom profile if they've selected one for this character.
--- No role-level merging happens here, so editing one class+spec's entry/
--- profile can never affect another's.
+-- Looks up the final scoring profile for a specific class+spec's ACTIVE
+-- profile (EverGear:GetActiveProfile, Core/EQProfiles.lua) -- either the
+-- read-only builtin from EverGear.SPEC_PROFILES, or the player's own custom
+-- profile if they've selected one for this character. No role-level merging
+-- happens here, so editing one class+spec's entry/profile can never affect
+-- another's.
 local function GetScoringProfile(classToken, specName)
-    local profile = EverGear:GetActiveProfile(classToken, specName)
-    return profile, profile.offStat
+    return EverGear:GetActiveProfile(classToken, specName)
 end
 
 -- Computes a single comparable score from a stats table (our own item.stats
 -- shape, or the live-read equivalent from NormalizeLiveStats below), plus
 -- armor value and weapon DPS (0 for non-weapon/non-armor items). `profile`
--- and `offStatWeights` come from GetScoringProfile (class+spec-aware, with
--- role defaults as the fallback) -- this function itself doesn't know or
--- care whether either came from a role default or a per-spec override.
-local function ScoreItem(stats, primaryStat, profile, offStatWeights, armorValue, dps)
+-- comes from GetScoringProfile (class+spec-aware) -- this function itself
+-- doesn't know or care whether it came from a builtin or a custom profile.
+--
+-- Every main stat (STRENGTH/AGILITY/STAMINA/INTELLECT/SPIRIT) is weighted
+-- straight out of profile.stats -- there's no more separate "primary stat"
+-- concept here; each spec's profile just names its own stats explicitly
+-- (see SPEC_PROFILES above), so a Warrior's grid says "Strength", not
+-- "Primary Stat".
+local function ScoreItem(stats, profile, armorValue, dps)
     local score = 0
 
     for statName, value in pairs(stats or {}) do
         if type(value) == "number" and not EXCLUDED_STAT_KEYS[statName] then
             local weight
-            if statName == primaryStat then
-                -- Previously hardcoded to 3.0 here -- now a real, tunable
-                -- field on the profile (see EQProfiles.lua's
-                -- GetBuiltinProfile, which fills this in as 3.0 for every
-                -- builtin so behavior is unchanged unless the player
-                -- actually customizes it).
-                weight = profile.primaryStatWeight
-            elseif statName == "STAMINA" then
-                weight = profile.staminaWeight
+            if profile.stats[statName] then
+                weight = profile.stats[statName]
             elseif profile.secondary[statName] then
                 weight = profile.secondary[statName]
-            elseif offStatWeights[statName] then
-                weight = offStatWeights[statName]
             else
                 weight = 0.3  -- unmapped fallback
             end
@@ -1051,9 +997,7 @@ end
 function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     local playerInfo = self:GetPlayerInfo()
     local charDB = self:GetCharDB()
-    local role = self:GetRoleForSpec(playerInfo.classToken, charDB.spec)
-    local primaryStat = self:GetPrimaryStat(playerInfo.classToken, role)
-    local profile, offStatWeights = GetScoringProfile(playerInfo.classToken, charDB.spec)
+    local profile = GetScoringProfile(playerInfo.classToken, charDB.spec)
 
     -- Look-ahead: show items up to the slider's chosen level (set via UI.lua's
     -- slider, player's current level - 30). EverGearDB.lookaheadLevel is an
@@ -1077,7 +1021,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     else
         equippedStats, equippedArmor, equippedDPS = NormalizeLiveStats(equippedItemLink)
     end
-    local currentScore = ScoreItem(equippedStats, primaryStat, profile, offStatWeights, equippedArmor, equippedDPS)
+    local currentScore = ScoreItem(equippedStats, profile, equippedArmor, equippedDPS)
 
     -- Player-chosen weapon-type opt-outs (e.g. a tank who never wants
     -- two-handers suggested even though their class/spec can technically use
@@ -1135,7 +1079,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
         then
             local armorValue = (item.stats and item.stats.ARMOR) or 0
             local dpsValue = (item.stats and item.stats.WEAPON_DPS) or 0
-            local score = ScoreItem(item.stats, primaryStat, profile, offStatWeights, armorValue, dpsValue)
+            local score = ScoreItem(item.stats, profile, armorValue, dpsValue)
             if score > currentScore then
                 table.insert(candidates, { item = item, score = score })
             end

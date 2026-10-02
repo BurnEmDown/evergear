@@ -2,17 +2,21 @@
 -- full design/milestone writeup this implements.
 --
 -- A "profile" is the same shape as one EverGear.SPEC_PROFILES[class][spec]
--- entry, plus a `primaryStatWeight` field (hardcoded to 3.0 inline in
--- Upgrades.lua's ScoreItem before this file existed -- now a real, tunable
--- part of the profile instead of a silent exception):
+-- entry:
 --   {
---     primaryStatWeight = 3.0,
---     staminaWeight = 1.5,
+--     stats = { STRENGTH = 3.0, AGILITY = 0.3, STAMINA = 1.5, INTELLECT = 0.05, SPIRIT = 0.1 },
 --     armorWeight = 0.15,
 --     dpsWeight = 3.0,
---     offStat = { AGILITY = 0.3, INTELLECT = 0.05, ... },
 --     secondary = { ATTACK_POWER = 0.5, SPELL_POWER = 0, ... },
 --   }
+-- `stats` always names all 5 main stats explicitly by their real name --
+-- there's no more generic "primary stat" field here (removed per user
+-- feedback: a profile used to carry a single opaque `primaryStatWeight`
+-- applied to whichever stat a hidden per-class/role table picked, which made
+-- the editor UI show a "Primary Stat" row with no indication of which real
+-- stat it actually weighted). Every spec just lists its own 5 stat weights
+-- directly now, so e.g. a Warrior's editor row reads "Strength", not
+-- "Primary Stat".
 --
 -- Every numeric value in here is expected to already be clamped via
 -- EverGear:ClampWeight -- callers that accept outside input (the editor UI in
@@ -60,7 +64,7 @@ end
 
 -- ===== Internal helpers =====
 
--- Deep-copies a flat-ish weights table (scalars + offStat{}/secondary{} sub-
+-- Deep-copies a flat-ish weights table (scalars + stats{}/secondary{} sub-
 -- tables -- never anything deeper than that in a profile's shape), running
 -- every numeric leaf through ClampWeight so a copy can never carry forward
 -- an out-of-range or unrounded value from whatever table it was sourced
@@ -85,10 +89,10 @@ local function CloneWeights(source)
 end
 
 -- Merges `overlay`'s keys onto a clone of `base`: scalars overwrite
--- directly, offStat{}/secondary{} sub-tables merge key-by-key rather than
+-- directly, stats{}/secondary{} sub-tables merge key-by-key rather than
 -- replacing the whole sub-table wholesale. A key `overlay` doesn't define
 -- is left at `base`'s value -- this is what lets CopyProfile move a profile
--- between specs with different offStat key sets (plan assumption 6) without
+-- between specs with different stats key sets (plan assumption 6) without
 -- ever leaving a key nil: `base` is always the TARGET spec's own builtin
 -- defaults, so every key the target actually uses is guaranteed present
 -- before `overlay` (the source profile) gets a chance to overwrite any of
@@ -137,8 +141,7 @@ end
 -- ===== Builtin (read-only) profile =====
 
 -- Wraps today's EverGear.SPEC_PROFILES lookup (Upgrades.lua), returning a
--- fresh, independent, fully-populated copy (including the primaryStatWeight
--- this table never carried before) rather than the live SPEC_PROFILES
+-- fresh, independent, fully-populated copy rather than the live SPEC_PROFILES
 -- table itself -- nothing should ever mutate what this returns, since
 -- SPEC_PROFILES is shared, hand-tuned, committed data (plan assumption 2:
 -- the builtin is read-only, full stop, not just "undeletable").
@@ -153,11 +156,9 @@ function EverGear:GetBuiltinProfile(classToken, specName)
         source = self.SPEC_PROFILES.WARRIOR.Arms
     end
     return {
-        primaryStatWeight = 3.0,
-        staminaWeight = self:ClampWeight(source.staminaWeight),
+        stats = CloneWeights(source.stats),
         armorWeight = self:ClampWeight(source.armorWeight),
         dpsWeight = self:ClampWeight(source.dpsWeight),
-        offStat = CloneWeights(source.offStat),
         secondary = CloneWeights(source.secondary),
     }
 end
@@ -279,7 +280,7 @@ end
 -- Copies fromProfileId (class+spec `fromClass`/`fromSpec`) onto a brand new
 -- custom profile under `toClass`/`toSpec`, named `newName`. Merge rule: the
 -- new profile starts from the TARGET spec's own builtin defaults (so every
--- key the target actually uses -- its own offStat set in particular, which
+-- key the target actually uses -- its own stats set in particular, which
 -- can differ from the source spec's -- gets a sane value), then every key
 -- the SOURCE profile defines overwrites that. The source doesn't have to be
 -- the character's currently-active profile, and the target doesn't have to
@@ -304,8 +305,8 @@ end
 -- M5; this is just the (de)serialization logic, independently testable
 -- without it.
 
-local SCALAR_WEIGHT_KEYS = { "primaryStatWeight", "staminaWeight", "armorWeight", "dpsWeight" }
-local SUBTABLE_WEIGHT_KEYS = { "offStat", "secondary" }
+local SCALAR_WEIGHT_KEYS = { "armorWeight", "dpsWeight" }
+local SUBTABLE_WEIGHT_KEYS = { "stats", "secondary" }
 
 -- JSON string -> { class, spec, name, weights }. Self-describing (carries
 -- the class/spec/name it was exported from) rather than a bare number blob,
@@ -394,16 +395,27 @@ function EverGear:DeserializeProfile(jsonString)
 end
 
 -- ===== Field layout for the editor UI (M4) =====
--- pairs() iteration order over offStat{}/secondary{} is NOT guaranteed
+-- pairs() iteration order over stats{}/secondary{} is NOT guaranteed
 -- stable in Lua, which would make the editor's field grid re-shuffle itself
 -- on every reload -- this builds a deterministic, grouped, human-labeled
 -- field list instead, generated from whatever keys the profile actually has
 -- (not a hand-maintained list -- a new stat key added to SPEC_PROFILES later
 -- just shows up here too).
 
-local CORE_FIELDS = {
-    { key = "primaryStatWeight", label = "Primary Stat" },
-    { key = "staminaWeight", label = "Stamina" },
+-- The 5 main stats (read from/written to weights.stats -- see each field's
+-- explicit `subtable` below) plus armor/weapon-DPS (plain scalars on
+-- `weights` itself) all grouped into one "Core" section, per user feedback:
+-- these are the numbers people actually tune first, and they belong
+-- together rather than split across a "Primary Stat"/"Stamina"/"Off-Stats"
+-- set of sections that didn't say which real stat each one was.
+local CORE_STAT_FIELDS = {
+    { key = "STRENGTH", label = "Strength" },
+    { key = "AGILITY", label = "Agility" },
+    { key = "STAMINA", label = "Stamina" },
+    { key = "INTELLECT", label = "Intellect" },
+    { key = "SPIRIT", label = "Spirit" },
+}
+local CORE_SCALAR_FIELDS = {
     { key = "armorWeight", label = "Armor" },
     { key = "dpsWeight", label = "Weapon DPS" },
 }
@@ -420,9 +432,15 @@ local function HumanizeStatKey(key)
 end
 
 -- Returns an ordered list of sections for the editor to render:
---   { { title = "Core", fields = { { key, label, subtable (nil for core) }, ... } },
---     { title = "Off-Stats", fields = {...}, subtable = weights.offStat },
+--   { { title = "Core",
+--       fields = { { key, label, subtable = weights.stats (stat rows) or
+--                                nil (armor/DPS rows, read off `weights`
+--                                itself) }, ... } },
 --     { title = "Secondary Stats", fields = {...}, subtable = weights.secondary } }
+-- Every field now carries its OWN `subtable` (falling back to the section's,
+-- if any) rather than one subtable per whole section -- Core needs that,
+-- since its stat rows live in weights.stats but its armor/DPS rows are
+-- top-level scalars on `weights` directly.
 -- `weights` must be a fully-populated profile table (e.g. from
 -- GetBuiltinProfile/GetActiveProfile/GetProfileWeights) -- this only reads
 -- its shape, never mutates it.
@@ -430,7 +448,10 @@ function EverGear:GetWeightFieldLayout(weights)
     local sections = {}
 
     local coreFields = {}
-    for _, f in ipairs(CORE_FIELDS) do
+    for _, f in ipairs(CORE_STAT_FIELDS) do
+        table.insert(coreFields, { key = f.key, label = f.label, subtable = weights.stats })
+    end
+    for _, f in ipairs(CORE_SCALAR_FIELDS) do
         table.insert(coreFields, { key = f.key, label = f.label })
     end
     table.insert(sections, { title = "Core", fields = coreFields })
@@ -446,7 +467,6 @@ function EverGear:GetWeightFieldLayout(weights)
         table.insert(sections, { title = title, fields = fields, subtable = subtable })
     end
 
-    addSubtableSection("Off-Stats", weights.offStat)
     addSubtableSection("Secondary Stats", weights.secondary)
 
     return sections

@@ -324,11 +324,16 @@ RefreshWeightGrid = function()
             row.label:SetText(field.label)
             row.label:Show()
 
-            row.sectionSubtable = section.subtable
+            -- A field carries its own subtable when it has one (Core's stat
+            -- rows all point at weights.stats even though Core's armor/DPS
+            -- rows don't), falling back to the section's shared one
+            -- (Secondary Stats) otherwise.
+            local fieldSubtable = field.subtable or section.subtable
+            row.sectionSubtable = fieldSubtable
             row.fieldKey = field.key
             row.isReadOnly = isReadOnly
 
-            local currentValue = section.subtable and section.subtable[field.key] or workingWeights[field.key] or 0
+            local currentValue = fieldSubtable and fieldSubtable[field.key] or workingWeights[field.key] or 0
             row.editBox:SetText(tostring(currentValue))
             -- Enable()/Disable(), not SetEnabled(bool) -- the latter is a
             -- newer convenience wrapper that may not exist on every client

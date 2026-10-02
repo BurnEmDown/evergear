@@ -210,3 +210,34 @@ window), opened via a small button next to the new Profile dropdown:
 - A "reset to default" that overwrites a *custom* profile's values back to
   the builtin's current numbers in place (Duplicate already covers getting
   a fresh starting point).
+
+## Post-M4 revision: "Primary Stat" removed
+
+Per user feedback after testing M4: the generic `primaryStatWeight` field
+(described above in "What currently exists" and the original M1 design) made
+the editor show an opaque "Primary Stat" row with no indication of which
+real stat it actually weighted -- e.g. a Warrior couldn't tell this row
+meant Strength.
+
+Fixed by removing the concept entirely:
+- Every `EverGear.SPEC_PROFILES[class][spec]` entry now has a `stats` table
+  naming all 5 main stats explicitly (`{ STRENGTH = 3.0, AGILITY = 0.3,
+  STAMINA = 1.5, INTELLECT = 0.05, SPIRIT = 0.1 }`, say, for a Warrior),
+  replacing the old `primaryStatWeight` + `staminaWeight` + `offStat{}`
+  trio. The actual numbers are unchanged -- this only renamed/reshaped where
+  each one lives (the old hardcoded-3.0 primary weight is now attached to
+  whichever real stat used to receive it).
+- `Core/Upgrades.lua`'s `CLASS_ROLE_PRIMARY_STAT`/`GetPrimaryStat` are gone;
+  `ScoreItem` just reads `profile.stats[statName]` directly.
+- The editor's field grid (`EverGear:GetWeightFieldLayout`,
+  Core/EQProfiles.lua) now has one "Core" section covering all 7 of
+  Strength/Agility/Stamina/Intellect/Spirit/Armor/Weapon DPS together
+  (previously split across a "Core" section of 4 opaque scalars and a
+  separate "Off-Stats" section), per user feedback. JSON export/import's
+  recognized keys changed to match (`stats`/`armorWeight`/`dpsWeight`
+  instead of `primaryStatWeight`/`staminaWeight`/`armorWeight`/`dpsWeight`/
+  `offStat`) -- an old exported profile JSON from before this change will no
+  longer import (its `primaryStatWeight`/`staminaWeight`/`offStat` keys are
+  no longer recognized and are silently ignored, same as any other unknown
+  key), since there's no previously-shipped version of this feature anyone
+  could have real exports from yet.
