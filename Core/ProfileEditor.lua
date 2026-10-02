@@ -391,11 +391,13 @@ StaticPopupDialogs["EVERGEAR_NEW_PROFILE"] = {
     hasEditBox = true,
     maxLetters = 40,
     OnShow = function(self)
-        self.editBox:SetText("")
-        self.editBox:SetFocus()
+        local editBox = self.EditBox or self.editBox
+        editBox:SetText("")
+        editBox:SetFocus()
     end,
     OnAccept = function(self)
-        local name = self.editBox:GetText()
+        local editBox = self.EditBox or self.editBox
+        local name = editBox:GetText()
         if name == "" then return end
         local defaults = EverGear:GetBuiltinProfile(editorClassToken, editorSpecName)
         local id = EverGear:CreateCustomProfile(editorClassToken, editorSpecName, name, defaults)
@@ -413,17 +415,19 @@ StaticPopupDialogs["EVERGEAR_DUPLICATE_PROFILE"] = {
     hasEditBox = true,
     maxLetters = 40,
     OnShow = function(self)
+        local editBox = self.EditBox or self.editBox
         local profiles = EverGear:GetProfileList(editorClassToken, editorSpecName)
         local currentName = "Profile"
         for _, p in ipairs(profiles) do
             if p.id == editingProfileId then currentName = p.name end
         end
-        self.editBox:SetText(currentName .. " (Copy)")
-        self.editBox:HighlightText()
-        self.editBox:SetFocus()
+        editBox:SetText(currentName .. " (Copy)")
+        editBox:HighlightText()
+        editBox:SetFocus()
     end,
     OnAccept = function(self)
-        local name = self.editBox:GetText()
+        local editBox = self.EditBox or self.editBox
+        local name = editBox:GetText()
         if name == "" then return end
         -- Duplicates whatever's currently in the grid, including any
         -- not-yet-saved edits -- "duplicate this" means what's on screen.
@@ -442,15 +446,17 @@ StaticPopupDialogs["EVERGEAR_RENAME_PROFILE"] = {
     hasEditBox = true,
     maxLetters = 40,
     OnShow = function(self)
+        local editBox = self.EditBox or self.editBox
         local profiles = EverGear:GetProfileList(editorClassToken, editorSpecName)
         for _, p in ipairs(profiles) do
-            if p.id == editingProfileId then self.editBox:SetText(p.name) end
+            if p.id == editingProfileId then editBox:SetText(p.name) end
         end
-        self.editBox:HighlightText()
-        self.editBox:SetFocus()
+        editBox:HighlightText()
+        editBox:SetFocus()
     end,
     OnAccept = function(self)
-        local name = self.editBox:GetText()
+        local editBox = self.EditBox or self.editBox
+        local name = editBox:GetText()
         if name == "" then return end
         EverGear:RenameCustomProfile(editorClassToken, editorSpecName, editingProfileId, name)
         RefreshProfileList()
