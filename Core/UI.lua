@@ -219,7 +219,8 @@ controlsPanel:SetBackdropBorderColor(unpack(THEME.panelBorder))
 EverGear:GetCharDB().spec = EverGear:GetCharDB().spec or EverGear:GetDefaultSpec(EverGear:GetPlayerInfo().classToken)
 
 local specDropdown = CreateFrame("Frame", "EverGearSpecDropdown", mainFrame, "UIDropDownMenuTemplate")
-specDropdown:SetPoint("TOP", mainFrame, "TOP", -8, -34)
+-- -44, not -34 -- dropped 10px per user feedback on the M3 layout.
+specDropdown:SetPoint("TOP", mainFrame, "TOP", -8, -44)
 UIDropDownMenu_SetWidth(specDropdown, 150)
 
 -- Forward-declared: the Profile dropdown is built just below (needs the spec
@@ -261,8 +262,21 @@ UIDropDownMenu_SetSelectedValue(specDropdown, EverGear:GetCharDB().spec)
 EverGear:GetCharDB().profileId = EverGear:GetCharDB().profileId or "default"
 
 local profileDropdown = CreateFrame("Frame", "EverGearProfileDropdown", mainFrame, "UIDropDownMenuTemplate")
-profileDropdown:SetPoint("TOP", specDropdown, "BOTTOM", 0, -4)
+-- -14, not -4 -- dropped 10px per user feedback on the M3 layout. Anchored
+-- directly off specDropdown (not chained through profileLabel below) so
+-- this offset alone determines its position -- the label is purely cosmetic
+-- and doesn't feed into anything else's layout math.
+profileDropdown:SetPoint("TOP", specDropdown, "BOTTOM", 0, -14)
 UIDropDownMenu_SetWidth(profileDropdown, 150)
+
+-- Small label above the dropdown -- unlike the spec dropdown (self-evident
+-- from showing real spec names like "Arms"/"Fury"), "Default" alone doesn't
+-- read as EQ-profile selection on its own, per user feedback on the M3
+-- layout.
+local profileLabel = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+profileLabel:SetPoint("BOTTOM", profileDropdown, "TOP", -8, 2)
+profileLabel:SetText("EQ Profile")
+profileLabel:SetTextColor(unpack(THEME.goldDim))
 
 local function ProfileDropdown_OnClick(self)
     EverGear:GetCharDB().profileId = self.value
@@ -313,9 +327,9 @@ end
 
 local lookaheadRow = CreateFrame("Frame", nil, mainFrame)
 lookaheadRow:SetSize(200, 34)
--- -86, not -60 -- shifted down 26px to clear the new Profile dropdown row
--- above it (M3).
-lookaheadRow:SetPoint("TOP", mainFrame, "TOP", 0, -86)
+-- -106: -60 originally, +26 to clear the new Profile dropdown row (M3), then
+-- +20 more per user feedback on that layout.
+lookaheadRow:SetPoint("TOP", mainFrame, "TOP", 0, -106)
 
 local lookaheadLabel = lookaheadRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 lookaheadLabel:SetPoint("TOP", lookaheadRow, "TOP", 0, 0)
@@ -451,7 +465,9 @@ end
 -- mainFrame's actual width rather than a hardcoded number.
 local FILTER_SLOT_WIDTH = 92
 local FILTER_ROW_GAP = 26
-local FILTER_TOP_Y = -130   -- shifted down to clear the profile dropdown + look-ahead label/slider rows
+-- -150: -104 originally, +26 to clear the new Profile dropdown row (M3),
+-- then +20 more per user feedback on that layout.
+local FILTER_TOP_Y = -150
 local FILTER_ROW_1_COUNT = 3
 
 local function RepositionFilters()
