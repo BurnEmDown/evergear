@@ -392,3 +392,62 @@ function EverGear:DeserializeProfile(jsonString)
         weights = weights,
     }
 end
+
+-- ===== Field layout for the editor UI (M4) =====
+-- pairs() iteration order over offStat{}/secondary{} is NOT guaranteed
+-- stable in Lua, which would make the editor's field grid re-shuffle itself
+-- on every reload -- this builds a deterministic, grouped, human-labeled
+-- field list instead, generated from whatever keys the profile actually has
+-- (not a hand-maintained list -- a new stat key added to SPEC_PROFILES later
+-- just shows up here too).
+
+local CORE_FIELDS = {
+    { key = "primaryStatWeight", label = "Primary Stat" },
+    { key = "staminaWeight", label = "Stamina" },
+    { key = "armorWeight", label = "Armor" },
+    { key = "dpsWeight", label = "Weapon DPS" },
+}
+
+-- "ATTACK_POWER_VS_UNDEAD" -> "Attack Power Vs Undead". Good enough for
+-- display purposes -- this addon has no other source of "pretty" stat names
+-- (Constants.lua's FRIENDLY_SLOT_NAMES is slot tokens, not stat keys).
+local function HumanizeStatKey(key)
+    local words = {}
+    for word in key:gmatch("[A-Za-z0-9]+") do
+        table.insert(words, word:sub(1, 1):upper() .. word:sub(2):lower())
+    end
+    return table.concat(words, " ")
+end
+
+-- Returns an ordered list of sections for the editor to render:
+--   { { title = "Core", fields = { { key, label, subtable (nil for core) }, ... } },
+--     { title = "Off-Stats", fields = {...}, subtable = weights.offStat },
+--     { title = "Secondary Stats", fields = {...}, subtable = weights.secondary } }
+-- `weights` must be a fully-populated profile table (e.g. from
+-- GetBuiltinProfile/GetActiveProfile/GetProfileWeights) -- this only reads
+-- its shape, never mutates it.
+function EverGear:GetWeightFieldLayout(weights)
+    local sections = {}
+
+    local coreFields = {}
+    for _, f in ipairs(CORE_FIELDS) do
+        table.insert(coreFields, { key = f.key, label = f.label })
+    end
+    table.insert(sections, { title = "Core", fields = coreFields })
+
+    local function addSubtableSection(title, subtable)
+        local keys = {}
+        for k in pairs(subtable or {}) do table.insert(keys, k) end
+        table.sort(keys)
+        local fields = {}
+        for _, k in ipairs(keys) do
+            table.insert(fields, { key = k, label = HumanizeStatKey(k) })
+        end
+        table.insert(sections, { title = title, fields = fields, subtable = subtable })
+    end
+
+    addSubtableSection("Off-Stats", weights.offStat)
+    addSubtableSection("Secondary Stats", weights.secondary)
+
+    return sections
+end

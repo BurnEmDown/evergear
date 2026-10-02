@@ -304,6 +304,33 @@ RefreshProfileDropdown = function()
     UIDropDownMenu_SetSelectedValue(profileDropdown, charDB.profileId)
 end
 RefreshProfileDropdown()
+-- Exposed globally so Core/ProfileEditor.lua (M4) can tell this dropdown to
+-- re-read the profile list after a create/rename/delete/copy -- this file's
+-- own RefreshProfileDropdown is a plain local, not reachable from another
+-- file otherwise.
+EverGear.RefreshProfileDropdown = RefreshProfileDropdown
+
+-- Small icon button opening the profile editor window (Core/ProfileEditor.lua,
+-- M4) -- where "Default" is the only option stops being true. Same corner-
+-- icon-button pattern as weaponFilterButton (-44) / professionFilterButton
+-- (-68) further down this file -- stacked at -92, 24px below the last one --
+-- rather than guessing at more free horizontal/vertical room in the already
+-- fairly packed controls panel above.
+local profileEditorButton = CreateFrame("Button", "EverGearProfileEditorButton", mainFrame)
+profileEditorButton:SetSize(20, 20)
+profileEditorButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -92)
+profileEditorButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Note_01")
+profileEditorButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+profileEditorButton:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    GameTooltip:SetText("EQ profiles")
+    GameTooltip:AddLine("Create, edit, and manage custom EQ scoring profiles.", 0.8, 0.8, 0.8, true)
+    GameTooltip:Show()
+end)
+profileEditorButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+profileEditorButton:SetScript("OnClick", function()
+    EverGear:ToggleProfileEditor()
+end)
 
 -- ===== Look-ahead slider =====
 -- Lets the player preview upgrades above their current level (e.g. "what

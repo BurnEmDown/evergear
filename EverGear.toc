@@ -16,6 +16,7 @@ Core\Equipment.lua
 Core\Upgrades.lua
 Core\JSON.lua
 Core\EQProfiles.lua
+Core\ProfileEditor.lua
 Core\UI.lua
 Core\MinimapButton.lua
 Core\Main.lua
