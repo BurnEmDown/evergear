@@ -5,6 +5,20 @@ patch digit (`0.0.X`) bumps on every shipped change, no matter how small.
 Moving to `0.1.0` or `1.0.0` is a deliberate decision, not a patch-count
 milestone -- see the "Versioning" section of `README.md`.
 
+## [0.0.12] - 2026-10-02
+
+### Changed
+- Completed the per-class EQ scoring pass: added HP5/MP5 scoring weights to
+  every spec profile (Priest, Shaman, and Druid were the remaining classes;
+  Warrior, Rogue, Hunter, Mage, Warlock, and Paladin were already done).
+
+### Fixed
+- `MOVEMENT_IMPAIRING_REDUCTION`/`THREAT_REDUCTION`/fire resistance stored as
+  percent strings instead of numbers across several dungeon items, which
+  silently zeroed their contribution to the upgrade score.
+- Plaguefang's (Ruins of Lordaeron) poison proc wasn't counted toward its
+  weapon DPS, understating its score vs. comparable weapons.
+
 ## [0.0.11] - 2026-09-29
 
 ### Added
