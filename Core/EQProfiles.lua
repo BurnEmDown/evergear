@@ -296,3 +296,99 @@ function EverGear:CopyProfile(fromClass, fromSpec, fromProfileId, toClass, toSpe
     local id = self:CreateCustomProfile(toClass, toSpec, newName, merged)
     return id
 end
+
+-- ===== JSON export / import (M2) =====
+-- WoW addons have no filesystem access, so "export to / import from a JSON
+-- file" is copy/paste text, not a real file picker -- see plan assumption 3.
+-- The UI side (a popup with a selectable/editable multi-line EditBox) is
+-- M5; this is just the (de)serialization logic, independently testable
+-- without it.
+
+local SCALAR_WEIGHT_KEYS = { "primaryStatWeight", "staminaWeight", "armorWeight", "dpsWeight" }
+local SUBTABLE_WEIGHT_KEYS = { "offStat", "secondary" }
+
+-- JSON string -> { class, spec, name, weights }. Self-describing (carries
+-- the class/spec/name it was exported from) rather than a bare number blob,
+-- so an imported profile doesn't need the player to re-specify what it's
+-- for. Field order in the output is alphabetical (JSON.lua's encoder sorts
+-- object keys) so two exports of the same profile diff cleanly.
+function EverGear:SerializeProfile(classToken, specName, profileName, weights)
+    return self.JSON.encode({
+        class = classToken,
+        spec = specName,
+        name = profileName,
+        weights = weights,
+    })
+end
+
+-- JSON string -> profileData, errorMessage. profileData is
+-- { class, spec, name, weights } with weights containing ONLY the
+-- recognized fields (SCALAR_WEIGHT_KEYS / SUBTABLE_WEIGHT_KEYS), every
+-- numeric leaf run through ClampWeight. Returns nil + a human-readable
+-- message instead of throwing -- callers (the M5 import popup) are
+-- expected to show that message inline rather than letting a bad paste
+-- produce a Lua error.
+--
+-- Deliberately permissive about EXTRA top-level fields (an export might
+-- pick up e.g. a future "exportedAt" timestamp some day; ignoring unknown
+-- keys rather than rejecting the whole import keeps old exports importable
+-- after the addon grows new metadata) but strict about the recognized
+-- weight fields themselves: if a field is present at all, it must be the
+-- right type, or the import is rejected outright rather than silently
+-- dropping/zeroing a value the player presumably meant to set.
+function EverGear:DeserializeProfile(jsonString)
+    local ok, decoded = pcall(self.JSON.decode, jsonString)
+    if not ok then
+        return nil, "Couldn't parse that as JSON (" .. tostring(decoded) .. ")."
+    end
+    if type(decoded) ~= "table" then
+        return nil, "Expected a JSON object, not a bare value."
+    end
+    if type(decoded.weights) ~= "table" then
+        return nil, "Missing or invalid \"weights\" object."
+    end
+
+    local weights = {}
+    for _, key in ipairs(SCALAR_WEIGHT_KEYS) do
+        local value = decoded.weights[key]
+        if value ~= nil then
+            if type(value) ~= "number" then
+                return nil, "\"" .. key .. "\" must be a number."
+            end
+            weights[key] = self:ClampWeight(value)
+        end
+    end
+    for _, key in ipairs(SUBTABLE_WEIGHT_KEYS) do
+        local sub = decoded.weights[key]
+        if sub ~= nil then
+            if type(sub) ~= "table" then
+                return nil, "\"" .. key .. "\" must be an object."
+            end
+            local cleanSub = {}
+            for subKey, subValue in pairs(sub) do
+                if type(subValue) ~= "number" then
+                    return nil, "\"" .. key .. "." .. subKey .. "\" must be a number."
+                end
+                cleanSub[subKey] = self:ClampWeight(subValue)
+            end
+            weights[key] = cleanSub
+        end
+    end
+
+    if decoded.class ~= nil and type(decoded.class) ~= "string" then
+        return nil, "\"class\" must be a string."
+    end
+    if decoded.spec ~= nil and type(decoded.spec) ~= "string" then
+        return nil, "\"spec\" must be a string."
+    end
+    if decoded.name ~= nil and type(decoded.name) ~= "string" then
+        return nil, "\"name\" must be a string."
+    end
+
+    return {
+        class = decoded.class,
+        spec = decoded.spec,
+        name = decoded.name,
+        weights = weights,
+    }
+end
