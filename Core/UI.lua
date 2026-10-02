@@ -30,7 +30,10 @@ local FRAME_WIDTH = 334
 -- BOTTOM_INSET together, not in isolation -- see content's own anchors
 -- further down for how the three relate (content height = FRAME_HEIGHT -
 -- TOP_INSET - BOTTOM_INSET).
-local FRAME_HEIGHT = 595
+-- +26 over the original 595 for the new Profile dropdown row (M3, custom EQ
+-- profiles) -- see TOP_INSET just below, which absorbs the same 26px so the
+-- paperdoll content panel's own size is unaffected.
+local FRAME_HEIGHT = 621
 
 local LEFT_MARGIN = 24
 local RIGHT_MARGIN = 24
@@ -41,8 +44,9 @@ local TOP_Y = -10
 local ROW_SPACING = 42
 local ICON_SIZE = 37
 -- Distance from the window's top edge to where the paperdoll content panel
--- starts: title + spec dropdown + look-ahead row + filter checkbox rows.
-local TOP_INSET = 190
+-- starts: title + spec dropdown + profile dropdown + look-ahead row + filter
+-- checkbox rows.
+local TOP_INSET = 216
 -- Distance from the window's bottom edge to where the paperdoll content
 -- panel ends -- the plain window background left below it.
 local BOTTOM_INSET = 7
@@ -218,9 +222,19 @@ local specDropdown = CreateFrame("Frame", "EverGearSpecDropdown", mainFrame, "UI
 specDropdown:SetPoint("TOP", mainFrame, "TOP", -8, -34)
 UIDropDownMenu_SetWidth(specDropdown, 150)
 
+-- Forward-declared: the Profile dropdown is built just below (needs the spec
+-- dropdown to exist first so it can anchor under it), but changing spec has
+-- to reset+refresh it too (a profile id from the OLD spec means nothing for
+-- the new one -- plan's M3) -- same "local name; ...; name = function"
+-- pattern this file already uses for weaponFilterPanel/professionFilterPanel.
+local RefreshProfileDropdown
+
 local function SpecDropdown_OnClick(self)
-    EverGear:GetCharDB().spec = self.value
+    local charDB = EverGear:GetCharDB()
+    charDB.spec = self.value
+    charDB.profileId = "default"
     UIDropDownMenu_SetSelectedValue(specDropdown, self.value)
+    if RefreshProfileDropdown then RefreshProfileDropdown() end
     EverGear:RefreshUI()
 end
 
@@ -235,6 +249,47 @@ UIDropDownMenu_Initialize(specDropdown, function()
     end
 end)
 UIDropDownMenu_SetSelectedValue(specDropdown, EverGear:GetCharDB().spec)
+
+-- ===== Profile dropdown (custom EQ profiles, M3) =====
+-- Lists "Default" (the read-only builtin EQ:GetBuiltinProfile weights) plus
+-- whatever custom profiles the player has saved for their CURRENT class+spec
+-- (EverGear:GetProfileList -- Core/EQProfiles.lua). Selecting one writes
+-- charDB.profileId; GetScoringProfile (Upgrades.lua) already resolves that
+-- through EverGear:GetActiveProfile on every score, so just changing the
+-- dropdown + RefreshUI is the entire wiring needed here -- no separate
+-- scoring-side change.
+EverGear:GetCharDB().profileId = EverGear:GetCharDB().profileId or "default"
+
+local profileDropdown = CreateFrame("Frame", "EverGearProfileDropdown", mainFrame, "UIDropDownMenuTemplate")
+profileDropdown:SetPoint("TOP", specDropdown, "BOTTOM", 0, -4)
+UIDropDownMenu_SetWidth(profileDropdown, 150)
+
+local function ProfileDropdown_OnClick(self)
+    EverGear:GetCharDB().profileId = self.value
+    UIDropDownMenu_SetSelectedValue(profileDropdown, self.value)
+    EverGear:RefreshUI()
+end
+
+-- Re-resolves and re-selects the current class+spec's profile list -- called
+-- after a spec change (which just reset profileId to "default") and usable
+-- later by the M4 editor window after a profile is created/renamed/deleted,
+-- so the dropdown never shows a stale list or a vanished id.
+RefreshProfileDropdown = function()
+    local charDB = EverGear:GetCharDB()
+    UIDropDownMenu_Initialize(profileDropdown, function()
+        local playerInfo = EverGear:GetPlayerInfo()
+        local profiles = EverGear:GetProfileList(playerInfo.classToken, charDB.spec)
+        for _, profile in ipairs(profiles) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = profile.name
+            info.value = profile.id
+            info.func = ProfileDropdown_OnClick
+            UIDropDownMenu_AddButton(info)
+        end
+    end)
+    UIDropDownMenu_SetSelectedValue(profileDropdown, charDB.profileId)
+end
+RefreshProfileDropdown()
 
 -- ===== Look-ahead slider =====
 -- Lets the player preview upgrades above their current level (e.g. "what
@@ -258,7 +313,9 @@ end
 
 local lookaheadRow = CreateFrame("Frame", nil, mainFrame)
 lookaheadRow:SetSize(200, 34)
-lookaheadRow:SetPoint("TOP", mainFrame, "TOP", 0, -60)
+-- -86, not -60 -- shifted down 26px to clear the new Profile dropdown row
+-- above it (M3).
+lookaheadRow:SetPoint("TOP", mainFrame, "TOP", 0, -86)
 
 local lookaheadLabel = lookaheadRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 lookaheadLabel:SetPoint("TOP", lookaheadRow, "TOP", 0, 0)
@@ -394,7 +451,7 @@ end
 -- mainFrame's actual width rather than a hardcoded number.
 local FILTER_SLOT_WIDTH = 92
 local FILTER_ROW_GAP = 26
-local FILTER_TOP_Y = -104   -- shifted down to clear the look-ahead label+slider row
+local FILTER_TOP_Y = -130   -- shifted down to clear the profile dropdown + look-ahead label/slider rows
 local FILTER_ROW_1_COUNT = 3
 
 local function RepositionFilters()
