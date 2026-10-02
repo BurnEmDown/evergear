@@ -311,14 +311,15 @@ RefreshProfileDropdown()
 EverGear.RefreshProfileDropdown = RefreshProfileDropdown
 
 -- Small icon button opening the profile editor window (Core/ProfileEditor.lua,
--- M4) -- where "Default" is the only option stops being true. Same corner-
--- icon-button pattern as weaponFilterButton (-44) / professionFilterButton
--- (-68) further down this file -- stacked at -92, 24px below the last one --
--- rather than guessing at more free horizontal/vertical room in the already
--- fairly packed controls panel above.
+-- M4) -- where "Default" is the only option stops being true. Sits directly
+-- to the LEFT of the Profile dropdown at the same height, per user feedback
+-- (previously stacked in the weaponFilterButton/professionFilterButton
+-- corner-icon column further down this file -- moved out of there since it's
+-- really about the dropdown right next to it, not a filter panel toggle like
+-- those two).
 local profileEditorButton = CreateFrame("Button", "EverGearProfileEditorButton", mainFrame)
 profileEditorButton:SetSize(20, 20)
-profileEditorButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -92)
+profileEditorButton:SetPoint("RIGHT", profileDropdown, "LEFT", -4, 2)
 profileEditorButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Note_01")
 profileEditorButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 profileEditorButton:SetScript("OnEnter", function(self)
@@ -832,6 +833,15 @@ local function SafeGetItemIcon(itemId)
     return nil
 end
 
+-- Exposed so Core/ProfileEditor.lua can hide a stale detail panel when IT
+-- opens (same side, left, as of the profile editor's reposition below) --
+-- otherwise a detail panel left open from an earlier item click would sit at
+-- its old anchor, now directly under/behind the freshly-opened editor
+-- window instead of following it.
+function EverGear:HideUpgradeDetail()
+    detailPanel:Hide()
+end
+
 function EverGear:ShowUpgradeDetail(slotToken)
     local btn = slotButtons[slotToken]
     if not btn then return end
@@ -899,7 +909,19 @@ function EverGear:ShowUpgradeDetail(slotToken)
 
     detailPanel:ClearAllPoints()
     if btn.side == "left" then
-        detailPanel:SetPoint("TOPRIGHT", mainFrame, "TOPLEFT", -8, 0)
+        -- The profile editor (Core/ProfileEditor.lua) now also opens to the
+        -- LEFT of mainFrame, same side as a left-slot's detail panel -- per
+        -- user feedback, anchor this panel below the editor instead of
+        -- beside mainFrame directly when the editor is open, so the two
+        -- windows stack vertically instead of landing on top of each other.
+        -- EverGearProfileEditor is that frame's own global name (ProfileEditor.lua
+        -- loads before this file in the .toc, so it already exists here).
+        local editor = EverGearProfileEditor
+        if editor and editor:IsShown() then
+            detailPanel:SetPoint("TOPRIGHT", editor, "BOTTOMRIGHT", 0, -8)
+        else
+            detailPanel:SetPoint("TOPRIGHT", mainFrame, "TOPLEFT", -8, 0)
+        end
     else
         detailPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
     end

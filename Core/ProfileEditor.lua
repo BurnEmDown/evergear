@@ -22,7 +22,10 @@ local PANEL_BG = { 0.05, 0.05, 0.07, 0.85 }
 local PANEL_BORDER = { 0.55, 0.45, 0.20, 1.0 }
 
 local EDITOR_WIDTH = 380
-local EDITOR_HEIGHT = 480
+-- +14 over the original 480 -- makes room for the class+spec subtitle added
+-- under the title (editorSubtitle below), which would otherwise overlap the
+-- top of the list panel/weight grid (both anchored at a fixed -40).
+local EDITOR_HEIGHT = 494
 local LIST_WIDTH = 130
 local LIST_ROW_HEIGHT = 20
 -- Known limitation: the profile list itself doesn't scroll -- past this many
@@ -75,13 +78,29 @@ editorTitle:SetPoint("TOP", 0, -16)
 editorTitle:SetText("EQ Profile Editor")
 editorTitle:SetTextColor(unpack(GOLD))
 
+-- Which class+spec this window is currently browsing -- NOT necessarily the
+-- character's own live spec (see decision note on spec-change below).
+-- Without this, there was no way to tell at a glance; added specifically so
+-- that independence doesn't read as a bug when the two fall out of sync.
+local editorSubtitle = editorFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+editorSubtitle:SetPoint("TOP", editorTitle, "BOTTOM", 0, -2)
+editorSubtitle:SetTextColor(unpack(GOLD_DIM))
+
+-- "WARRIOR" -> "Warrior". Classes are always written in Title Case
+-- everywhere else in this addon's UI; only SPEC_PROFILES/CLASS_SPECS key
+-- them in upper-case tokens.
+local function HumanizeClassToken(classToken)
+    if not classToken then return "" end
+    return classToken:sub(1, 1) .. classToken:sub(2):lower()
+end
+
 local editorCloseButton = CreateFrame("Button", nil, editorFrame, "UIPanelCloseButton")
 editorCloseButton:SetPoint("TOPRIGHT", -4, -4)
 
 -- ===== Left column: profile list =====
 
 local listPanel = CreateFrame("Frame", nil, editorFrame, "BackdropTemplate")
-listPanel:SetPoint("TOPLEFT", 14, -40)
+listPanel:SetPoint("TOPLEFT", 14, -54)
 listPanel:SetSize(LIST_WIDTH, MAX_LIST_ROWS * LIST_ROW_HEIGHT + 8)
 listPanel:SetBackdrop({
     bgFile = "Interface\\Buttons\\WHITE8X8",
@@ -160,7 +179,7 @@ local GRID_HEIGHT = EDITOR_HEIGHT - 110
 local GRID_WIDTH = EDITOR_WIDTH - 34 - GRID_X
 
 local scrollFrame = CreateFrame("ScrollFrame", "EverGearProfileEditorScroll", editorFrame, "UIPanelScrollFrameTemplate")
-scrollFrame:SetPoint("TOPLEFT", GRID_X, -40)
+scrollFrame:SetPoint("TOPLEFT", GRID_X, -54)
 scrollFrame:SetSize(GRID_WIDTH, GRID_HEIGHT)
 
 local scrollChild = CreateFrame("Frame", nil, scrollFrame)
@@ -381,6 +400,8 @@ SelectProfileForEditing = function(profileId)
     -- table -- safe to treat as a mutable working copy without touching
     -- anything persisted until Save.
     workingWeights = weights
+
+    editorSubtitle:SetText(HumanizeClassToken(editorClassToken) .. " - " .. editorSpecName)
 
     RefreshProfileList()
     RefreshWeightGrid()
@@ -636,9 +657,22 @@ function EverGear:ToggleProfileEditor()
 
     editorFrame:ClearAllPoints()
     if EverGearFrame then
-        editorFrame:SetPoint("TOPLEFT", EverGearFrame, "TOPRIGHT", 8, 0)
+        -- Opens to the LEFT of the main window now, not the right -- per
+        -- user feedback (matches the profile editor button's new position,
+        -- to the left of the Profile dropdown it opens). UI.lua's
+        -- ShowUpgradeDetail checks whether this frame is shown and anchors
+        -- the upgrade-suggestions detail panel below it (not beside
+        -- mainFrame directly) specifically so the two windows don't land on
+        -- top of each other now that both can appear on this same side.
+        editorFrame:SetPoint("TOPRIGHT", EverGearFrame, "TOPLEFT", -8, 0)
     else
         editorFrame:SetPoint("CENTER")
     end
     editorFrame:Show()
+    -- Hides a detail panel left open from an earlier left-slot item click --
+    -- it was anchored beside mainFrame directly (no editor open yet at the
+    -- time), which the editor now sits on top of/in front of. The player
+    -- re-clicking the item re-opens it correctly anchored below this window
+    -- (see UI.lua's ShowUpgradeDetail).
+    if EverGear.HideUpgradeDetail then EverGear:HideUpgradeDetail() end
 end

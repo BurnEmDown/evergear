@@ -241,3 +241,31 @@ Fixed by removing the concept entirely:
   no longer recognized and are silently ignored, same as any other unknown
   key), since there's no previously-shipped version of this feature anyone
   could have real exports from yet.
+
+## Decision: changing spec while the editor is open
+
+Question raised by user: what should happen if the player changes their
+main Spec dropdown while the EQ Profile Editor window is open?
+
+Decision: **nothing happens to the editor automatically** -- it keeps
+showing whatever class+spec it was last pointed at (the character's spec at
+the moment it was opened, or wherever "Copy to..." last sent it), fully
+independent of the main window's Spec dropdown from that point on.
+
+Why: the editor already supports browsing/editing a DIFFERENT class+spec
+than the character's own active one on purpose (Copy to..., plan
+assumption 6) -- that's the whole point of `editorClassToken`/
+`editorSpecName` being separate state from `charDB.spec`. Auto-syncing the
+editor to the live spec on every change would fight that: either it would
+undo an intentional Copy-to navigation the player is still looking at, or
+it would need some way to tell "live-following" and "manually navigated"
+apart, which isn't worth the complexity for a window that's explicitly a
+secondary, independent browser/editor rather than a mirror of the live
+suggestions. It's also the safer default: workingWeights (any unsaved edit)
+is never touched by a spec change, so nothing is silently discarded either
+way.
+
+The risk this creates -- not noticing the editor is now showing a
+different spec than the live one -- is addressed instead by always
+labeling which class+spec the editor is currently on: a subtitle under the
+window's title ("Warrior - Fury", etc), added alongside this decision.
