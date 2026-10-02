@@ -197,8 +197,8 @@ end)
 local ROW_HEIGHT = 18
 -- Extra vertical gap between consecutive stat rows within a section (on top
 -- of ROW_HEIGHT itself) -- added per user feedback that the grid felt too
--- cramped, starting with 1px to see how that reads before going further.
-local ROW_GAP = 1
+-- cramped. Started at 1px, bumped to 5px per follow-up feedback.
+local ROW_GAP = 5
 local SECTION_GAP = 6
 local gridRowPool = {}
 

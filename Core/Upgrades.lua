@@ -183,7 +183,13 @@ EverGear.SPEC_PROFILES = {
     },
     PALADIN = {
         ["Holy"] = {  -- role: Healer
-            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.2, INTELLECT = 3.0, SPIRIT = 0.3 }, armorWeight = 0.08, dpsWeight = 0.1,
+            -- SPIRIT = 1, not the generic 0.3 fallback -- this was hand-tuned
+            -- (found inside the old `secondary` table's "Healer-specific
+            -- stats" as a real SPIRIT=1 entry, missed during the primary-
+            -- stat refactor since every OTHER healer spec deliberately
+            -- omits its primary stat from `secondary`, so this one's
+            -- survival there read like 0.3-fallback territory at a glance).
+            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.2, INTELLECT = 3.0, SPIRIT = 1 }, armorWeight = 0.08, dpsWeight = 0.1,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
@@ -194,8 +200,9 @@ EverGear.SPEC_PROFILES = {
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Healer-specific stats
-                SPIRIT = 1, SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_RATING = 0.5,
+                -- Healer-specific stats (Spirit's own weight lives in this
+                -- spec's `stats` table above, alongside every other main stat)
+                SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_RATING = 0.5,
                 SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
                 RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0.6,

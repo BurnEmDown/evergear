@@ -456,10 +456,52 @@ function EverGear:GetWeightFieldLayout(weights)
     end
     table.insert(sections, { title = "Core", fields = coreFields })
 
+    -- Ordered by category (per user feedback) rather than alphabetically --
+    -- physical-damage stats first, then spell-damage/caster stats, then
+    -- defensive/survivability stats, so a quick scan down the grid roughly
+    -- matches "offense, then defense" instead of an arbitrary A-Z jumble.
+    -- Alphabetical WITHIN each category (no finer ordering requested yet).
+    -- Any key not listed here (a new stat added to SPEC_PROFILES's
+    -- `secondary` tables later, say) falls into "Other" at the very bottom
+    -- rather than being silently dropped -- same spirit as this whole
+    -- function already being generated from whatever keys actually exist
+    -- instead of a hand-maintained list.
+    local SECONDARY_CATEGORY_ORDER = { "Physical Damage", "Spell Damage", "Defensive", "Other" }
+    local SECONDARY_STAT_CATEGORY = {
+        -- Physical Damage
+        ATTACK_POWER = "Physical Damage", RANGED_ATTACK_POWER = "Physical Damage",
+        HIT_RATING = "Physical Damage", CRIT_RATING = "Physical Damage", HASTE_RATING = "Physical Damage",
+        EXPERTISE_RATING = "Physical Damage", ARMOR_PENETRATION_RATING = "Physical Damage",
+        PHYSICAL_DAMAGE = "Physical Damage", ATTACK_POWER_VS_BEASTS = "Physical Damage",
+        ATTACK_POWER_VS_HUMANOIDS = "Physical Damage", ATTACK_POWER_VS_UNDEAD = "Physical Damage",
+        -- Spell Damage (includes healing -- same "caster" stat family, and
+        -- MP5, whose entire relevance is feeding spellcasting)
+        SPELL_POWER = "Spell Damage", SPELL_HEALING = "Spell Damage", SPELL_HIT_RATING = "Spell Damage",
+        SPELL_CRIT_RATING = "Spell Damage", SPELL_HASTE_RATING = "Spell Damage", MANA_REGEN = "Spell Damage",
+        SPELL_PENETRATION = "Spell Damage", SPELL_DAMAGE = "Spell Damage", FIRE_DAMAGE = "Spell Damage",
+        SHADOW_DAMAGE = "Spell Damage", ARCANE_DAMAGE = "Spell Damage", FROST_DAMAGE = "Spell Damage",
+        NATURE_DAMAGE = "Spell Damage", MP5 = "Spell Damage",
+        -- Defensive (mitigation/avoidance, resistances, and HP5/threat
+        -- reduction -- survivability, not offense)
+        DODGE_RATING = "Defensive", PARRY_RATING = "Defensive", BLOCK_RATING = "Defensive",
+        BLOCK_VALUE = "Defensive", RESILIENCE_RATING = "Defensive", DEFENSE = "Defensive",
+        ARCANE_RESISTANCE = "Defensive", FIRE_RESISTANCE = "Defensive", FROST_RESISTANCE = "Defensive",
+        NATURE_RESISTANCE = "Defensive", SHADOW_RESISTANCE = "Defensive",
+        MOVEMENT_IMPAIRING_REDUCTION = "Defensive", SPELL_DAMAGE_REDUCTION = "Defensive",
+        HP5 = "Defensive", THREAT_REDUCTION = "Defensive",
+    }
+    local SECONDARY_CATEGORY_RANK = {}
+    for i, name in ipairs(SECONDARY_CATEGORY_ORDER) do SECONDARY_CATEGORY_RANK[name] = i end
+
     local function addSubtableSection(title, subtable)
         local keys = {}
         for k in pairs(subtable or {}) do table.insert(keys, k) end
-        table.sort(keys)
+        table.sort(keys, function(a, b)
+            local rankA = SECONDARY_CATEGORY_RANK[SECONDARY_STAT_CATEGORY[a] or "Other"]
+            local rankB = SECONDARY_CATEGORY_RANK[SECONDARY_STAT_CATEGORY[b] or "Other"]
+            if rankA ~= rankB then return rankA < rankB end
+            return a < b
+        end)
         local fields = {}
         for _, k in ipairs(keys) do
             table.insert(fields, { key = k, label = HumanizeStatKey(k) })

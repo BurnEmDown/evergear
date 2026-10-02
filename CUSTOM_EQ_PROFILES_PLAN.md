@@ -269,3 +269,19 @@ The risk this creates -- not noticing the editor is now showing a
 different spec than the live one -- is addressed instead by always
 labeling which class+spec the editor is currently on: a subtitle under the
 window's title ("Warrior - Fury", etc), added alongside this decision.
+
+## Correction: Paladin Holy's Spirit weight
+
+The "Primary Stat" removal above claimed every spec's numbers were
+unchanged -- that missed one case. Paladin Holy's old `secondary` table had
+a real, hand-tuned `SPIRIT = 1` entry under "Healer-specific stats" (every
+OTHER healer spec deliberately leaves its primary stat out of `secondary`
+entirely, since Priest/Shaman/Druid's healer role is Spirit-primary and
+already gets the 3.0 weight that way -- Paladin's healer role is
+INTELLECT-primary, so its Spirit weight lived here instead, not as the
+primary stat). The bulk conversion script only looked at each spec's
+`offStat{}` table, missed this one, and defaulted Paladin Holy's `stats.
+SPIRIT` to the generic 0.3 fallback instead of the real value. Fixed to
+`SPIRIT = 1` in `Core/Upgrades.lua`, and the stray duplicate `SPIRIT = 1`
+removed from Paladin Holy's `secondary` table (it's exclusively in `stats`
+now, like every other main stat).
