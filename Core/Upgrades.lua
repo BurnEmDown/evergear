@@ -780,19 +780,13 @@ local EXCLUDED_STAT_KEYS = {
 }
 
 -- Looks up the final scoring profile + off-stat weights for a specific
--- class+spec directly from EverGear.SPEC_PROFILES above -- no role-level
--- merging happens here anymore, so editing one class+spec's entry can never
--- affect another's.
+-- class+spec's ACTIVE profile (EverGear:GetActiveProfile, Core/EQProfiles.lua)
+-- -- either the read-only builtin from EverGear.SPEC_PROFILES, or the
+-- player's own custom profile if they've selected one for this character.
+-- No role-level merging happens here, so editing one class+spec's entry/
+-- profile can never affect another's.
 local function GetScoringProfile(classToken, specName)
-    local classProfiles = EverGear.SPEC_PROFILES[classToken]
-    local profile = classProfiles and classProfiles[specName]
-    if not profile then
-        -- Defensive fallback: should never happen since every CLASS_SPECS
-        -- entry (Upgrades.lua, above) has a matching SPEC_PROFILES entry
-        -- generated for it -- but better to fall back to a safe, sane
-        -- default than error out entirely if the two ever drift apart.
-        profile = EverGear.SPEC_PROFILES.WARRIOR.Arms
-    end
+    local profile = EverGear:GetActiveProfile(classToken, specName)
     return profile, profile.offStat
 end
 
@@ -809,7 +803,12 @@ local function ScoreItem(stats, primaryStat, profile, offStatWeights, armorValue
         if type(value) == "number" and not EXCLUDED_STAT_KEYS[statName] then
             local weight
             if statName == primaryStat then
-                weight = 3.0
+                -- Previously hardcoded to 3.0 here -- now a real, tunable
+                -- field on the profile (see EQProfiles.lua's
+                -- GetBuiltinProfile, which fills this in as 3.0 for every
+                -- builtin so behavior is unchanged unless the player
+                -- actually customizes it).
+                weight = profile.primaryStatWeight
             elseif statName == "STAMINA" then
                 weight = profile.staminaWeight
             elseif profile.secondary[statName] then
