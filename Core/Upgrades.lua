@@ -981,9 +981,19 @@ end
 -- (Dagger, Staff, Bow, ...) just uses its bare weaponType as the key. UI.lua
 -- builds the checklist using this exact same key scheme so a checkbox and
 -- what it filters can never drift apart.
+--
+-- A split type ALWAYS gets a ":1h"/":2h" suffix, even when item.isTwoHand
+-- itself is nil (a handful of hand-entered items are missing this field --
+-- see the data fixes alongside this change). Previously, a nil isTwoHand
+-- made this fall through to the bare "axe"/"mace"/"sword" key, which UI.lua
+-- never creates a checkbox or seeds a filter entry for (only the :1h/:2h
+-- rows exist) -- so `weaponTypeFilter[filterKey] ~= false` was always true
+-- for that item, regardless of what the player had unchecked, silently
+-- bypassing the filter entirely. Treating a nil/unknown isTwoHand as 1H
+-- (the more common case) keeps the item inside the filterable set instead.
 function EverGear:GetWeaponFilterKey(item)
     if not item.weaponType then return nil end
-    if EverGear.SPLIT_WEAPON_TYPES[item.weaponType] and item.isTwoHand ~= nil then
+    if EverGear.SPLIT_WEAPON_TYPES[item.weaponType] then
         return item.weaponType .. (item.isTwoHand and ":2h" or ":1h")
     end
     return item.weaponType
