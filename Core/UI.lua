@@ -1473,10 +1473,23 @@ local itemInfoWatcher = CreateFrame("Frame")
 itemInfoWatcher:RegisterEvent("GET_ITEM_INFO_RECEIVED")
 itemInfoWatcher:SetScript("OnEvent", function(_, _, _, success)
     if not success then return end
+    -- Captured BEFORE RefreshUI runs, not after: RefreshUI unconditionally
+    -- calls detailPanel:Hide() as its very first line (it has no way to know
+    -- whether the panel's current candidates are still valid), so checking
+    -- detailPanel:IsShown() afterward was always false and this reopen never
+    -- fired. That was the actual cause of a since-reported bug ("the first
+    -- time I click a gear slot the suggestions window doesn't open, but it
+    -- does the 2nd time") -- showing the detail panel for a slot almost
+    -- always looks up brand-new candidate items the player has never seen
+    -- (see the quality-color lookup above), which is exactly the kind of
+    -- cache miss this watcher exists to catch: the click shows the panel,
+    -- then this event fires moments later for that same cache miss, and
+    -- RefreshUI silently closed it again with nothing to reopen it.
+    local wasDetailShown = detailPanel:IsShown()
     if mainFrame:IsShown() then
         EverGear:RefreshUI()
     end
-    if detailPanel:IsShown() and currentDetailSlot then
+    if wasDetailShown and currentDetailSlot then
         EverGear:ShowUpgradeDetail(currentDetailSlot)
     end
 end)
