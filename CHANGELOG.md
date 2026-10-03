@@ -5,6 +5,29 @@ patch digit (`0.0.X`) bumps on every shipped change, no matter how small.
 Moving to `0.1.0` or `1.0.0` is a deliberate decision, not a patch-count
 milestone -- see the "Versioning" section of `README.md`.
 
+## [0.0.14] - 2026-10-03
+
+### Changed
+- Paper-doll slot icon borders now show the equipped item's rarity color
+  (gray/white/green/blue/purple/yellow) instead of the upgrade-status
+  color. Best-in-slot items still show a "BIS" badge, and upgradable items
+  now show their "+X" score delta with a small green arrow next to it
+  (cropped from the addon's own icon) -- the badge pill carries the
+  upgrade-status signal on its own now that the slot border doesn't.
+- An empty equipment slot's border is now white (matching "Common"
+  quality) instead of the same neutral-gold used for a cache-miss on a
+  real item -- those are different situations ("nothing equipped" vs.
+  "something's equipped but not resolved yet") and should look different.
+
+### Fixed
+- The new rarity-colored slot/detail-panel borders showed yellow for an
+  item the client hadn't cached yet instead of its real rarity color --
+  most noticeable the first time opening a slot's upgrade list, since
+  those candidates are often items the player has never seen before.
+  Previously required closing and reopening to pick up the right color
+  once the client's background fetch landed; now self-corrects in place
+  via the client's GET_ITEM_INFO_RECEIVED event.
+
 ## [0.0.13] - 2026-10-03
 
 ### Added

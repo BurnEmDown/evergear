@@ -111,12 +111,27 @@ end
 -- gap is exactly how a Warrior once saw a weak spell-power mace outscore a
 -- much better weapon (SPELL_POWER/SPELL_DAMAGE fell through to 0.3/point
 -- instead of being recognized as caster-only) -- see git history on this
--- file if the details matter. Several secondary-stat key names (HIT_RATING,
--- CRIT_RATING, etc.) are a best guess at what wowtbc.gg will call them once
--- dungeons with combat-rating gear get converted -- none have shown up in
--- real converted data yet, so verify/correct these key names against a
--- real example the first time one of these stats actually appears in
--- Data/*.lua.
+-- file if the details matter.
+--
+-- Hit/Crit/Haste/Dodge/Parry/Block (and the spell equivalents) are named
+-- HIT_CHANCE/CRIT_CHANCE/HASTE/DODGE_CHANCE/PARRY_CHANCE/BLOCK_CHANCE/
+-- SPELL_HIT_CHANCE/SPELL_CRIT_CHANCE/SPELL_HASTE, not "...RATING" --
+-- confirmed with the player that WoW Forever has no TBC-style scaling
+-- "rating" stat at all: an item just grants the flat percentage directly
+-- (e.g. "Equip: Increases your chance to hit by 0.3%" is stored/scored as
+-- HIT_CHANCE = 0.3, not run through a rating-to-percent conversion). Every
+-- weight below for these keys is therefore priced per PERCENTAGE POINT, a
+-- much bigger number than the old (wrong) per-rating-point guess -- e.g.
+-- Warrior's CRIT_CHANCE = 13.2 here used to be CRIT_RATING = 0.6, rescaled
+-- by the old guessed rating-per-% conversion (*22) to preserve this spec's
+-- existing relative emphasis on the stat now that the unit itself changed,
+-- not because any of these per-class numbers are independently verified --
+-- same hand-tuned/piecemeal caveat as the rest of this table applies to the
+-- rescaled numbers too. Expertise and Resilience are confirmed to not exist
+-- as mechanics in this game at all (removed outright, not just zeroed), and
+-- Armor Penetration is confirmed to be a flat armor-reduction value (not a
+-- percentage), so ARMOR_PENETRATION kept its old per-point weight unchanged
+-- -- only its name lost the misleading "_RATING" suffix.
 --
 EverGear.SPEC_PROFILES = {
     WARRIOR = {
@@ -124,17 +139,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 3.0, AGILITY = 0.3, STAMINA = 1.5, INTELLECT = 0.05, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
-                SPELL_HASTE_RATING = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Physical DPS-specific stats
-                ATTACK_POWER = 0.5, HIT_RATING = 0.8, CRIT_RATING = 0.6, HASTE_RATING = 0.5,
-                EXPERTISE_RATING = 0.6, ARMOR_PENETRATION_RATING = 0.5, RESILIENCE_RATING = 0.3, DODGE_RATING = 0.2,
-                PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0.1,
+                ATTACK_POWER = 0.5, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
+                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
+                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0.1,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
                 RANGED_ATTACK_POWER = 0.1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0,
@@ -144,17 +159,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 3.0, AGILITY = 0.3, STAMINA = 1.5, INTELLECT = 0.05, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
-                SPELL_HASTE_RATING = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Physical DPS-specific stats
-                ATTACK_POWER = 0.5, HIT_RATING = 0.8, CRIT_RATING = 0.6, HASTE_RATING = 0.5,
-                EXPERTISE_RATING = 0.6, ARMOR_PENETRATION_RATING = 0.5, RESILIENCE_RATING = 0.3, DODGE_RATING = 0.2,
-                PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0.1,
+                ATTACK_POWER = 0.5, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
+                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
+                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0.1,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
                 RANGED_ATTACK_POWER = 0.1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0,
@@ -164,17 +179,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 3.0, AGILITY = 0.3, STAMINA = 2.5, INTELLECT = 0.05, SPIRIT = 0.1 }, armorWeight = 0.3, dpsWeight = 1.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
-                SPELL_HASTE_RATING = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Tank-specific stats
-                DODGE_RATING = 0.8, PARRY_RATING = 0.7, BLOCK_RATING = 0.6,
-                BLOCK_VALUE = 0.5, RESILIENCE_RATING = 0.2, ATTACK_POWER = 0.2, HIT_RATING = 0.3,
-                CRIT_RATING = 0.2, HASTE_RATING = 0.1, EXPERTISE_RATING = 0.3, ARMOR_PENETRATION_RATING = 0.05,
+                DODGE_CHANCE = 15.84, PARRY_CHANCE = 13.86, BLOCK_CHANCE = 11.88,
+                BLOCK_VALUE = 0.5, ATTACK_POWER = 0.2, HIT_CHANCE = 4.74,
+                CRIT_CHANCE = 4.4, HASTE = 1.58, ARMOR_PENETRATION = 0.05,
                 DEFENSE = 1.0, PHYSICAL_DAMAGE = 0.1, ATTACK_POWER_VS_BEASTS = 0.05, ATTACK_POWER_VS_HUMANOIDS = 0.05,
                 ATTACK_POWER_VS_UNDEAD = 0.05, RANGED_ATTACK_POWER = 0.05, THREAT_REDUCTION = 0,
                 HP5 = 0.4, MP5 = 0,
@@ -192,9 +207,9 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.2, INTELLECT = 3.0, SPIRIT = 1 }, armorWeight = 0.08, dpsWeight = 0.1,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
-                ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
-                EXPERTISE_RATING = 0, ARMOR_PENETRATION_RATING = 0, DODGE_RATING = 0,
-                PARRY_RATING = 0, BLOCK_RATING = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
                 -- Universal utility stats
@@ -202,9 +217,9 @@ EverGear.SPEC_PROFILES = {
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Healer-specific stats (Spirit's own weight lives in this
                 -- spec's `stats` table above, alongside every other main stat)
-                SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_RATING = 0.5,
-                SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
-                RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_CHANCE = 13,
+                SPELL_CRIT_CHANCE = 8.8, SPELL_HASTE = 6.32, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
+                SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0.6,
             },
         },
@@ -212,17 +227,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 3.0, AGILITY = 0.5, STAMINA = 2.5, INTELLECT = 0.25, SPIRIT = 0.05 }, armorWeight = 0.3, dpsWeight = 1.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 1.2, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
-                SPELL_HASTE_RATING = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                SPELL_POWER = 1.2, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Tank-specific stats
-                DODGE_RATING = 0.8, PARRY_RATING = 0.7, BLOCK_RATING = 0.6,
-                BLOCK_VALUE = 0.5, RESILIENCE_RATING = 0.2, ATTACK_POWER = 0.2, HIT_RATING = 0.3,
-                CRIT_RATING = 0.2, HASTE_RATING = 0.1, EXPERTISE_RATING = 0.3, ARMOR_PENETRATION_RATING = 0.05,
+                DODGE_CHANCE = 15.84, PARRY_CHANCE = 13.86, BLOCK_CHANCE = 11.88,
+                BLOCK_VALUE = 0.5, ATTACK_POWER = 0.2, HIT_CHANCE = 4.74,
+                CRIT_CHANCE = 4.4, HASTE = 1.58, ARMOR_PENETRATION = 0.05,
                 DEFENSE = 1.0, PHYSICAL_DAMAGE = 0.1, ATTACK_POWER_VS_BEASTS = 0.05, ATTACK_POWER_VS_HUMANOIDS = 0.05,
                 ATTACK_POWER_VS_UNDEAD = 0.05, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
                 HP5 = 0.4, MP5 = 0,
@@ -232,17 +247,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 3.0, AGILITY = 1, STAMINA = 1.5, INTELLECT = 0.1, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0.5, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
-                SPELL_HASTE_RATING = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                SPELL_POWER = 0.5, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Physical DPS-specific stats
-                ATTACK_POWER = 1, HIT_RATING = 0.8, CRIT_RATING = 0.6, HASTE_RATING = 0.5,
-                EXPERTISE_RATING = 0.6, ARMOR_PENETRATION_RATING = 0.5, RESILIENCE_RATING = 0.3, DODGE_RATING = 0.2,
-                PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0.1,
+                ATTACK_POWER = 1, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
+                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
+                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0.1,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
                 RANGED_ATTACK_POWER = 0, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0,
@@ -254,17 +269,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.2, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
-                SPELL_HASTE_RATING = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Physical DPS-specific stats
-                ATTACK_POWER = 1, HIT_RATING = 0.8, CRIT_RATING = 0.6, HASTE_RATING = 0.5,
-                EXPERTISE_RATING = 0.6, ARMOR_PENETRATION_RATING = 0.5, RESILIENCE_RATING = 0.3, DODGE_RATING = 0.2,
-                PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0,
+                ATTACK_POWER = 1, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
+                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
+                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.4, ATTACK_POWER_VS_HUMANOIDS = 0.4, ATTACK_POWER_VS_UNDEAD = 0.4,
                 RANGED_ATTACK_POWER = 1.5, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0.4,
@@ -274,17 +289,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.2, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
-                SPELL_HASTE_RATING = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Physical DPS-specific stats
-                ATTACK_POWER = 1, HIT_RATING = 0.8, CRIT_RATING = 0.6, HASTE_RATING = 0.5,
-                EXPERTISE_RATING = 0.6, ARMOR_PENETRATION_RATING = 0.5, RESILIENCE_RATING = 0.3, DODGE_RATING = 0.2,
-                PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0,
+                ATTACK_POWER = 1, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
+                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
+                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.4, ATTACK_POWER_VS_HUMANOIDS = 0.4, ATTACK_POWER_VS_UNDEAD = 0.4,
                 RANGED_ATTACK_POWER = 1.5, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0.4,
@@ -294,17 +309,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.2, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
-                SPELL_HASTE_RATING = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Physical DPS-specific stats
-                ATTACK_POWER = 1, HIT_RATING = 0.8, CRIT_RATING = 0.6, HASTE_RATING = 0.5,
-                EXPERTISE_RATING = 0.6, ARMOR_PENETRATION_RATING = 0.5, RESILIENCE_RATING = 0.3, DODGE_RATING = 0.2,
-                PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0,
+                ATTACK_POWER = 1, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
+                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
+                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.4, ATTACK_POWER_VS_HUMANOIDS = 0.4, ATTACK_POWER_VS_UNDEAD = 0.4,
                 RANGED_ATTACK_POWER = 1.5, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0.4,
@@ -316,17 +331,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.05, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
-                SPELL_HASTE_RATING = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Physical DPS-specific stats
-                ATTACK_POWER = 0.9, HIT_RATING = 0.8, CRIT_RATING = 0.6, HASTE_RATING = 0.5,
-                EXPERTISE_RATING = 0.6, ARMOR_PENETRATION_RATING = 0.5, RESILIENCE_RATING = 0.3, DODGE_RATING = 0.2,
-                PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0,
+                ATTACK_POWER = 0.9, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
+                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
+                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
                 RANGED_ATTACK_POWER = 0.1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0,
@@ -336,17 +351,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.05, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
-                SPELL_HASTE_RATING = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Physical DPS-specific stats
-                ATTACK_POWER = 0.9, HIT_RATING = 0.8, CRIT_RATING = 0.6, HASTE_RATING = 0.5,
-                EXPERTISE_RATING = 0.6, ARMOR_PENETRATION_RATING = 0.5, RESILIENCE_RATING = 0.3, DODGE_RATING = 0.2,
-                PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0,
+                ATTACK_POWER = 0.9, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
+                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
+                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
                 RANGED_ATTACK_POWER = 0.1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0,
@@ -356,17 +371,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.05, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
-                SPELL_HASTE_RATING = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Physical DPS-specific stats
-                ATTACK_POWER = 0.9, HIT_RATING = 0.8, CRIT_RATING = 0.6, HASTE_RATING = 0.5,
-                EXPERTISE_RATING = 0.6, ARMOR_PENETRATION_RATING = 0.5, RESILIENCE_RATING = 0.3, DODGE_RATING = 0.2,
-                PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0,
+                ATTACK_POWER = 0.9, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
+                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
+                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
                 RANGED_ATTACK_POWER = 0.1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0,
@@ -378,9 +393,9 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.2, INTELLECT = 1, SPIRIT = 3.0 }, armorWeight = 0.08, dpsWeight = 0.1,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
-                ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
-                EXPERTISE_RATING = 0, ARMOR_PENETRATION_RATING = 0, DODGE_RATING = 0,
-                PARRY_RATING = 0, BLOCK_RATING = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
                 -- Universal utility stats
@@ -388,9 +403,9 @@ EverGear.SPEC_PROFILES = {
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Healer-specific stats (Spirit's own weight lives in this
                 -- spec's `stats` table above, alongside every other main stat)
-                SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_RATING = 0.5,
-                SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
-                RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_CHANCE = 13,
+                SPELL_CRIT_CHANCE = 8.8, SPELL_HASTE = 6.32, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
+                SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0.6,
             },
         },
@@ -398,9 +413,9 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.2, INTELLECT = 1, SPIRIT = 3.0 }, armorWeight = 0.08, dpsWeight = 0.1,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
-                ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
-                EXPERTISE_RATING = 0, ARMOR_PENETRATION_RATING = 0, DODGE_RATING = 0,
-                PARRY_RATING = 0, BLOCK_RATING = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
                 -- Universal utility stats
@@ -408,9 +423,9 @@ EverGear.SPEC_PROFILES = {
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Healer-specific stats (Spirit's own weight lives in this
                 -- spec's `stats` table above, alongside every other main stat)
-                SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_RATING = 0.5,
-                SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
-                RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_CHANCE = 13,
+                SPELL_CRIT_CHANCE = 8.8, SPELL_HASTE = 6.32, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
+                SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0.6,
             },
         },
@@ -418,17 +433,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 1 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
-                ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
-                EXPERTISE_RATING = 0, ARMOR_PENETRATION_RATING = 0, DODGE_RATING = 0,
-                PARRY_RATING = 0, BLOCK_RATING = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Caster DPS-specific stats
-                SPELL_POWER = 1.2, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 0.8,
+                SPELL_POWER = 1.2, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
+                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 0.8,
                 -- Shadow Damage weighted well above the other schools -- it's
                 -- this spec's entire kit (Mind Flay/Shadow Word: Pain/etc).
                 FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 1, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
@@ -442,17 +457,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 0.05, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.3 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
-                ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
-                EXPERTISE_RATING = 0, ARMOR_PENETRATION_RATING = 0, DODGE_RATING = 0,
-                PARRY_RATING = 0, BLOCK_RATING = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Caster DPS-specific stats
-                SPELL_POWER = 0.8, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 0.8,
+                SPELL_POWER = 0.8, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
+                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 0.8,
                 -- Nature Damage weighted well above the other schools -- it's
                 -- Elemental's actual nuke school (Lightning Bolt/Chain Lightning).
                 FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
@@ -464,17 +479,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 3.0, AGILITY = 1, STAMINA = 1.5, INTELLECT = 0.3, SPIRIT = 0.3 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
-                SPELL_HASTE_RATING = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Physical DPS-specific stats
-                ATTACK_POWER = 0.5, HIT_RATING = 0.8, CRIT_RATING = 0.6, HASTE_RATING = 0.5,
-                EXPERTISE_RATING = 0.6, ARMOR_PENETRATION_RATING = 0.5, RESILIENCE_RATING = 0.3, DODGE_RATING = 0.2,
-                PARRY_RATING = 0.2, BLOCK_RATING = 0.2, BLOCK_VALUE = 0.1,
+                ATTACK_POWER = 0.5, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
+                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
+                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0.1,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
                 RANGED_ATTACK_POWER = 0.4, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0.4,
@@ -484,9 +499,9 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.2, INTELLECT = 1, SPIRIT = 3.0 }, armorWeight = 0.08, dpsWeight = 0.1,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
-                ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
-                EXPERTISE_RATING = 0, ARMOR_PENETRATION_RATING = 0, DODGE_RATING = 0,
-                PARRY_RATING = 0, BLOCK_RATING = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
                 -- Universal utility stats
@@ -494,9 +509,9 @@ EverGear.SPEC_PROFILES = {
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Healer-specific stats (Spirit's own weight lives in this
                 -- spec's `stats` table above, alongside every other main stat)
-                SPELL_POWER = 0.8, SPELL_HEALING = 1.2, SPELL_HIT_RATING = 0.5,
-                SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
-                RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                SPELL_POWER = 0.8, SPELL_HEALING = 1.2, SPELL_HIT_CHANCE = 13,
+                SPELL_CRIT_CHANCE = 8.8, SPELL_HASTE = 6.32, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
+                SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0.6,
             },
         },
@@ -506,17 +521,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.1 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
-                ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
-                EXPERTISE_RATING = 0, ARMOR_PENETRATION_RATING = 0, DODGE_RATING = 0,
-                PARRY_RATING = 0, BLOCK_RATING = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Caster DPS-specific stats
-                SPELL_POWER = 1, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 1,
+                SPELL_POWER = 1, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
+                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 1,
                 -- ARCANE_DAMAGE weighted higher than the other schools -- Arcane is
                 -- this spec's actual nuke school, so +Arcane spell damage items are
                 -- worth more to it than the flat 0.4 every caster gets by default.
@@ -529,17 +544,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.1 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
-                ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
-                EXPERTISE_RATING = 0, ARMOR_PENETRATION_RATING = 0, DODGE_RATING = 0,
-                PARRY_RATING = 0, BLOCK_RATING = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Caster DPS-specific stats
-                SPELL_POWER = 1, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 1,
+                SPELL_POWER = 1, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
+                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 1,
                 -- FIRE_DAMAGE weighted higher than the other schools -- Fire is this
                 -- spec's actual nuke school, so +Fire spell damage items are worth
                 -- more to it than the flat 0.4 every caster gets by default.
@@ -552,17 +567,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.1 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
-                ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
-                EXPERTISE_RATING = 0, ARMOR_PENETRATION_RATING = 0, DODGE_RATING = 0,
-                PARRY_RATING = 0, BLOCK_RATING = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Caster DPS-specific stats
-                SPELL_POWER = 1, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 1,
+                SPELL_POWER = 1, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
+                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 1,
                 -- FROST_DAMAGE weighted higher than the other schools -- Frost is
                 -- this spec's actual nuke school, so +Frost spell damage items are
                 -- worth more to it than the flat 0.4 every caster gets by default.
@@ -577,17 +592,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.01 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
-                ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
-                EXPERTISE_RATING = 0, ARMOR_PENETRATION_RATING = 0, DODGE_RATING = 0,
-                PARRY_RATING = 0, BLOCK_RATING = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Caster DPS-specific stats
-                SPELL_POWER = 1, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 1,
+                SPELL_POWER = 1, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
+                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 1,
                 -- Shadow is this spec's nuke school; Fire is not used, so it stays
                 -- at the universal flat default rather than being boosted.
                 FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.7, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
@@ -599,17 +614,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.01 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
-                ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
-                EXPERTISE_RATING = 0, ARMOR_PENETRATION_RATING = 0, DODGE_RATING = 0,
-                PARRY_RATING = 0, BLOCK_RATING = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Caster DPS-specific stats
-                SPELL_POWER = 1, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 1,
+                SPELL_POWER = 1, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
+                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 1,
                 -- Fire and Shadow are both relevant nuke schools for Demonology's kit,
                 -- so both get the boosted weight instead of the universal 0.4.
                 FIRE_DAMAGE = 0.7, SHADOW_DAMAGE = 0.7, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
@@ -621,17 +636,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.01 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
-                ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
-                EXPERTISE_RATING = 0, ARMOR_PENETRATION_RATING = 0, DODGE_RATING = 0,
-                PARRY_RATING = 0, BLOCK_RATING = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Caster DPS-specific stats
-                SPELL_POWER = 1, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 1,
+                SPELL_POWER = 1, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
+                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 1,
                 -- Fire and Shadow are both relevant nuke schools for Destruction's kit,
                 -- so both get the boosted weight instead of the universal 0.4.
                 FIRE_DAMAGE = 0.7, SHADOW_DAMAGE = 0.7, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
@@ -645,17 +660,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.5 }, armorWeight = 0.1, dpsWeight = 0.3,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
-                ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
-                EXPERTISE_RATING = 0, ARMOR_PENETRATION_RATING = 0, DODGE_RATING = 0,
-                PARRY_RATING = 0, BLOCK_RATING = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Caster DPS-specific stats
-                SPELL_POWER = 0.8, SPELL_HIT_RATING = 0.7, SPELL_CRIT_RATING = 0.6, SPELL_HASTE_RATING = 0.5,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, RESILIENCE_RATING = 0.3, SPELL_DAMAGE = 0.8,
+                SPELL_POWER = 0.8, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
+                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 0.8,
                 -- Nature and Arcane Damage weighted above the other schools --
                 -- Balance's kit spans both (Starfire is Arcane, Wrath/Moonfire
                 -- are Nature).
@@ -668,17 +683,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.05, SPIRIT = 0.05 }, armorWeight = 0.15, dpsWeight = 3.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
-                SPELL_HASTE_RATING = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Physical DPS-specific stats
-                ATTACK_POWER = 0.5, HIT_RATING = 0.8, CRIT_RATING = 0.6, HASTE_RATING = 0.5,
-                EXPERTISE_RATING = 0.6, ARMOR_PENETRATION_RATING = 0.5, RESILIENCE_RATING = 0.3, DODGE_RATING = 0.2,
-                PARRY_RATING = 0.2, BLOCK_RATING = 0, BLOCK_VALUE = 0,
+                ATTACK_POWER = 0.5, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
+                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
+                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
                 RANGED_ATTACK_POWER = 0, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0,
@@ -688,17 +703,17 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 2, AGILITY = 3.0, STAMINA = 2.5, INTELLECT = 0.05, SPIRIT = 0.05 }, armorWeight = 0.3, dpsWeight = 1.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_RATING = 0, SPELL_CRIT_RATING = 0,
-                SPELL_HASTE_RATING = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
                 -- Universal utility stats
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Tank-specific stats
-                DODGE_RATING = 0.8, PARRY_RATING = 0.7, BLOCK_RATING = 0,
-                BLOCK_VALUE = 0, RESILIENCE_RATING = 0.2, ATTACK_POWER = 0.2, HIT_RATING = 0.3,
-                CRIT_RATING = 0.2, HASTE_RATING = 0.1, EXPERTISE_RATING = 0.3, ARMOR_PENETRATION_RATING = 0.05,
+                DODGE_CHANCE = 15.84, PARRY_CHANCE = 13.86, BLOCK_CHANCE = 0,
+                BLOCK_VALUE = 0, ATTACK_POWER = 0.2, HIT_CHANCE = 4.74,
+                CRIT_CHANCE = 4.4, HASTE = 1.58, ARMOR_PENETRATION = 0.05,
                 DEFENSE = 1.0, PHYSICAL_DAMAGE = 0.1, ATTACK_POWER_VS_BEASTS = 0.05, ATTACK_POWER_VS_HUMANOIDS = 0.05,
                 ATTACK_POWER_VS_UNDEAD = 0.05, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
                 HP5 = 0.4, MP5 = 0,
@@ -708,9 +723,9 @@ EverGear.SPEC_PROFILES = {
             stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.2, INTELLECT = 0.5, SPIRIT = 3.0 }, armorWeight = 0.08, dpsWeight = 0.1,
             secondary = {
                 -- Melee-exclusive stats -- 0 for this caster/healer role
-                ATTACK_POWER = 0, HIT_RATING = 0, CRIT_RATING = 0, HASTE_RATING = 0,
-                EXPERTISE_RATING = 0, ARMOR_PENETRATION_RATING = 0, DODGE_RATING = 0,
-                PARRY_RATING = 0, BLOCK_RATING = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
                 -- Universal utility stats
@@ -718,9 +733,9 @@ EverGear.SPEC_PROFILES = {
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Healer-specific stats (Spirit's own weight lives in this
                 -- spec's `stats` table above, alongside every other main stat)
-                SPELL_POWER = 0.8, SPELL_HEALING = 1.2, SPELL_HIT_RATING = 0.5,
-                SPELL_CRIT_RATING = 0.4, SPELL_HASTE_RATING = 0.4, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
-                RESILIENCE_RATING = 0.2, SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
+                SPELL_POWER = 0.8, SPELL_HEALING = 1.2, SPELL_HIT_CHANCE = 13,
+                SPELL_CRIT_CHANCE = 8.8, SPELL_HASTE = 6.32, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
+                SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0.6,
             },
         },
@@ -886,23 +901,34 @@ end
 
 -- Maps GetItemStats()/C_Item.GetItemStats() key names to our own stat names,
 -- so a live-read equipped item scores on the same scale as a candidate from
--- our database. Primary stats keep the _SHORT suffix; the TBC-era combat
--- ratings (Hit/Crit/Haste/Defense/Dodge/Parry/Block/Resilience/Expertise/
--- ArmorPen) drop it -- this split was confirmed against real GetItemStats()
--- output while building the TBC sibling addon's Upgrades.lua, and reused
--- here since Blizzard's own key-naming convention doesn't change per game.
+-- our database. Primary stats keep the _SHORT suffix.
+--
+-- WoW Forever has no combat-rating itemization at all (confirmed by the
+-- player) -- Hit/Crit/Haste/Dodge/Parry/Block/etc. are granted as flat
+-- percentages (CRIT_CHANCE, HIT_CHANCE, etc. in SPEC_PROFILES above), not as
+-- a scaling "rating" stat, and Expertise/Resilience don't exist as mechanics
+-- here at all. This table's ITEM_MOD_*_RATING keys are retained below only
+-- because they're (still) the Blizzard client API's own enum names for
+-- these item-mod slots -- nothing here claims this game actually populates
+-- them. In practice a flat-% bonus here (like Precision Bow's "Equip:
+-- increases hit chance by 0.3%") is almost certainly granted via an on-equip
+-- spell effect's tooltip text, which GetItemStats() can't see at all -- so a
+-- LIVE-equipped item not yet in our own database likely can't have its
+-- flat-% bonuses read at all through this table; they'd need a tooltip
+-- scan (same trick as ScanArmorFromLink/ScanWeaponRangeFromLink above) to
+-- ever be picked up live. Not implemented -- flagging the gap rather than
+-- guessing at a tooltip pattern with zero real examples to check it against.
 local API_KEY_TO_STAT = {
     ITEM_MOD_AGILITY_SHORT = "AGILITY", ITEM_MOD_STRENGTH_SHORT = "STRENGTH",
     ITEM_MOD_INTELLECT_SHORT = "INTELLECT", ITEM_MOD_SPIRIT_SHORT = "SPIRIT",
     ITEM_MOD_STAMINA_SHORT = "STAMINA",
-    ITEM_MOD_DEFENSE_SKILL_RATING = "DEFENSE_RATING", ITEM_MOD_DODGE_RATING = "DODGE_RATING",
-    ITEM_MOD_PARRY_RATING = "PARRY_RATING", ITEM_MOD_BLOCK_RATING = "BLOCK_RATING",
-    ITEM_MOD_HIT_RATING = "HIT_RATING", ITEM_MOD_CRIT_RATING = "CRIT_RATING",
-    ITEM_MOD_HASTE_RATING = "HASTE_RATING",
-    ITEM_MOD_HIT_SPELL_RATING_SHORT = "SPELL_HIT_RATING", ITEM_MOD_CRIT_SPELL_RATING_SHORT = "SPELL_CRIT_RATING",
-    ITEM_MOD_HASTE_SPELL_RATING_SHORT = "SPELL_HASTE_RATING",
-    ITEM_MOD_RESILIENCE_RATING = "RESILIENCE_RATING", ITEM_MOD_EXPERTISE_RATING = "EXPERTISE_RATING",
-    ITEM_MOD_ARMOR_PENETRATION_RATING = "ARMOR_PENETRATION_RATING",
+    ITEM_MOD_DEFENSE_SKILL_RATING = "DEFENSE", ITEM_MOD_DODGE_RATING = "DODGE_CHANCE",
+    ITEM_MOD_PARRY_RATING = "PARRY_CHANCE", ITEM_MOD_BLOCK_RATING = "BLOCK_CHANCE",
+    ITEM_MOD_HIT_RATING = "HIT_CHANCE", ITEM_MOD_CRIT_RATING = "CRIT_CHANCE",
+    ITEM_MOD_HASTE_RATING = "HASTE",
+    ITEM_MOD_HIT_SPELL_RATING_SHORT = "SPELL_HIT_CHANCE", ITEM_MOD_CRIT_SPELL_RATING_SHORT = "SPELL_CRIT_CHANCE",
+    ITEM_MOD_HASTE_SPELL_RATING_SHORT = "SPELL_HASTE",
+    ITEM_MOD_ARMOR_PENETRATION_RATING = "ARMOR_PENETRATION",
     ITEM_MOD_ATTACK_POWER_SHORT = "ATTACK_POWER", ITEM_MOD_SPELL_POWER_SHORT = "SPELL_POWER",
     ITEM_MOD_MANA_REGENERATION_SHORT = "MANA_REGEN", ITEM_MOD_SPELL_PENETRATION_SHORT = "SPELL_PENETRATION",
     ITEM_MOD_BLOCK_VALUE_SHORT = "BLOCK_VALUE",

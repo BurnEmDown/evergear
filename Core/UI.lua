@@ -98,6 +98,11 @@ local QUALITY_COLORS = {
     [5] = { 1.00, 0.50, 0.00 },  -- Legendary
 }
 
+-- Cropped straight from the addon's own Icon.tga (the small green up-arrow
+-- "upgrade" badge in its bottom-right corner) -- see the badge-pill section
+-- below, which overlays it next to the "+X" delta on an upgradable slot.
+local UPGRADE_ARROW_TEXTURE = "Interface\\AddOns\\EverGear\\UpgradeArrow"
+
 local function GetQualityColor(quality)
     local c = quality and QUALITY_COLORS[quality]
     if c then return c[1], c[2], c[3] end
@@ -663,10 +668,24 @@ local function CreateSlotButton(slotToken)
     badgeBG:SetBackdropColor(0.05, 0.05, 0.06, 0.9)
     btn.badgeBG = badgeBG
 
+    -- Left-anchored (not centered) now that the pill's width is recomputed
+    -- every refresh (see UpdateBadgePill below) -- an upgrade slot needs room
+    -- for the arrow icon after the text, a BIS/"--" slot doesn't, and only a
+    -- fixed left edge keeps the text from jumping around between the two.
     local badge = badgeBG:CreateFontString(nil, "OVERLAY")
     badge:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
-    badge:SetPoint("CENTER", badgeBG, "CENTER", 0, 0)
+    badge:SetPoint("LEFT", badgeBG, "LEFT", 4, 0)
     btn.badge = badge
+
+    -- Small green "upgrade available" arrow (cropped from the addon's own
+    -- icon, see UPGRADE_ARROW_TEXTURE) shown next to the "+X" delta text --
+    -- hidden for the BIS/"--" cases, where there's no delta to point at.
+    local upgradeArrow = badgeBG:CreateTexture(nil, "OVERLAY")
+    upgradeArrow:SetSize(10, 10)
+    upgradeArrow:SetTexture(UPGRADE_ARROW_TEXTURE)
+    upgradeArrow:SetPoint("LEFT", badge, "RIGHT", 2, 0)
+    upgradeArrow:Hide()
+    btn.upgradeArrow = upgradeArrow
 
     btn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -684,6 +703,27 @@ local function CreateSlotButton(slotToken)
 
     slotButtons[slotToken] = btn
     return btn
+end
+
+-- Resizes/repositions a slot button's badge pill for its current text +
+-- (optionally) the upgrade arrow -- the pill only has a BOTTOMRIGHT anchor
+-- point (see CreateSlotButton), so changing its width grows/shrinks it
+-- leftward from that fixed corner, same as it's always been sized. Keeping
+-- this fixed-minimum-width rather than always tight-fitting the text means
+-- "BIS"/"--" render at the same pill size they always have.
+local BADGE_PAD_LEFT = 4
+local BADGE_PAD_RIGHT = 4
+local BADGE_ARROW_GAP = 2
+local BADGE_ARROW_WIDTH = 10
+local BADGE_MIN_WIDTH = 24
+
+local function UpdateBadgePill(btn, showArrow)
+    btn.upgradeArrow:SetShown(showArrow)
+    local width = BADGE_PAD_LEFT + btn.badge:GetStringWidth() + BADGE_PAD_RIGHT
+    if showArrow then
+        width = width + BADGE_ARROW_GAP + BADGE_ARROW_WIDTH
+    end
+    btn.badgeBG:SetWidth(math.max(BADGE_MIN_WIDTH, width))
 end
 
 for i, slotToken in ipairs(leftColumn) do
@@ -748,6 +788,11 @@ end)
 local DETAIL_WIDTH = 220
 local DETAIL_ROW_HEIGHT = 46
 local MAX_DETAIL_CANDIDATES = 5
+
+-- Which slot's detail panel is currently showing, if any -- used below to
+-- re-run ShowUpgradeDetail when a cold item-info cache miss resolves (see
+-- the GET_ITEM_INFO_RECEIVED watcher near the end of this file).
+local currentDetailSlot
 
 local detailPanel = CreateFrame("Frame", "EverGearDetailPanel", mainFrame, "BackdropTemplate")
 detailPanel:SetSize(DETAIL_WIDTH, 150)
@@ -865,6 +910,8 @@ function EverGear:ShowUpgradeDetail(slotToken)
     local btn = slotButtons[slotToken]
     if not btn then return end
 
+    currentDetailSlot = slotToken
+
     if weaponFilterPanel then weaponFilterPanel:Hide() end
     if professionFilterPanel then professionFilterPanel:Hide() end
 
@@ -903,8 +950,12 @@ function EverGear:ShowUpgradeDetail(slotToken)
             -- item DB doesn't carry rarity, but the client's item cache
             -- does for any real item id/link). Falls back to the theme's
             -- neutral gold-grey when the client hasn't cached this item yet
-            -- (a common cold-cache miss for anything not recently seen),
-            -- rather than leaving it uncolored.
+            -- (a common cold-cache miss for anything not recently seen,
+            -- especially here -- a candidate the player may never have laid
+            -- eyes on) rather than leaving it uncolored; the
+            -- GET_ITEM_INFO_RECEIVED watcher near the end of this file
+            -- re-runs this once the real data arrives, so it self-corrects
+            -- in place instead of needing the panel closed and reopened.
             local _, _, quality = SafeGetItemInfo(itemLink)
             local qr, qg, qb = GetQualityColor(quality)
             row.icon:SetBackdropBorderColor(qr, qg, qb, 1)
@@ -1298,8 +1349,10 @@ function EverGear:RefreshUI()
             end
         end
 
+        local itemQuality
         if itemLink then
-            local _, _, _, _, _, _, _, _, _, itemTexture = SafeGetItemInfo(itemLink)
+            local _, _, quality, _, _, _, _, _, _, itemTexture = SafeGetItemInfo(itemLink)
+            itemQuality = quality
             SetIconTexture(btn, itemTexture or SafeGetItemIcon(itemLink) or EverGear.EMPTY_SLOT_TEXTURES[slotToken])
             btn.currentLink = itemLink
         else
@@ -1310,11 +1363,30 @@ function EverGear:RefreshUI()
         btn.currentScore = currentScore
         btn.upgradeList = filtered
 
-        -- Status color drives both the badge pill and the slot's own border
-        -- ring, so the whole icon reads as "this needs attention" (green),
-        -- "you're set" (gold), or "nothing to see" (dim) even without
-        -- reading the badge text itself.
+        -- The slot's own border ring is now the equipped item's rarity color
+        -- (gray/white/green/blue/purple/yellow -- same lookup/fallback the
+        -- detail panel's rows already use below), not an upgrade-status
+        -- color -- per user feedback, "what is this item" (rarity) belongs on
+        -- the icon itself, while "do I need to act on this" moves entirely to
+        -- the badge pill (status-colored still) plus its text/arrow. An empty
+        -- slot has no rarity to show -- white (same RGB as the "Common"
+        -- quality color, per user feedback) rather than GetQualityColor's own
+        -- unknown-quality fallback (a muted gold, meant for a cache-miss on a
+        -- REAL item, not "there's nothing here").
+        local qr, qg, qb
+        if itemLink then
+            qr, qg, qb = GetQualityColor(itemQuality)
+        else
+            qr, qg, qb = 1, 1, 1
+        end
+        btn:SetBackdropBorderColor(qr, qg, qb, 1)
+
+        -- Status color still drives the badge pill, so "this needs attention"
+        -- (green), "you're set" (gold), or "nothing to see" (dim) reads at a
+        -- glance even before reading the badge text -- only the slot's own
+        -- border moved to rarity coloring above.
         local statusColor
+        local showArrow = false
         if #candidates == 0 then
             btn.badge:SetText("BIS")
             statusColor = THEME.statusBIS
@@ -1329,11 +1401,12 @@ function EverGear:RefreshUI()
             btn.badge:SetText("+" .. delta)
             statusColor = THEME.statusUpgrade
             btn.isBIS = false
+            showArrow = true
         end
 
         btn.badge:SetTextColor(1, 1, 1)
         btn.badgeBG:SetBackdropBorderColor(unpack(statusColor))
-        btn:SetBackdropBorderColor(statusColor[1], statusColor[2], statusColor[3], 0.9)
+        UpdateBadgePill(btn, showArrow)
     end
 end
 
@@ -1379,3 +1452,27 @@ SLASH_EVERGEAR2 = "/eg"
 SlashCmdList["EVERGEAR"] = function()
     EverGear:ToggleUI()
 end
+
+-- ===== Cold item-cache self-correction =====
+-- SafeGetItemInfo (C_Item.GetItemInfo under the hood) returns nils for an
+-- item the client hasn't cached yet -- most often one of the detail panel's
+-- upgrade candidates, since those can easily be items the player has never
+-- seen in-game before. That's what GetQualityColor's neutral-gold fallback
+-- above was showing instead of the real rarity color (reported as "borders
+-- are yellow the first time, correct after closing and reopening" -- closing
+-- and reopening just happened to re-run the same lookup after the client's
+-- background fetch had time to land). The client fires
+-- GET_ITEM_INFO_RECEIVED once that fetch actually completes, so this just
+-- re-runs whichever of RefreshUI/ShowUpgradeDetail is currently relevant
+-- instead of waiting for the player to close and reopen something.
+local itemInfoWatcher = CreateFrame("Frame")
+itemInfoWatcher:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+itemInfoWatcher:SetScript("OnEvent", function(_, _, _, success)
+    if not success then return end
+    if mainFrame:IsShown() then
+        EverGear:RefreshUI()
+    end
+    if detailPanel:IsShown() and currentDetailSlot then
+        EverGear:ShowUpgradeDetail(currentDetailSlot)
+    end
+end)
