@@ -20,6 +20,25 @@ local GOLD_DIM = { 0.78, 0.63, 0.24 }
 local PARCHMENT = { 0.90, 0.85, 0.72 }
 local PANEL_BG = { 0.05, 0.05, 0.07, 0.85 }
 local PANEL_BORDER = { 0.55, 0.45, 0.20, 1.0 }
+-- Tint for the "Copy to...", Export and Import popups' DialogBox backdrop --
+-- fully opaque black (vs. that texture's own default, more translucent
+-- tint) so these smaller windows read as solid against the 3D world/other
+-- UI behind them instead of blending in, per user feedback.
+local POPUP_BG_TINT = { 0, 0, 0, 1 }
+
+-- Forward-declared (assigned further down, where each popup is built) so
+-- CloseOtherProfilePopups below -- and each popup's own Show function --
+-- can reach all three regardless of definition order: only one of these
+-- should ever be visible at a time, per user feedback that opening one
+-- while another was already open should close the previous one instead of
+-- stacking them.
+local copyPopup, exportPopup, importPopup
+
+local function CloseOtherProfilePopups(keepOpen)
+    if copyPopup and copyPopup ~= keepOpen then copyPopup:Hide() end
+    if exportPopup and exportPopup ~= keepOpen then exportPopup:Hide() end
+    if importPopup and importPopup ~= keepOpen then importPopup:Hide() end
+end
 
 local EDITOR_WIDTH = 380
 -- +14 over the original 480 -- makes room for the class+spec subtitle added
@@ -526,8 +545,10 @@ StaticPopupDialogs["EVERGEAR_DELETE_PROFILE"] = {
 
 -- ===== "Copy to..." popup (plan assumption 6) =====
 
-local copyPopup = CreateFrame("Frame", "EverGearCopyProfilePopup", UIParent, "BackdropTemplate")
-copyPopup:SetSize(260, 190)
+-- 240x210 -- narrowed by 10px each side and heightened by 20px from the
+-- original 260x190, per user feedback.
+copyPopup = CreateFrame("Frame", "EverGearCopyProfilePopup", UIParent, "BackdropTemplate")
+copyPopup:SetSize(240, 210)
 copyPopup:SetPoint("CENTER")
 copyPopup:SetFrameStrata("DIALOG")
 copyPopup:EnableMouse(true)
@@ -537,6 +558,7 @@ copyPopup:SetBackdrop({
     tile = true, tileSize = 32, edgeSize = 32,
     insets = { left = 11, right = 12, top = 12, bottom = 11 }
 })
+copyPopup:SetBackdropColor(unpack(POPUP_BG_TINT))
 copyPopup:Hide()
 
 local copyTitle = copyPopup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -658,6 +680,7 @@ function EverGear:ShowCopyProfilePopup(fromClass, fromSpec, fromProfileId, fromW
         if p.id == fromProfileId then sourceName = p.name end
     end
     copyNameEditBox:SetText(sourceName)
+    CloseOtherProfilePopups(copyPopup)
     copyPopup:Show()
 end
 
@@ -699,7 +722,7 @@ end
 
 -- ----- Export -----
 
-local exportPopup = CreateFrame("Frame", "EverGearExportProfilePopup", UIParent, "BackdropTemplate")
+exportPopup = CreateFrame("Frame", "EverGearExportProfilePopup", UIParent, "BackdropTemplate")
 exportPopup:SetSize(420, 320)
 exportPopup:SetPoint("CENTER")
 exportPopup:SetFrameStrata("DIALOG")
@@ -710,6 +733,7 @@ exportPopup:SetBackdrop({
     tile = true, tileSize = 32, edgeSize = 32,
     insets = { left = 11, right = 12, top = 12, bottom = 11 }
 })
+exportPopup:SetBackdropColor(unpack(POPUP_BG_TINT))
 exportPopup:Hide()
 
 local exportTitle = exportPopup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -761,6 +785,7 @@ function EverGear:ShowExportProfilePopup(classToken, specName, profileId, weight
     exportSubtitle:SetText(HumanizeClassToken(classToken) .. " - " .. specName .. " - " .. profileName)
     currentExportText = self:SerializeProfile(classToken, specName, profileName, weights)
     exportEditBox:SetText(currentExportText)
+    CloseOtherProfilePopups(exportPopup)
     exportPopup:Show()
     exportEditBox:SetFocus()
     exportEditBox:HighlightText()
@@ -768,7 +793,7 @@ end
 
 -- ----- Import -----
 
-local importPopup = CreateFrame("Frame", "EverGearImportProfilePopup", UIParent, "BackdropTemplate")
+importPopup = CreateFrame("Frame", "EverGearImportProfilePopup", UIParent, "BackdropTemplate")
 importPopup:SetSize(420, 320)
 importPopup:SetPoint("CENTER")
 importPopup:SetFrameStrata("DIALOG")
@@ -779,6 +804,7 @@ importPopup:SetBackdrop({
     tile = true, tileSize = 32, edgeSize = 32,
     insets = { left = 11, right = 12, top = 12, bottom = 11 }
 })
+importPopup:SetBackdropColor(unpack(POPUP_BG_TINT))
 importPopup:Hide()
 
 local importTitle = importPopup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -894,6 +920,7 @@ function EverGear:ShowImportProfilePopup(classToken, specName)
     importSubtitle:SetText(HumanizeClassToken(classToken) .. " - " .. specName)
     importEditBox:SetText("")
     importErrorText:SetText("")
+    CloseOtherProfilePopups(importPopup)
     importPopup:Show()
     importEditBox:SetFocus()
 end

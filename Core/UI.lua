@@ -1097,8 +1097,11 @@ local function RefreshWeaponFilterCheckboxes()
     end
 end
 
--- +26 over the plain grid height for the extra "Usable Only" button row.
-weaponFilterPanel:SetSize(WEAPON_PANEL_WIDTH, 92 + math.ceil(#weaponFilterEntries / WEAPON_COLS) * WEAPON_ROW_HEIGHT)
+-- +26 over the plain grid height for the extra "Usable Only" button row,
+-- +5 more per user feedback (the panel is anchored by its TOPLEFT corner
+-- when shown, so growing its height here extends the bottom edge downward
+-- without moving the top).
+weaponFilterPanel:SetSize(WEAPON_PANEL_WIDTH, 97 + math.ceil(#weaponFilterEntries / WEAPON_COLS) * WEAPON_ROW_HEIGHT)
 
 local weaponFilterUsableButton = CreateFrame("Button", nil, weaponFilterPanel, "UIPanelButtonTemplate")
 weaponFilterUsableButton:SetSize(150, 20)
