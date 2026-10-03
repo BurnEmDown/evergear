@@ -927,3 +927,28 @@ function EverGear:ToggleProfileEditor()
     -- (see UI.lua's ShowUpgradeDetail).
     if EverGear.HideUpgradeDetail then EverGear:HideUpgradeDetail() end
 end
+
+-- Called by UI.lua's Spec dropdown (SpecDropdown_OnClick) whenever the
+-- player's LIVE spec changes, passing the spec it was on just before and the
+-- one it's on now -- see CUSTOM_EP_PROFILES_PLAN.md's "changing spec while
+-- the editor is open" decision and its follow-up revision.
+--
+-- Only follows the live spec change if the editor was showing the spec that
+-- was JUST live (i.e. nobody has navigated it elsewhere via "Copy to..." --
+-- editorClassToken/editorSpecName would then point at that other class+spec
+-- instead). That preserves the original reason the editor doesn't just
+-- mirror the main window's dropdown: an active "Copy to..." comparison
+-- shouldn't be yanked out from under the player by an unrelated spec change
+-- in the main window. But the far more common case -- the editor is open on
+-- whatever's live, same as it was opened on -- previously left it stuck on
+-- the old spec until closed and reopened, which this fixes by re-pointing it
+-- at the new spec's own Default profile, same as a fresh ToggleProfileEditor
+-- open would.
+function EverGear:NotifyLiveSpecChanged(oldSpecName, newSpecName)
+    if not editorFrame:IsShown() then return end
+    local playerInfo = self:GetPlayerInfo()
+    if editorClassToken == playerInfo.classToken and editorSpecName == oldSpecName then
+        editorSpecName = newSpecName
+        SelectProfileForEditing("default")
+    end
+end

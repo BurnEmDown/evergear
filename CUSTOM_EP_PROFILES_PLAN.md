@@ -280,6 +280,21 @@ different spec than the live one -- is addressed instead by always
 labeling which class+spec the editor is currently on: a subtitle under the
 window's title ("Warrior - Fury", etc), added alongside this decision.
 
+### Revision: the editor now follows the live spec, conditionally
+
+Per user follow-up, "nothing happens automatically" above left the far more
+common case -- the editor opened normally (no "Copy to..." involved) and the
+player then switches specs in the main window -- stuck showing the old spec
+until closed and reopened, which read as more of a bug than a deliberate
+independence. Revised to a conditional follow: `EverGear:NotifyLiveSpecChanged`
+(`Core/ProfileEditor.lua`, called from `UI.lua`'s Spec dropdown) re-points the
+editor at the new live spec's own Default profile, but ONLY if the editor was
+still showing the spec being switched away from. If it's showing something
+else (an active "Copy to..." comparison), it's left alone -- the original
+worry above (an unrelated spec change yanking the player out of that
+comparison) still applies and is still avoided; only the "was actually
+following live" case changed.
+
 ## Correction: Paladin Holy's Spirit weight
 
 The "Primary Stat" removal above claimed every spec's numbers were

@@ -245,10 +245,16 @@ local RefreshProfileDropdown
 
 local function SpecDropdown_OnClick(self)
     local charDB = EverGear:GetCharDB()
+    local oldSpec = charDB.spec
     charDB.spec = self.value
     charDB.profileId = "default"
     UIDropDownMenu_SetSelectedValue(specDropdown, self.value)
     if RefreshProfileDropdown then RefreshProfileDropdown() end
+    -- Re-points the EP profile editor at the new spec too, but only if it
+    -- was still showing the spec we're switching away from -- see
+    -- NotifyLiveSpecChanged's own comment (Core/ProfileEditor.lua) for why
+    -- that guard matters.
+    if EverGear.NotifyLiveSpecChanged then EverGear:NotifyLiveSpecChanged(oldSpec, self.value) end
     EverGear:RefreshUI()
 end
 
