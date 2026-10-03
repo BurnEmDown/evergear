@@ -747,11 +747,50 @@ local function GetScoringProfile(classToken, specName)
     return EverGear:GetActiveProfile(classToken, specName)
 end
 
+-- "39 - 60 Damage" -> 39, 60. Also handles the single-value form some ranged/
+-- thrown weapons use ("18 Damage", no dash). Returns nil, nil if `text` isn't
+-- a weapon damage string at all (non-weapon items, or a live-read item whose
+-- tooltip scan below found nothing).
+local function ParseWeaponDamageRange(text)
+    if type(text) ~= "string" then return nil, nil end
+    local lo, hi = text:match("(%d+)%s*%-%s*(%d+)")
+    if lo and hi then return tonumber(lo), tonumber(hi) end
+    local single = text:match("^(%d+)%s*Damage$")
+    if single then return tonumber(single), tonumber(single) end
+    return nil, nil
+end
+
 -- Computes a single comparable score from a stats table (our own item.stats
 -- shape, or the live-read equivalent from NormalizeLiveStats below), plus
 -- armor value and weapon DPS (0 for non-weapon/non-armor items). `profile`
 -- comes from GetScoringProfile (class+spec-aware) -- this function itself
 -- doesn't know or care whether it came from a builtin or a custom profile.
+--
+-- Weapon scoring beyond raw DPS: a weapon's speed and its damage range carry
+-- real, independent information DPS alone collapses away, so a profile can
+-- weight them on top of (not instead of) dpsWeight --
+--   avgDamageWeight: per point of average per-hit damage (dps * speed) --
+--     what "weapon damage" special abilities (Heroic Strike, Mortal Strike,
+--     Execute, etc.) actually roll against each swing, confirmed random
+--     between the weapon's low and high end rather than weighted toward the
+--     top -- see CUSTOM_EP_PROFILES_PLAN.md for the writeup. Two weapons
+--     with the same average score identically here even if their min/max
+--     spread differs, which is mechanically correct for expected damage.
+--   maxDamageWeight: per point of the weapon's highest possible roll --
+--     doesn't affect expected DPS, but is the right number for someone
+--     explicitly optimizing burst/crit-ceiling rather than average output.
+--     Zero by default on every builtin profile; it's here for a player who
+--     wants to tune for it deliberately, not a standard scoring factor.
+--   fastWeaponWeight / slowWeaponWeight: per point of attacks-per-second
+--     (1/speed) or of speed itself -- two one-directional fields rather than
+--     one signed "speed preference" field, so they clamp/clone/import the
+--     same way every other weight here does. A spec that wants fast weapons
+--     (poison/proc uptime) sets fastWeaponWeight; one that wants slow
+--     weapons (Windfury, big-hit-based abilities) sets slowWeaponWeight --
+--     ordinarily only one of the two is ever nonzero for a given profile.
+-- All four read with an `or 0` fallback so a profile created before these
+-- fields existed (every builtin profile as of this writing) scores them as
+-- flatly irrelevant rather than erroring on a missing key.
 --
 -- Every main stat (STRENGTH/AGILITY/STAMINA/INTELLECT/SPIRIT) is weighted
 -- straight out of profile.stats -- there's no more separate "primary stat"
@@ -777,6 +816,20 @@ local function ScoreItem(stats, profile, armorValue, dps)
 
     score = score + ((armorValue or 0) * profile.armorWeight)
     score = score + ((dps or 0) * profile.dpsWeight)
+
+    local weaponSpeed = stats and stats.WEAPON_SPEED
+    if weaponSpeed and weaponSpeed > 0 then
+        local avgDamage = (dps or 0) * weaponSpeed
+        score = score + (avgDamage * (profile.avgDamageWeight or 0))
+        score = score + ((1 / weaponSpeed) * (profile.fastWeaponWeight or 0))
+        score = score + (weaponSpeed * (profile.slowWeaponWeight or 0))
+
+        local _, maxDamage = ParseWeaponDamageRange(stats.WEAPON_DAMAGE)
+        if maxDamage then
+            score = score + (maxDamage * (profile.maxDamageWeight or 0))
+        end
+    end
+
     return score
 end
 
@@ -800,6 +853,35 @@ local function ScanArmorFromLink(itemLink)
         end
     end
     return 0
+end
+
+-- GetItemStats() exposes a weapon's DPS (ITEM_MOD_DAMAGE_PER_SECOND_SHORT,
+-- see DPS_API_KEY below) but not its speed or its damage range -- same gap as
+-- Armor above, same fix: scan the rendered tooltip text. Returns
+-- (weaponDamageText, weaponSpeed) -- either or both nil if this isn't a
+-- weapon/the lines weren't found. weaponDamageText comes back in the exact
+-- "39 - 60 Damage" shape ParseWeaponDamageRange (above) expects, so a
+-- live-read item's stats.WEAPON_DAMAGE is interchangeable with a database
+-- item's.
+local function ScanWeaponRangeFromLink(itemLink)
+    if not itemLink then return nil, nil end
+    scanTooltip:ClearLines()
+    scanTooltip:SetHyperlink(itemLink)
+    local damageText, speed
+    for i = 1, scanTooltip:NumLines() do
+        local line = _G["EverGear_ScanTooltipTextLeft" .. i]
+        local text = line and line:GetText()
+        if text then
+            if not damageText then
+                damageText = text:match("^%d+ %- %d+ Damage$") or text:match("^%d+ Damage$")
+            end
+            if not speed then
+                local spd = text:match("^Speed ([%d%.]+)$")
+                if spd then speed = tonumber(spd) end
+            end
+        end
+    end
+    return damageText, speed
 end
 
 -- Maps GetItemStats()/C_Item.GetItemStats() key names to our own stat names,
@@ -849,6 +931,13 @@ local function NormalizeLiveStats(itemLink)
 
     local armorValue = ScanArmorFromLink(itemLink)
     local dpsValue = apiStats[DPS_API_KEY] or 0
+    -- Only a weapon has DPS at all -- skip the extra tooltip scan for every
+    -- other slot.
+    if dpsValue > 0 then
+        local damageText, speed = ScanWeaponRangeFromLink(itemLink)
+        if damageText then stats.WEAPON_DAMAGE = damageText end
+        if speed then stats.WEAPON_SPEED = speed end
+    end
     return stats, armorValue, dpsValue
 end
 

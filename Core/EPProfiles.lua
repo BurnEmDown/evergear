@@ -170,6 +170,17 @@ function EverGear:GetBuiltinProfile(classToken, specName)
         stats = CloneWeights(source.stats),
         armorWeight = self:ClampWeight(source.armorWeight),
         dpsWeight = self:ClampWeight(source.dpsWeight),
+        -- Weapon speed/damage-range scoring, beyond raw DPS (see ScoreItem's
+        -- comment in Upgrades.lua for what each one means). `or 0` via
+        -- ClampWeight(nil) is deliberate: every SPEC_PROFILES entry as of
+        -- this writing omits these keys entirely, which this clamps down to
+        -- a flatly-irrelevant 0 rather than nil -- no existing profile's
+        -- score changes until someone (the editor UI, a future hand-tune of
+        -- SPEC_PROFILES) sets one explicitly.
+        avgDamageWeight = self:ClampWeight(source.avgDamageWeight),
+        maxDamageWeight = self:ClampWeight(source.maxDamageWeight),
+        fastWeaponWeight = self:ClampWeight(source.fastWeaponWeight),
+        slowWeaponWeight = self:ClampWeight(source.slowWeaponWeight),
         secondary = CloneWeights(source.secondary),
     }
 end
@@ -316,7 +327,10 @@ end
 -- M5; this is just the (de)serialization logic, independently testable
 -- without it.
 
-local SCALAR_WEIGHT_KEYS = { "armorWeight", "dpsWeight" }
+local SCALAR_WEIGHT_KEYS = {
+    "armorWeight", "dpsWeight",
+    "avgDamageWeight", "maxDamageWeight", "fastWeaponWeight", "slowWeaponWeight",
+}
 local SUBTABLE_WEIGHT_KEYS = { "stats", "secondary" }
 
 -- JSON string -> { class, spec, name, weights }. Self-describing (carries
@@ -445,6 +459,10 @@ local CORE_STAT_FIELDS = {
 local CORE_SCALAR_FIELDS = {
     { key = "armorWeight", label = "Armor" },
     { key = "dpsWeight", label = "Weapon DPS" },
+    { key = "avgDamageWeight", label = "Avg Weapon Damage" },
+    { key = "maxDamageWeight", label = "Max Weapon Damage" },
+    { key = "fastWeaponWeight", label = "Fast Weapon" },
+    { key = "slowWeaponWeight", label = "Slow Weapon" },
 }
 
 -- "ATTACK_POWER_VS_UNDEAD" -> "Attack Power Vs Undead". Good enough for
