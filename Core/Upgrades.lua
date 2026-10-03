@@ -715,86 +715,103 @@ EverGear.SPEC_PROFILES = {
     },
     DRUID = {
         ["Balance"] = {  -- role: Caster DPS
-            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.5 }, armorWeight = 0.1, dpsWeight = 0.3,
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder -- including SPELL_POWER
+            -- and NATURE_DAMAGE (Balance's kit does both Arcane and Nature
+            -- damage in practice, but this set only weights Arcane).
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.11, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Caster DPS-specific stats
-                SPELL_POWER = 0.8, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 0.8,
-                -- Nature and Arcane Damage weighted above the other schools --
-                -- Balance's kit spans both (Starfire is Arcane, Wrath/Moonfire
-                -- are Nature).
-                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.7, FROST_DAMAGE = 0.4,
-                NATURE_DAMAGE = 0.7, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.5,
-            },
-        },
-        ["Feral (DPS)"] = {  -- role: Physical DPS
-            stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.05, SPIRIT = 0.05 }, armorWeight = 0.15, dpsWeight = 3.0,
-            secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
-                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
-                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
-                NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Physical DPS-specific stats
-                ATTACK_POWER = 0.5, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
-                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
-                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
-                PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
-                RANGED_ATTACK_POWER = 0, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HIT_CHANCE = 8.94, SPELL_CRIT_CHANCE = 6.59, SPELL_HASTE = 0,
+                MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
+                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 1, FROST_DAMAGE = 0,
+                NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
                 HP5 = 0, MP5 = 0,
             },
         },
-        ["Feral (Tank)"] = {  -- role: Tank
-            stats = { STRENGTH = 2, AGILITY = 3.0, STAMINA = 2.5, INTELLECT = 0.05, SPIRIT = 0.05 }, armorWeight = 0.3, dpsWeight = 1.0,
+        ["Feral (DPS)"] = {  -- role: Physical DPS
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder. The source JSON's "mana"
+            -- (0.04) is folded into MANA_REGEN, same as the healer specs.
+            stats = { STRENGTH = 2.2, AGILITY = 2.02, STAMINA = 0, INTELLECT = 0.67, SPIRIT = 0.08 }, armorWeight = 0, dpsWeight = 14,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
+                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HASTE = 0, MANA_REGEN = 0.04, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
+                NATURE_DAMAGE = 0,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                ATTACK_POWER = 1, HIT_CHANCE = 8.21, CRIT_CHANCE = 8.19, HASTE = 4.17,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
+                PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
+                RANGED_ATTACK_POWER = 0, DEFENSE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0.46,
+            },
+        },
+        ["Feral (Tank)"] = {  -- role: Tank
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder.
+            --
+            -- "armorBonus" (0.069) is folded additively into armorWeight
+            -- alongside "armor" (0.33, giving 0.4) -- confirmed earlier that
+            -- bonus armor isn't a separate itemized stat in this game, it's
+            -- the same total Armor value shown on the tooltip (just colored
+            -- differently historically), so there's only one ARMOR number
+            -- per item to apply a single weight to. This is my best
+            -- approximation of two sixtyupgrades inputs that both ultimately
+            -- score against that one number -- flagging in case a different
+            -- split was intended.
+            --
+            -- "health" (0.167, a flat Health distinct from Stamina) has no
+            -- equivalent key in this game's data model -- same situation as
+            -- this spec's own Mitigation profile elsewhere -- and is
+            -- dropped rather than folded into Stamina.
+            stats = { STRENGTH = 2.2, AGILITY = 1.57, STAMINA = 2.2, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0.4, dpsWeight = 14,
+            secondary = {
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Tank-specific stats
-                DODGE_CHANCE = 15.84, PARRY_CHANCE = 13.86, BLOCK_CHANCE = 0,
-                BLOCK_VALUE = 0, ATTACK_POWER = 0.2, HIT_CHANCE = 4.74,
-                CRIT_CHANCE = 4.4, HASTE = 1.58, ARMOR_PENETRATION = 0.05,
-                DEFENSE = 1.0, PHYSICAL_DAMAGE = 0.1, ATTACK_POWER_VS_BEASTS = 0.05, ATTACK_POWER_VS_HUMANOIDS = 0.05,
-                ATTACK_POWER_VS_UNDEAD = 0.05, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
-                HP5 = 0.4, MP5 = 0,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                DODGE_CHANCE = 0, PARRY_CHANCE = 0, BLOCK_CHANCE = 0,
+                BLOCK_VALUE = 0, ATTACK_POWER = 1, HIT_CHANCE = 36.1,
+                CRIT_CHANCE = 25.8, HASTE = 26.6, ARMOR_PENETRATION = 0,
+                DEFENSE = 0.46, PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0,
+                ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Restoration"] = {  -- role: Healer (Spirit-primary for Druid -- see CLASS_ROLE_PRIMARY_STAT)
-            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.2, INTELLECT = 0.5, SPIRIT = 3.0 }, armorWeight = 0.08, dpsWeight = 0.1,
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder -- including SPELL_POWER,
+            -- which this set omits in favor of SPELL_DAMAGE/SPELL_HEALING
+            -- alone. The source JSON's "mana" (0.02) is folded into
+            -- MANA_REGEN, same as the other healer specs.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.3, SPIRIT = 0.46 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Healer-specific stats (Spirit's own weight lives in this
-                -- spec's `stats` table above, alongside every other main stat)
-                SPELL_POWER = 0.8, SPELL_HEALING = 1.2, SPELL_HIT_CHANCE = 13,
-                SPELL_CRIT_CHANCE = 8.8, SPELL_HASTE = 6.32, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
-                SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.6,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
+                SPELL_CRIT_CHANCE = 10, SPELL_HASTE = 0, MANA_REGEN = 0.02, SPELL_PENETRATION = 0,
+                SPELL_DAMAGE = 1, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 3,
             },
         },
     },
