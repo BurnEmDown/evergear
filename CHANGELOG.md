@@ -5,6 +5,16 @@ patch digit (`0.0.X`) bumps on every shipped change, no matter how small.
 Moving to `0.1.0` or `1.0.0` is a deliberate decision, not a patch-count
 milestone -- see the "Versioning" section of `README.md`.
 
+## [0.0.14] - 2026-10-03
+
+### Changed
+- Paper-doll slot icon borders now show the equipped item's rarity color
+  (gray/white/green/blue/purple/yellow) instead of the upgrade-status
+  color. Best-in-slot items still show a "BIS" badge, and upgradable items
+  now show their "+X" score delta with a small green arrow next to it
+  (cropped from the addon's own icon) -- the badge pill carries the
+  upgrade-status signal on its own now that the slot border doesn't.
+
 ## [0.0.13] - 2026-10-03
 
 ### Added
