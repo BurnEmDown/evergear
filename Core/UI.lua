@@ -669,6 +669,11 @@ local DETAIL_WIDTH = 220
 local DETAIL_ROW_HEIGHT = 46
 local MAX_DETAIL_CANDIDATES = 5
 
+-- Which slot's detail panel is currently showing, if any -- used below to
+-- re-run ShowUpgradeDetail when a cold item-info cache miss resolves (see
+-- the GET_ITEM_INFO_RECEIVED watcher near the end of this file).
+local currentDetailSlot
+
 local detailPanel = CreateFrame("Frame", "EverGearDetailPanel", mainFrame, "BackdropTemplate")
 detailPanel:SetSize(DETAIL_WIDTH, 150)
 detailPanel:SetBackdrop({
@@ -776,6 +781,8 @@ function EverGear:ShowUpgradeDetail(slotToken)
     local btn = slotButtons[slotToken]
     if not btn then return end
 
+    currentDetailSlot = slotToken
+
     if weaponFilterPanel then weaponFilterPanel:Hide() end
     if professionFilterPanel then professionFilterPanel:Hide() end
 
@@ -814,8 +821,12 @@ function EverGear:ShowUpgradeDetail(slotToken)
             -- item DB doesn't carry rarity, but the client's item cache
             -- does for any real item id/link). Falls back to the theme's
             -- neutral gold-grey when the client hasn't cached this item yet
-            -- (a common cold-cache miss for anything not recently seen),
-            -- rather than leaving it uncolored.
+            -- (a common cold-cache miss for anything not recently seen,
+            -- especially here -- a candidate the player may never have laid
+            -- eyes on) rather than leaving it uncolored; the
+            -- GET_ITEM_INFO_RECEIVED watcher near the end of this file
+            -- re-runs this once the real data arrives, so it self-corrects
+            -- in place instead of needing the panel closed and reopened.
             local _, _, quality = SafeGetItemInfo(itemLink)
             local qr, qg, qb = GetQualityColor(quality)
             row.icon:SetBackdropBorderColor(qr, qg, qb, 1)
@@ -1216,8 +1227,17 @@ function EverGear:RefreshUI()
         -- detail panel's rows already use below), not an upgrade-status
         -- color -- per user feedback, "what is this item" (rarity) belongs on
         -- the icon itself, while "do I need to act on this" moves entirely to
-        -- the badge pill (status-colored still) plus its text/arrow.
-        local qr, qg, qb = GetQualityColor(itemQuality)
+        -- the badge pill (status-colored still) plus its text/arrow. An empty
+        -- slot has no rarity to show -- white (same RGB as the "Common"
+        -- quality color, per user feedback) rather than GetQualityColor's own
+        -- unknown-quality fallback (a muted gold, meant for a cache-miss on a
+        -- REAL item, not "there's nothing here").
+        local qr, qg, qb
+        if itemLink then
+            qr, qg, qb = GetQualityColor(itemQuality)
+        else
+            qr, qg, qb = 1, 1, 1
+        end
         btn:SetBackdropBorderColor(qr, qg, qb, 1)
 
         -- Status color still drives the badge pill, so "this needs attention"
@@ -1291,3 +1311,27 @@ SLASH_EVERGEAR2 = "/eg"
 SlashCmdList["EVERGEAR"] = function()
     EverGear:ToggleUI()
 end
+
+-- ===== Cold item-cache self-correction =====
+-- SafeGetItemInfo (C_Item.GetItemInfo under the hood) returns nils for an
+-- item the client hasn't cached yet -- most often one of the detail panel's
+-- upgrade candidates, since those can easily be items the player has never
+-- seen in-game before. That's what GetQualityColor's neutral-gold fallback
+-- above was showing instead of the real rarity color (reported as "borders
+-- are yellow the first time, correct after closing and reopening" -- closing
+-- and reopening just happened to re-run the same lookup after the client's
+-- background fetch had time to land). The client fires
+-- GET_ITEM_INFO_RECEIVED once that fetch actually completes, so this just
+-- re-runs whichever of RefreshUI/ShowUpgradeDetail is currently relevant
+-- instead of waiting for the player to close and reopen something.
+local itemInfoWatcher = CreateFrame("Frame")
+itemInfoWatcher:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+itemInfoWatcher:SetScript("OnEvent", function(_, _, _, success)
+    if not success then return end
+    if mainFrame:IsShown() then
+        EverGear:RefreshUI()
+    end
+    if detailPanel:IsShown() and currentDetailSlot then
+        EverGear:ShowUpgradeDetail(currentDetailSlot)
+    end
+end)
