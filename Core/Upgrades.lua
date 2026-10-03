@@ -657,69 +657,65 @@ EverGear.SPEC_PROFILES = {
     },
     WARLOCK = {
         ["Affliction"] = {  -- role: Caster DPS
-            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.01 }, armorWeight = 0.1, dpsWeight = 0.3,
+            -- sixtyupgrades-derived weights (same JSON given for all 3
+            -- Warlock specs): every key the source JSON omitted is an
+            -- explicit 0 here (confirmed convention), not a mechanically-
+            -- rescaled placeholder -- including SPELL_POWER, which this set
+            -- omits in favor of SPELL_DAMAGE alone.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.28, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Caster DPS-specific stats
-                SPELL_POWER = 1, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 1,
-                -- Shadow is this spec's nuke school; Fire is not used, so it stays
-                -- at the universal flat default rather than being boosted.
-                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.7, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
-                NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
-                HP5 = 0.2, MP5 = 0.5,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HIT_CHANCE = 19.53, SPELL_CRIT_CHANCE = 12.64, SPELL_HASTE = 0,
+                MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
+                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 1, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
+                NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Demonology"] = {  -- role: Caster DPS
-            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.01 }, armorWeight = 0.1, dpsWeight = 0.3,
+            -- Same sixtyupgrades-derived weights as Affliction (one JSON
+            -- was given for all 3 Warlock specs) -- see Affliction's comment
+            -- for the zero-fill convention.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.28, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Caster DPS-specific stats
-                SPELL_POWER = 1, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 1,
-                -- Fire and Shadow are both relevant nuke schools for Demonology's kit,
-                -- so both get the boosted weight instead of the universal 0.4.
-                FIRE_DAMAGE = 0.7, SHADOW_DAMAGE = 0.7, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
-                NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
-                HP5 = 0.2, MP5 = 0.5,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HIT_CHANCE = 19.53, SPELL_CRIT_CHANCE = 12.64, SPELL_HASTE = 0,
+                MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
+                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 1, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
+                NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Destruction"] = {  -- role: Caster DPS
-            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.0, INTELLECT = 3.0, SPIRIT = 0.01 }, armorWeight = 0.1, dpsWeight = 0.3,
+            -- Same sixtyupgrades-derived weights as Affliction (one JSON
+            -- was given for all 3 Warlock specs) -- see Affliction's comment
+            -- for the zero-fill convention.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.28, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Caster DPS-specific stats
-                SPELL_POWER = 1, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 1,
-                -- Fire and Shadow are both relevant nuke schools for Destruction's kit,
-                -- so both get the boosted weight instead of the universal 0.4.
-                FIRE_DAMAGE = 0.7, SHADOW_DAMAGE = 0.7, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
-                NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
-                HP5 = 0.2, MP5 = 0.5,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HIT_CHANCE = 19.53, SPELL_CRIT_CHANCE = 12.64, SPELL_HASTE = 0,
+                MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
+                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 1, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
+                NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
     },
