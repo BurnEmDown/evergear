@@ -1,0 +1,15 @@
+-- GENERATED FILE. Do not hand-edit.
+-- Produced by evergear-backend/scripts/json_to_lua.py from imported/processed/excavation-site-wetlands.json (+ manual/excavation-site-wetlands.json overrides).
+-- Regenerate instead of editing this file directly.
+
+EverGear = EverGear or {}
+EverGear.Items = EverGear.Items or {}
+
+EverGear.Items[273024] = {id = 273024, name = "Glinteye Slippers", slot = "FeetSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = 26, confirmed = true, source = {type = "dungeonDrop", zone = "Excavation Site: Wetlands", boss = "Saltspine"}, stats = {STAMINA = 9, INTELLECT = 6, SPIRIT = 6, ARMOR = 33}}
+EverGear.Items[273023] = {id = 273023, name = "Saltscale Girdle", slot = "WaistSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = 26, confirmed = true, source = {type = "dungeonDrop", zone = "Excavation Site: Wetlands", boss = "Saltspine", chance = 0.2353}, stats = {STRENGTH = 9, STAMINA = 9, ARMOR = 124}}
+EverGear.Items[273022] = {id = 273022, name = "Supple Bellyskin Leggings", slot = "LegsSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = 26, confirmed = true, source = {type = "dungeonDrop", zone = "Excavation Site: Wetlands", boss = "Saltspine"}, stats = {STRENGTH = 6, STAMINA = 14, ARMOR = 92}}
+EverGear.Items[273025] = {id = 273025, name = "Raptorclaw Greaves", slot = "FeetSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = 26, confirmed = true, source = {type = "dungeonDrop", zone = "Excavation Site: Wetlands", boss = "Shadetooth"}, stats = {STRENGTH = 7, STAMINA = 7, INTELLECT = 6, ARMOR = 152}}
+EverGear.Items[273027] = {id = 273027, name = "Raptor's Gaze", slot = "SecondaryHandSlot", armorType = nil, weaponType = "offhand", isTwoHand = nil, classes = nil, ilvl = 31, minLevel = 26, confirmed = true, source = {type = "dungeonDrop", zone = "Excavation Site: Wetlands", boss = "Shadetooth"}, stats = {STAMINA = 7, INTELLECT = 4, SPELL_POWER = 5}}
+EverGear.Items[273030] = {id = 273030, name = "Ring of Power Regulation", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 28, confirmed = true, source = {type = "dungeonDrop", zone = "Excavation Site: Wetlands", boss = "Relic Guardian"}, stats = {STAMINA = 8, MP5 = 2}}
+EverGear.Items[273029] = {id = 273029, name = "Golemsight Long Gun", slot = "RangedSlot", armorType = nil, weaponType = "gun", isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 28, confirmed = true, source = {type = "dungeonDrop", zone = "Excavation Site: Wetlands", boss = "Relic Guardian"}, stats = {AGILITY = 6, WEAPON_DAMAGE = "29 - 54 Damage", WEAPON_SPEED = 2.5, WEAPON_DPS = 16.6}}
+EverGear.Items[273028] = {id = 273028, name = "Reliquary Mantle", slot = "ShoulderSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 28, confirmed = true, source = {type = "dungeonDrop", zone = "Excavation Site: Wetlands", boss = "Relic Guardian"}, stats = {STAMINA = 12, SPIRIT = 4, ARMOR = 171}}
