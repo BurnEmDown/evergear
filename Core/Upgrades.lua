@@ -249,29 +249,25 @@ EverGear.SPEC_PROFILES = {
     },
     PALADIN = {
         ["Holy"] = {  -- role: Healer
-            -- SPIRIT = 1, not the generic 0.3 fallback -- this was hand-tuned
-            -- (found inside the old `secondary` table's "Healer-specific
-            -- stats" as a real SPIRIT=1 entry, missed during the primary-
-            -- stat refactor since every OTHER healer spec deliberately
-            -- omits its primary stat from `secondary`, so this one's
-            -- survival there read like 0.3-fallback territory at a glance).
-            stats = { STRENGTH = 0, AGILITY = 0.05, STAMINA = 1.2, INTELLECT = 3.0, SPIRIT = 1 }, armorWeight = 0.08, dpsWeight = 0.1,
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder -- including SPELL_POWER,
+            -- which this set omits in favor of SPELL_DAMAGE/SPELL_HEALING
+            -- alone. The source JSON's "mana" (0.06) is folded into
+            -- MANA_REGEN, same as Priest Holy/Discipline.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 1, SPIRIT = 0.5 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Healer-specific stats (Spirit's own weight lives in this
-                -- spec's `stats` table above, alongside every other main stat)
-                SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_CHANCE = 13,
-                SPELL_CRIT_CHANCE = 8.8, SPELL_HASTE = 6.32, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
-                SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.6,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
+                SPELL_CRIT_CHANCE = 20, SPELL_HASTE = 0, MANA_REGEN = 0.06, SPELL_PENETRATION = 0,
+                SPELL_DAMAGE = 1, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 3,
             },
         },
         ["Protection"] = {  -- role: Tank
@@ -295,22 +291,22 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Retribution"] = {  -- role: Physical DPS
-            stats = { STRENGTH = 3.0, AGILITY = 1, STAMINA = 1.5, INTELLECT = 0.1, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder.
+            stats = { STRENGTH = 2, AGILITY = 1, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0.5, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Physical DPS-specific stats
-                ATTACK_POWER = 1, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
-                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
-                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0.1,
-                PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
-                RANGED_ATTACK_POWER = 0, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                ATTACK_POWER = 1, HIT_CHANCE = 20, CRIT_CHANCE = 15, HASTE = 50,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
+                PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
+                RANGED_ATTACK_POWER = 0, DEFENSE = 0, THREAT_REDUCTION = 0,
                 HP5 = 0, MP5 = 0,
             },
         },
@@ -465,10 +461,8 @@ EverGear.SPEC_PROFILES = {
             -- explicit 0 here (confirmed convention), not a mechanically-
             -- rescaled placeholder -- including SPELL_POWER, which this set
             -- omits in favor of SPELL_DAMAGE/SPELL_HEALING alone. The
-            -- source JSON's "mana" (0.07, presumably a flat +mana-pool
-            -- stat) has no equivalent key in this game's data model (same
-            -- situation as Warrior Protection's "health" -- see that
-            -- comment) and is dropped rather than folded into MANA_REGEN.
+            -- source JSON's "mana" (0.07) is folded into MANA_REGEN per
+            -- user confirmation.
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 1.16, SPIRIT = 0.83 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
@@ -479,7 +473,7 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
                 SPELL_POWER = 0, SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
-                SPELL_CRIT_CHANCE = 0, SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0,
+                SPELL_CRIT_CHANCE = 0, SPELL_HASTE = 0, MANA_REGEN = 0.07, SPELL_PENETRATION = 0,
                 SPELL_DAMAGE = 1, THREAT_REDUCTION = 0,
                 HP5 = 0, MP5 = 3.5,
             },
@@ -487,7 +481,7 @@ EverGear.SPEC_PROFILES = {
         ["Holy"] = {  -- role: Healer (Spirit-primary for Priest -- see CLASS_ROLE_PRIMARY_STAT)
             -- Same sixtyupgrades-derived weights as Discipline (one JSON
             -- was given for both) -- see Discipline's comment for the
-            -- zero-fill convention and the dropped "mana" key.
+            -- zero-fill convention and the "mana"->MANA_REGEN fold.
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 1.16, SPIRIT = 0.83 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
@@ -498,7 +492,7 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
                 SPELL_POWER = 0, SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
-                SPELL_CRIT_CHANCE = 0, SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0,
+                SPELL_CRIT_CHANCE = 0, SPELL_HASTE = 0, MANA_REGEN = 0.07, SPELL_PENETRATION = 0,
                 SPELL_DAMAGE = 1, THREAT_REDUCTION = 0,
                 HP5 = 0, MP5 = 3.5,
             },
