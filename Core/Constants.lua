@@ -6,7 +6,7 @@ EverGear.ADDON_NAME = "EverGear"
 -- change, no matter how small -- 0.0.1 -> 0.0.2 -> 0.0.3, etc. Moving to
 -- 0.1.0 or 1.0.0 is the user's call alone; Claude may suggest it's time,
 -- but must never bump a minor/major version on its own initiative.
-EverGear.VERSION = "0.0.12"
+EverGear.VERSION = "0.0.13"
 
 -- Populated later from Data\*.lua files. Each entry keyed by numeric item id.
 -- Canonical item shape (mirrors evergear-backend/schema.md):
