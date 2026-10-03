@@ -149,10 +149,9 @@ EverGear.SPEC_PROFILES = {
                 NATURE_DAMAGE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                -- HASTE here stands in for sixtyupgrades' "speed" -- pending
-                -- explicit confirmation that "speed" means Haste rather than
-                -- the weapon's own base speed (already fully captured by
-                -- dpsWeight/WEAPON_DPS).
+                -- HASTE here stands in for sixtyupgrades' "speed" --
+                -- confirmed to mean the Haste stat, not the weapon's own
+                -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
                 ATTACK_POWER = 1, HIT_CHANCE = 20, CRIT_CHANCE = 20, HASTE = 50,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
@@ -173,10 +172,9 @@ EverGear.SPEC_PROFILES = {
                 NATURE_DAMAGE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                -- HASTE here stands in for sixtyupgrades' "speed" -- pending
-                -- explicit confirmation that "speed" means Haste rather than
-                -- the weapon's own base speed (already fully captured by
-                -- dpsWeight/WEAPON_DPS).
+                -- HASTE here stands in for sixtyupgrades' "speed" --
+                -- confirmed to mean the Haste stat, not the weapon's own
+                -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
                 ATTACK_POWER = 1, HIT_CHANCE = 20, CRIT_CHANCE = 20, HASTE = 50,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
@@ -332,9 +330,8 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
                 -- HASTE here stands in for sixtyupgrades' "rangedSpeed" --
-                -- pending explicit confirmation that "speed" in these weight
-                -- sets means Haste rather than the weapon's own base speed
-                -- (already fully captured by dpsWeight/WEAPON_DPS).
+                -- confirmed to mean the Haste stat, not the weapon's own
+                -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
                 ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 100,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
@@ -357,9 +354,8 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
                 -- HASTE here stands in for sixtyupgrades' "rangedSpeed" --
-                -- pending explicit confirmation that "speed" in these weight
-                -- sets means Haste rather than the weapon's own base speed
-                -- (already fully captured by dpsWeight/WEAPON_DPS).
+                -- confirmed to mean the Haste stat, not the weapon's own
+                -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
                 ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 100,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
@@ -382,9 +378,8 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
                 -- HASTE here stands in for sixtyupgrades' "rangedSpeed" --
-                -- pending explicit confirmation that "speed" in these weight
-                -- sets means Haste rather than the weapon's own base speed
-                -- (already fully captured by dpsWeight/WEAPON_DPS).
+                -- confirmed to mean the Haste stat, not the weapon's own
+                -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
                 ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 100,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
@@ -408,10 +403,9 @@ EverGear.SPEC_PROFILES = {
                 NATURE_DAMAGE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                -- HASTE here stands in for sixtyupgrades' "speed" -- pending
-                -- explicit confirmation that "speed" means Haste rather than
-                -- the weapon's own base speed (already fully captured by
-                -- dpsWeight/WEAPON_DPS).
+                -- HASTE here stands in for sixtyupgrades' "speed" --
+                -- confirmed to mean the Haste stat, not the weapon's own
+                -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
                 ATTACK_POWER = 1, HIT_CHANCE = 16, CRIT_CHANCE = 20, HASTE = 50,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
@@ -432,10 +426,9 @@ EverGear.SPEC_PROFILES = {
                 NATURE_DAMAGE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                -- HASTE here stands in for sixtyupgrades' "speed" -- pending
-                -- explicit confirmation that "speed" means Haste rather than
-                -- the weapon's own base speed (already fully captured by
-                -- dpsWeight/WEAPON_DPS).
+                -- HASTE here stands in for sixtyupgrades' "speed" --
+                -- confirmed to mean the Haste stat, not the weapon's own
+                -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
                 ATTACK_POWER = 1, HIT_CHANCE = 18, CRIT_CHANCE = 23, HASTE = 50,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
