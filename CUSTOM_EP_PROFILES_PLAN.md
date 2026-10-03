@@ -103,7 +103,10 @@ later doesn't require separately updating the editor:
   HP5, MP5, resistances, etc. -- see Upgrades.lua:142-776 for the full set
   per spec)
 
-All of them: range `[0, 5]`, step `0.1`.
+All of them: range `[0, 100]`, step `0.01` (originally `[0, 5]`/`0.1`, raised
+once real sixtyupgrades-derived weights -- e.g. Hunter's `HASTE = 100`,
+`CRIT_CHANCE = 28.57` -- arrived with values and precision outside that
+range; see `EverGear:ClampWeight`'s own comment).
 
 ## Milestones
 
@@ -123,7 +126,7 @@ New `Core/EPProfiles.lua`:
   back to builtin default if the saved id no longer exists (deleted from
   another character, etc.).
 - `EverGear:ClampWeight(value)` -- shared rounding/clamping helper (round to
-  nearest 0.1, clamp to [0, 5]) used by both the UI input filter and
+  nearest 0.01, clamp to [0, 100]) used by both the UI input filter and
   JSON import validation, so both paths enforce the same rule.
 - `EverGear:CopyProfile(fromClass, fromSpec, fromProfileId, toClass, toSpec, newName)`
   -- builds the new profile by starting from `toSpec`'s builtin defaults

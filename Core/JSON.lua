@@ -79,7 +79,7 @@ EncodeValue = function(value, indent)
         return EncodeString(value)
     elseif valueType == "number" then
         -- %.10g avoids both unnecessary trailing zeros (weights are always
-        -- at most 1 decimal place already, see ClampWeight) and float noise
+        -- at most 2 decimal places already, see ClampWeight) and float noise
         -- like 0.30000000000000004.
         return string.format("%.10g", value)
     elseif valueType == "boolean" then

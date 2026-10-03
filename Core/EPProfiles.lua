@@ -60,16 +60,26 @@ end
 
 -- ===== Weight validation =====
 
--- Rounds to the nearest 0.1 and clamps to [0, 5] -- the single source of
+-- Rounds to the nearest 0.01 and clamps to [0, 100] -- the single source of
 -- truth for "is this a legal weight" used by the (future) editor UI's input
 -- filter and by JSON import validation alike, so a value can never sneak in
 -- through one path with different rules than the other.
+--
+-- Was [0, 5] at step 0.1 until the real sixtyupgrades-derived weights
+-- arrived (Hunter/Fury/Warrior Protection) with values up to 100 (e.g.
+-- HASTE = 100) and 2 decimal places (e.g. CRIT_CHANCE = 28.57) -- that old
+-- range/step was an arbitrary UI-slider-friendly number from before any
+-- real data existed, not a mechanically meaningful limit (a weight is a
+-- multiplier applied to a stat value, not a percentage itself), and it was
+-- silently clamping those real weights down to 5 on every read. 100 covers
+-- the highest value derived so far with headroom; bump it again if a future
+-- class ever needs more.
 function EverGear:ClampWeight(value)
     value = tonumber(value)
     if not value then return 0 end
-    value = math.floor(value * 10 + 0.5) / 10
+    value = math.floor(value * 100 + 0.5) / 100
     if value < 0 then value = 0 end
-    if value > 5 then value = 5 end
+    if value > 100 then value = 100 end
     return value
 end
 

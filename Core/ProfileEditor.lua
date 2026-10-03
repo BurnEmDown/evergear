@@ -212,10 +212,11 @@ local ROW_GAP = 5
 local SECTION_GAP = 6
 local gridRowPool = {}
 
--- Only digits and a single '.' survive, and at most the first 2 DIGIT
--- characters typed (the '.' doesn't count toward that limit) -- per the
--- feature spec: "only numbers and decimal point", "each digit after the
--- 2nd is ignored". Final range/step clamping (0-5, nearest 0.1) happens
+-- Only digits and a single '.' survive, and at most the first 5 DIGIT
+-- characters typed (the '.' doesn't count toward that limit) -- enough for
+-- the full range ("100.00" is 5 digits) now that weights go up to 100 at
+-- 2 decimal places (previously 2 digits, back when the range was [0, 5] at
+-- step 0.1). Final range/step clamping (0-100, nearest 0.01) happens
 -- separately on commit, via EverGear:ClampWeight -- this is just keeping
 -- the text itself sane while typing.
 local function SanitizeWeightText(text)
@@ -225,7 +226,7 @@ local function SanitizeWeightText(text)
     for i = 1, #text do
         local c = text:sub(i, i)
         if c:match("%d") then
-            if digitsSeen < 2 then
+            if digitsSeen < 5 then
                 table.insert(out, c)
                 digitsSeen = digitsSeen + 1
             end
@@ -251,13 +252,17 @@ local function GetOrCreateGridRow(index)
 
     local label = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     label:SetPoint("LEFT", 4, 0)
-    label:SetPoint("RIGHT", row, "RIGHT", -60, 0)
+    -- -70, not -60 -- keeps the same ~8px gap to the editBox now that it's
+    -- 10px wider (54 vs 44) to fit "100.00".
+    label:SetPoint("RIGHT", row, "RIGHT", -70, 0)
     label:SetJustifyH("LEFT")
     label:SetTextColor(unpack(PARCHMENT))
     row.label = label
 
     local editBox = CreateFrame("EditBox", nil, row, "InputBoxTemplate")
-    editBox:SetSize(44, 16)
+    -- Widened from 44 (fit for the old [0, 5]-at-step-0.1 range) to fit
+    -- "100.00" now that weights go up to 100 at 2 decimal places.
+    editBox:SetSize(54, 16)
     editBox:SetPoint("RIGHT", -8, 0)
     editBox:SetAutoFocus(false)
     editBox:SetJustifyH("CENTER")
