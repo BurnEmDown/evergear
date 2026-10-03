@@ -161,10 +161,10 @@ local duplicateButton = MakeCrudButton("Duplicate", -30, function()
     StaticPopup_Show("EVERGEAR_DUPLICATE_PROFILE")
 end)
 local renameButton = MakeCrudButton("Rename", -54, function()
-    if editingProfileId ~= "default" then StaticPopup_Show("EVERGEAR_RENAME_PROFILE") end
+    if not EverGear:IsBuiltinProfileId(editingProfileId) then StaticPopup_Show("EVERGEAR_RENAME_PROFILE") end
 end)
 local deleteButton = MakeCrudButton("Delete", -78, function()
-    if editingProfileId ~= "default" then StaticPopup_Show("EVERGEAR_DELETE_PROFILE") end
+    if not EverGear:IsBuiltinProfileId(editingProfileId) then StaticPopup_Show("EVERGEAR_DELETE_PROFILE") end
 end)
 local copyToButton = MakeCrudButton("Copy to...", -102, function()
     EverGear:ShowCopyProfilePopup(editorClassToken, editorSpecName, editingProfileId, workingWeights)
@@ -300,7 +300,7 @@ saveButton:SetSize(100, 22)
 saveButton:SetPoint("BOTTOMRIGHT", -14, 14)
 saveButton:SetText("Save")
 saveButton:SetScript("OnClick", function()
-    if editingProfileId == "default" then return end
+    if EverGear:IsBuiltinProfileId(editingProfileId) then return end
     local ok, err = EverGear:SaveCustomProfile(editorClassToken, editorSpecName, editingProfileId, workingWeights)
     if not ok then
         UIErrorsFrame:AddMessage(err or "Couldn't save profile.", 1, 0.2, 0.2)
@@ -330,7 +330,7 @@ end
 
 RefreshWeightGrid = function()
     local sections = EverGear:GetWeightFieldLayout(workingWeights)
-    local isReadOnly = (editingProfileId == "default")
+    local isReadOnly = EverGear:IsBuiltinProfileId(editingProfileId)
 
     local rowIndex = 0
     local y = -4
@@ -393,7 +393,7 @@ RefreshWeightGrid = function()
 end
 
 RefreshButtonStates = function()
-    local isDefault = (editingProfileId == "default")
+    local isDefault = EverGear:IsBuiltinProfileId(editingProfileId)
     local buttons = { renameButton, deleteButton, saveButton }
     for _, btn in ipairs(buttons) do
         if isDefault then btn:Disable() else btn:Enable() end
@@ -406,8 +406,8 @@ SelectProfileForEditing = function(profileId)
         -- Deleted (e.g. from another character sharing this account-wide
         -- profile) since the list was last refreshed -- fall back rather
         -- than leaving the grid pointed at nothing.
-        profileId = "default"
-        weights = EverGear:GetBuiltinProfile(editorClassToken, editorSpecName)
+        profileId = EverGear:GetDefaultProfileId(editorClassToken, editorSpecName)
+        weights = EverGear:GetBuiltinProfile(editorClassToken, editorSpecName, profileId)
     end
     editingProfileId = profileId
     -- GetProfileWeights/GetBuiltinProfile always return a fresh, independent
@@ -512,7 +512,7 @@ StaticPopupDialogs["EVERGEAR_DELETE_PROFILE"] = {
     button2 = "Cancel",
     OnAccept = function()
         EverGear:DeleteCustomProfile(editorClassToken, editorSpecName, editingProfileId)
-        SelectProfileForEditing("default")
+        SelectProfileForEditing(EverGear:GetDefaultProfileId(editorClassToken, editorSpecName))
         if EverGear.RefreshProfileDropdown then EverGear.RefreshProfileDropdown() end
         EverGear:RefreshUI()
     end,
@@ -904,7 +904,7 @@ function EverGear:ToggleProfileEditor()
     local charDB = self:GetCharDB()
     editorClassToken = playerInfo.classToken
     editorSpecName = charDB.spec
-    SelectProfileForEditing(charDB.profileId or "default")
+    SelectProfileForEditing(charDB.profileId or self:GetDefaultProfileId(editorClassToken, editorSpecName))
 
     editorFrame:ClearAllPoints()
     if EverGearFrame then
@@ -949,6 +949,6 @@ function EverGear:NotifyLiveSpecChanged(oldSpecName, newSpecName)
     local playerInfo = self:GetPlayerInfo()
     if editorClassToken == playerInfo.classToken and editorSpecName == oldSpecName then
         editorSpecName = newSpecName
-        SelectProfileForEditing("default")
+        SelectProfileForEditing(self:GetDefaultProfileId(editorClassToken, editorSpecName))
     end
 end

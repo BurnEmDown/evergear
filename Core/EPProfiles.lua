@@ -149,23 +149,78 @@ local function GetCustomProfileTable(classToken, specName, create)
     return bySpec
 end
 
--- ===== Builtin (read-only) profile =====
+-- ===== Builtin (read-only) profile(s) =====
 
--- Wraps today's EverGear.SPEC_PROFILES lookup (Upgrades.lua), returning a
--- fresh, independent, fully-populated copy rather than the live SPEC_PROFILES
--- table itself -- nothing should ever mutate what this returns, since
--- SPEC_PROFILES is shared, hand-tuned, committed data (plan assumption 2:
--- the builtin is read-only, full stop, not just "undeletable").
-function EverGear:GetBuiltinProfile(classToken, specName)
-    local classProfiles = self.SPEC_PROFILES[classToken]
+-- Almost every class+spec has exactly one builtin profile (a flat
+-- {stats=..., secondary=...} table), but a spec whose single talent tree
+-- serves genuinely different goals (Warrior Protection: survive vs generate
+-- threat) can instead define SEVERAL named builtin VARIANTS, each a full
+-- profile in its own right:
+--   Protection = {
+--       variants = {
+--           { id = "mitigation", name = "Mitigation", profile = {...} },
+--           { id = "threat", name = "Threat", profile = {...} },
+--       },
+--   },
+-- The variant's `id` is internal/stable (used in the "default:<id>" profile
+-- id below); `name` is what the player sees. The FIRST variant listed is
+-- the fallback used wherever older code asks for "the" builtin profile
+-- without naming a variant (CopyProfile's merge target, etc.) -- order
+-- matters for that reason, not just display order.
+local function ResolveBuiltinSource(classToken, specName, profileId)
+    local classProfiles = EverGear.SPEC_PROFILES[classToken]
     local source = classProfiles and classProfiles[specName]
     if not source then
         -- Same defensive fallback GetScoringProfile used before this file
         -- existed -- should never trigger (every CLASS_SPECS entry has a
         -- matching SPEC_PROFILES entry), but better a sane default than an
         -- error if the two ever drift apart.
-        source = self.SPEC_PROFILES.WARRIOR.Arms
+        return EverGear.SPEC_PROFILES.WARRIOR.Arms
     end
+    if source.variants then
+        local variantId = type(profileId) == "string" and profileId:match("^default:(.+)$")
+        for _, variant in ipairs(source.variants) do
+            if variant.id == variantId then return variant.profile end
+        end
+        return source.variants[1].profile  -- no/unrecognized variant id -> first variant
+    end
+    return source
+end
+
+-- True for nil/absent (never-set charDB.profileId), the single-variant
+-- "default", or any "default:<variantId>" id -- i.e. anything that refers to
+-- a read-only builtin rather than a player-saved custom profile. Every spot
+-- that used to compare a profileId to the literal string "default" now goes
+-- through this instead, since a multi-variant spec's builtin ids don't look
+-- like that bare string any more.
+function EverGear:IsBuiltinProfileId(profileId)
+    if not profileId or profileId == DEFAULT_PROFILE_ID then return true end
+    return type(profileId) == "string" and profileId:sub(1, #DEFAULT_PROFILE_ID + 1) == (DEFAULT_PROFILE_ID .. ":")
+end
+
+-- The profileId a spec should fall back to/start from -- "default" for a
+-- normal single-profile spec, "default:<firstVariantId>" for a multi-variant
+-- one. Used wherever code used to hardcode the literal "default" as a reset
+-- target (switching spec, self-healing a stale charDB.profileId, etc).
+function EverGear:GetDefaultProfileId(classToken, specName)
+    local classProfiles = self.SPEC_PROFILES[classToken]
+    local source = classProfiles and classProfiles[specName]
+    if source and source.variants then
+        return DEFAULT_PROFILE_ID .. ":" .. source.variants[1].id
+    end
+    return DEFAULT_PROFILE_ID
+end
+
+-- Wraps today's EverGear.SPEC_PROFILES lookup (Upgrades.lua), returning a
+-- fresh, independent, fully-populated copy rather than the live SPEC_PROFILES
+-- table itself -- nothing should ever mutate what this returns, since
+-- SPEC_PROFILES is shared, hand-tuned, committed data (plan assumption 2:
+-- the builtin is read-only, full stop, not just "undeletable"). `profileId`
+-- is optional and only matters for a multi-variant spec (see
+-- ResolveBuiltinSource) -- every other caller can omit it exactly like
+-- before and gets that spec's one-and-only builtin.
+function EverGear:GetBuiltinProfile(classToken, specName, profileId)
+    local source = ResolveBuiltinSource(classToken, specName, profileId)
     return {
         stats = CloneWeights(source.stats),
         armorWeight = self:ClampWeight(source.armorWeight),
@@ -188,10 +243,27 @@ end
 -- ===== Custom profile CRUD =====
 
 -- Ordered list of every profile selectable for this class+spec: the
--- synthesized builtin first, then custom profiles sorted by name. Shape:
+-- synthesized builtin(s) first, then custom profiles sorted by name. Shape:
 -- { { id = "default", name = "Arms Default", builtin = true }, { id = "...", name = "...", builtin = false }, ... }
+-- A multi-variant spec (Warrior Protection) lists ONE builtin entry per
+-- variant instead of a single "default" entry -- e.g. "Protection Default
+-- (Mitigation)" and "Protection Default (Threat)", ids "default:mitigation"/
+-- "default:threat" -- rather than a single blended "Protection Default".
 function EverGear:GetProfileList(classToken, specName)
-    local list = { { id = DEFAULT_PROFILE_ID, name = DefaultProfileName(specName), builtin = true } }
+    local list = {}
+    local classProfiles = self.SPEC_PROFILES[classToken]
+    local specEntry = classProfiles and classProfiles[specName]
+    if specEntry and specEntry.variants then
+        for _, variant in ipairs(specEntry.variants) do
+            table.insert(list, {
+                id = DEFAULT_PROFILE_ID .. ":" .. variant.id,
+                name = DefaultProfileName(specName) .. " (" .. variant.name .. ")",
+                builtin = true,
+            })
+        end
+    else
+        table.insert(list, { id = DEFAULT_PROFILE_ID, name = DefaultProfileName(specName), builtin = true })
+    end
     local customTable = GetCustomProfileTable(classToken, specName, false)
     if customTable then
         local customList = {}
@@ -213,8 +285,8 @@ end
 -- profileId isn't "default" and doesn't exist in this class+spec's custom
 -- table (e.g. deleted from another character since).
 function EverGear:GetProfileWeights(classToken, specName, profileId)
-    if not profileId or profileId == DEFAULT_PROFILE_ID then
-        return self:GetBuiltinProfile(classToken, specName)
+    if self:IsBuiltinProfileId(profileId) then
+        return self:GetBuiltinProfile(classToken, specName, profileId)
     end
     local customTable = GetCustomProfileTable(classToken, specName, false)
     local entry = customTable and customTable[profileId]
@@ -235,8 +307,9 @@ function EverGear:GetActiveProfile(classToken, specName)
     local profileId = charDB.profileId
     local weights = self:GetProfileWeights(classToken, specName, profileId)
     if not weights then
-        charDB.profileId = DEFAULT_PROFILE_ID
-        weights = self:GetBuiltinProfile(classToken, specName)
+        local defaultId = self:GetDefaultProfileId(classToken, specName)
+        charDB.profileId = defaultId
+        weights = self:GetBuiltinProfile(classToken, specName, defaultId)
     end
     return weights
 end
@@ -259,7 +332,7 @@ end
 -- saved data in the first place, there's nothing TO delete) and silently
 -- succeeds on an id that's already gone (nothing left to do).
 function EverGear:DeleteCustomProfile(classToken, specName, profileId)
-    if not profileId or profileId == DEFAULT_PROFILE_ID then
+    if self:IsBuiltinProfileId(profileId) then
         return false, "The default profile can't be deleted."
     end
     local customTable = GetCustomProfileTable(classToken, specName, false)
@@ -270,7 +343,7 @@ function EverGear:DeleteCustomProfile(classToken, specName, profileId)
 end
 
 function EverGear:RenameCustomProfile(classToken, specName, profileId, newName)
-    if not profileId or profileId == DEFAULT_PROFILE_ID then
+    if self:IsBuiltinProfileId(profileId) then
         return false, "The default profile can't be renamed."
     end
     local customTable = GetCustomProfileTable(classToken, specName, false)
@@ -285,7 +358,7 @@ end
 -- Overwrites an existing custom profile's weights in place (the editor's
 -- Save button, M4) -- refuses "default" for the same reason as above.
 function EverGear:SaveCustomProfile(classToken, specName, profileId, weights)
-    if not profileId or profileId == DEFAULT_PROFILE_ID then
+    if self:IsBuiltinProfileId(profileId) then
         return false, "The default profile can't be edited -- duplicate it first."
     end
     local customTable = GetCustomProfileTable(classToken, specName, false)

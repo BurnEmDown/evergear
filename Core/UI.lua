@@ -252,7 +252,7 @@ local function SpecDropdown_OnClick(self)
     local charDB = EverGear:GetCharDB()
     local oldSpec = charDB.spec
     charDB.spec = self.value
-    charDB.profileId = "default"
+    charDB.profileId = EverGear:GetDefaultProfileId(EverGear:GetPlayerInfo().classToken, charDB.spec)
     UIDropDownMenu_SetSelectedValue(specDropdown, self.value)
     if RefreshProfileDropdown then RefreshProfileDropdown() end
     -- Re-points the EP profile editor at the new spec too, but only if it
@@ -283,7 +283,8 @@ UIDropDownMenu_SetSelectedValue(specDropdown, EverGear:GetCharDB().spec)
 -- through EverGear:GetActiveProfile on every score, so just changing the
 -- dropdown + RefreshUI is the entire wiring needed here -- no separate
 -- scoring-side change.
-EverGear:GetCharDB().profileId = EverGear:GetCharDB().profileId or "default"
+EverGear:GetCharDB().profileId = EverGear:GetCharDB().profileId
+    or EverGear:GetDefaultProfileId(EverGear:GetPlayerInfo().classToken, EverGear:GetCharDB().spec)
 
 local profileDropdown = CreateFrame("Frame", "EverGearProfileDropdown", mainFrame, "UIDropDownMenuTemplate")
 -- +1, not -14 -- raised 15px per user feedback. Anchored directly off

@@ -156,43 +156,90 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Fury"] = {  -- role: Physical DPS
-            stats = { STRENGTH = 3.0, AGILITY = 0.3, STAMINA = 1.5, INTELLECT = 0.05, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder.
+            stats = { STRENGTH = 2, AGILITY = 1, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Physical DPS-specific stats
-                ATTACK_POWER = 0.5, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
-                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
-                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0.1,
-                PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
-                RANGED_ATTACK_POWER = 0.1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                -- HASTE here stands in for sixtyupgrades' "speed" -- pending
+                -- explicit confirmation that "speed" means Haste rather than
+                -- the weapon's own base speed (already fully captured by
+                -- dpsWeight/WEAPON_DPS).
+                ATTACK_POWER = 1, HIT_CHANCE = 20, CRIT_CHANCE = 20, HASTE = 50,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
+                PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
+                RANGED_ATTACK_POWER = 0, DEFENSE = 0, THREAT_REDUCTION = 0,
                 HP5 = 0, MP5 = 0,
             },
         },
         ["Protection"] = {  -- role: Tank
-            stats = { STRENGTH = 3.0, AGILITY = 0.3, STAMINA = 2.5, INTELLECT = 0.05, SPIRIT = 0.1 }, armorWeight = 0.3, dpsWeight = 1.0,
-            secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
-                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
-                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
-                NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Tank-specific stats
-                DODGE_CHANCE = 15.84, PARRY_CHANCE = 13.86, BLOCK_CHANCE = 11.88,
-                BLOCK_VALUE = 0.5, ATTACK_POWER = 0.2, HIT_CHANCE = 4.74,
-                CRIT_CHANCE = 4.4, HASTE = 1.58, ARMOR_PENETRATION = 0.05,
-                DEFENSE = 1.0, PHYSICAL_DAMAGE = 0.1, ATTACK_POWER_VS_BEASTS = 0.05, ATTACK_POWER_VS_HUMANOIDS = 0.05,
-                ATTACK_POWER_VS_UNDEAD = 0.05, RANGED_ATTACK_POWER = 0.05, THREAT_REDUCTION = 0,
-                HP5 = 0.4, MP5 = 0,
+            -- Two sixtyupgrades-derived default profiles, not one blended
+            -- set: Mitigation (survive the hit) and Threat (hold aggro) pull
+            -- in genuinely different directions for a tank (e.g. Mitigation
+            -- wants Stamina/Dodge/Parry/Defense/Block Value for
+            -- damage-reduction, Threat wants Attack Power/Hit/Crit/DPS to
+            -- generate aggro), so the player picks whichever matches what
+            -- they're optimizing for instead of EverGear guessing a
+            -- compromise. Both are zero-filled per the sixtyupgrades
+            -- convention -- every key the source JSON omitted (including
+            -- Block Chance, which both sets omit) is an explicit 0, not the
+            -- old mechanically-rescaled placeholder.
+            variants = {
+                {
+                    id = "mitigation",
+                    name = "Mitigation",
+                    profile = {
+                        stats = { STRENGTH = 0.02, AGILITY = 0.91, STAMINA = 1, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0.05, dpsWeight = 0,
+                        secondary = {
+                            SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                            SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                            FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
+                            NATURE_DAMAGE = 0,
+                            ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                            SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                            DODGE_CHANCE = 16.29, PARRY_CHANCE = 16.29, BLOCK_CHANCE = 0,
+                            BLOCK_VALUE = 0.43, ATTACK_POWER = 0, HIT_CHANCE = 0,
+                            CRIT_CHANCE = 0, HASTE = 0, ARMOR_PENETRATION = 0,
+                            DEFENSE = 2.61, PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0,
+                            ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
+                            -- sixtyupgrades' Mitigation set also lists a flat
+                            -- "health" weight distinct from Stamina -- no
+                            -- equivalent stat exists in this game's data
+                            -- model (never confirmed as a real itemized
+                            -- stat), so it's dropped rather than folded into
+                            -- HP5/Stamina.
+                            HP5 = 0, MP5 = 0,
+                        },
+                    },
+                },
+                {
+                    id = "threat",
+                    name = "Threat",
+                    profile = {
+                        stats = { STRENGTH = 2, AGILITY = 1.05, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 7.5,
+                        secondary = {
+                            SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                            SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                            FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
+                            NATURE_DAMAGE = 0,
+                            ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                            SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                            DODGE_CHANCE = 0, PARRY_CHANCE = 7.47, BLOCK_CHANCE = 0,
+                            BLOCK_VALUE = 0.9, ATTACK_POWER = 1, HIT_CHANCE = 27,
+                            CRIT_CHANCE = 22, HASTE = 0, ARMOR_PENETRATION = 0,
+                            DEFENSE = 0.22, PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0,
+                            ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
+                            HP5 = 0, MP5 = 0,
+                        },
+                    },
+                },
             },
         },
     },
@@ -266,63 +313,78 @@ EverGear.SPEC_PROFILES = {
     },
     HUNTER = {
         ["Beast Mastery"] = {  -- role: Physical DPS
-            stats = { STRENGTH = 1, AGILITY = 2.79, STAMINA = 1.5, INTELLECT = 0.2, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 14,
+            stats = { STRENGTH = 0, AGILITY = 2.79, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
+                -- sixtyupgrades-derived weights: every key the source JSON
+                -- omitted is an explicit 0 here (confirmed convention), not a
+                -- mechanically-rescaled placeholder -- this is a pure-DPS EP
+                -- metric, not a survivability-aware one.
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Physical DPS-specific stats
-                ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 7.9,
-                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
-                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
-                PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.4, ATTACK_POWER_VS_HUMANOIDS = 0.4, ATTACK_POWER_VS_UNDEAD = 0.4,
-                RANGED_ATTACK_POWER = 1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.4,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                -- HASTE here stands in for sixtyupgrades' "rangedSpeed" --
+                -- pending explicit confirmation that "speed" in these weight
+                -- sets means Haste rather than the weapon's own base speed
+                -- (already fully captured by dpsWeight/WEAPON_DPS).
+                ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 100,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
+                PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
+                RANGED_ATTACK_POWER = 1, DEFENSE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Marksmanship"] = {  -- role: Physical DPS
-            stats = { STRENGTH = 1, AGILITY = 2.79, STAMINA = 1.5, INTELLECT = 0.2, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 14,
+            stats = { STRENGTH = 0, AGILITY = 2.79, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
+                -- sixtyupgrades-derived weights: every key the source JSON
+                -- omitted is an explicit 0 here (confirmed convention), not a
+                -- mechanically-rescaled placeholder -- this is a pure-DPS EP
+                -- metric, not a survivability-aware one.
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Physical DPS-specific stats
-                ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 7.9,
-                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
-                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
-                PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.4, ATTACK_POWER_VS_HUMANOIDS = 0.4, ATTACK_POWER_VS_UNDEAD = 0.4,
-                RANGED_ATTACK_POWER = 1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.4,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                -- HASTE here stands in for sixtyupgrades' "rangedSpeed" --
+                -- pending explicit confirmation that "speed" in these weight
+                -- sets means Haste rather than the weapon's own base speed
+                -- (already fully captured by dpsWeight/WEAPON_DPS).
+                ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 100,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
+                PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
+                RANGED_ATTACK_POWER = 1, DEFENSE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Survival"] = {  -- role: Physical DPS
-            stats = { STRENGTH = 1, AGILITY = 2.79, STAMINA = 1.5, INTELLECT = 0.2, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 14,
+            stats = { STRENGTH = 0, AGILITY = 2.79, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
+                -- sixtyupgrades-derived weights: every key the source JSON
+                -- omitted is an explicit 0 here (confirmed convention), not a
+                -- mechanically-rescaled placeholder -- this is a pure-DPS EP
+                -- metric, not a survivability-aware one.
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Physical DPS-specific stats
-                ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 7.9,
-                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
-                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
-                PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.4, ATTACK_POWER_VS_HUMANOIDS = 0.4, ATTACK_POWER_VS_UNDEAD = 0.4,
-                RANGED_ATTACK_POWER = 1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.4,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                -- HASTE here stands in for sixtyupgrades' "rangedSpeed" --
+                -- pending explicit confirmation that "speed" in these weight
+                -- sets means Haste rather than the weapon's own base speed
+                -- (already fully captured by dpsWeight/WEAPON_DPS).
+                ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 100,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
+                PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
+                RANGED_ATTACK_POWER = 1, DEFENSE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
     },
