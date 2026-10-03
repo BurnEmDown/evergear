@@ -48,7 +48,15 @@ EverGear = EverGear or {}
 EverGearDB = EverGearDB or {}
 
 local DEFAULT_PROFILE_ID = "default"
-local DEFAULT_PROFILE_NAME = "Default"
+
+-- "Arms Default", "Fury Default", etc. -- per user feedback, a bare
+-- "Default" read ambiguously once more than one spec's dropdown/editor list
+-- could be open to compare (which spec is THIS "Default"?). specName is
+-- already the real display name CLASS_SPECS/the spec dropdown use elsewhere
+-- (Upgrades.lua), so no separate humanizing needed here.
+local function DefaultProfileName(specName)
+    return (specName or "") .. " Default"
+end
 
 -- ===== Weight validation =====
 
@@ -170,9 +178,9 @@ end
 
 -- Ordered list of every profile selectable for this class+spec: the
 -- synthesized builtin first, then custom profiles sorted by name. Shape:
--- { { id = "default", name = "Default", builtin = true }, { id = "...", name = "...", builtin = false }, ... }
+-- { { id = "default", name = "Arms Default", builtin = true }, { id = "...", name = "...", builtin = false }, ... }
 function EverGear:GetProfileList(classToken, specName)
-    local list = { { id = DEFAULT_PROFILE_ID, name = DEFAULT_PROFILE_NAME, builtin = true } }
+    local list = { { id = DEFAULT_PROFILE_ID, name = DefaultProfileName(specName), builtin = true } }
     local customTable = GetCustomProfileTable(classToken, specName, false)
     if customTable then
         local customList = {}

@@ -326,3 +326,16 @@ now it simply can't be dragged, and will always follow the main window
 when that one's moved. The detail/upgrade-suggestions panel and the
 "Copy to..." popup were both already non-movable, so no change was needed
 there.
+
+## The synthesized builtin is named "<Spec> Default", not "Default"
+
+Per user feedback, the read-only builtin profile's display name (shown in
+the Profile dropdown, the editor's profile list, Duplicate's suggested
+name, etc.) now includes the spec it belongs to -- "Arms Default", "Fury
+Default" -- instead of a bare "Default" (`EverGear:GetProfileList`,
+`Core/EPProfiles.lua`). A bare "Default" was ambiguous as soon as more than
+one spec's list could reasonably be compared side by side (the editor's
+"Copy to..." flow, say, or just remembering which spec's tab was open).
+`DEFAULT_PROFILE_ID` (the stored id, `"default"`) is unchanged -- only the
+human-facing name changed, so this doesn't touch any persisted data or the
+JSON export/import shape.
