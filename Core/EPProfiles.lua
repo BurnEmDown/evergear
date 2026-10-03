@@ -519,22 +519,22 @@ function EverGear:GetWeightFieldLayout(weights)
     local SECONDARY_STAT_CATEGORY = {
         -- Physical Damage
         ATTACK_POWER = "Physical Damage", RANGED_ATTACK_POWER = "Physical Damage",
-        HIT_RATING = "Physical Damage", CRIT_RATING = "Physical Damage", HASTE_RATING = "Physical Damage",
-        EXPERTISE_RATING = "Physical Damage", ARMOR_PENETRATION_RATING = "Physical Damage",
+        HIT_CHANCE = "Physical Damage", CRIT_CHANCE = "Physical Damage", HASTE = "Physical Damage",
+        ARMOR_PENETRATION = "Physical Damage",
         PHYSICAL_DAMAGE = "Physical Damage", ATTACK_POWER_VS_BEASTS = "Physical Damage",
         ATTACK_POWER_VS_HUMANOIDS = "Physical Damage", ATTACK_POWER_VS_UNDEAD = "Physical Damage",
         -- Spell Damage (includes healing -- same "caster" stat family, and
         -- MP5, whose entire relevance is feeding spellcasting)
-        SPELL_POWER = "Spell Damage", SPELL_HEALING = "Spell Damage", SPELL_HIT_RATING = "Spell Damage",
-        SPELL_CRIT_RATING = "Spell Damage", SPELL_HASTE_RATING = "Spell Damage", MANA_REGEN = "Spell Damage",
+        SPELL_POWER = "Spell Damage", SPELL_HEALING = "Spell Damage", SPELL_HIT_CHANCE = "Spell Damage",
+        SPELL_CRIT_CHANCE = "Spell Damage", SPELL_HASTE = "Spell Damage", MANA_REGEN = "Spell Damage",
         SPELL_PENETRATION = "Spell Damage", SPELL_DAMAGE = "Spell Damage", FIRE_DAMAGE = "Spell Damage",
         SHADOW_DAMAGE = "Spell Damage", ARCANE_DAMAGE = "Spell Damage", FROST_DAMAGE = "Spell Damage",
         NATURE_DAMAGE = "Spell Damage", MP5 = "Spell Damage",
         -- Defensive (mitigation/avoidance, and HP5/threat reduction --
         -- survivability, not offense; resistances used to live here too,
         -- see "Resistances" below)
-        DODGE_RATING = "Defensive", PARRY_RATING = "Defensive", BLOCK_RATING = "Defensive",
-        BLOCK_VALUE = "Defensive", RESILIENCE_RATING = "Defensive", DEFENSE = "Defensive",
+        DODGE_CHANCE = "Defensive", PARRY_CHANCE = "Defensive", BLOCK_CHANCE = "Defensive",
+        BLOCK_VALUE = "Defensive", DEFENSE = "Defensive",
         MOVEMENT_IMPAIRING_REDUCTION = "Defensive", SPELL_DAMAGE_REDUCTION = "Defensive",
         HP5 = "Defensive", THREAT_REDUCTION = "Defensive",
         -- Resistances (last of all -- see comment on SECONDARY_CATEGORY_ORDER)

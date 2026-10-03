@@ -266,7 +266,7 @@ EverGear.SPEC_PROFILES = {
     },
     HUNTER = {
         ["Beast Mastery"] = {  -- role: Physical DPS
-            stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.2, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
+            stats = { STRENGTH = 1, AGILITY = 2.79, STAMINA = 1.5, INTELLECT = 0.2, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 14,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
@@ -277,16 +277,16 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Physical DPS-specific stats
-                ATTACK_POWER = 1, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
+                ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 7.9,
                 ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
                 PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.4, ATTACK_POWER_VS_HUMANOIDS = 0.4, ATTACK_POWER_VS_UNDEAD = 0.4,
-                RANGED_ATTACK_POWER = 1.5, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                RANGED_ATTACK_POWER = 1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0.4,
             },
         },
         ["Marksmanship"] = {  -- role: Physical DPS
-            stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.2, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
+            stats = { STRENGTH = 1, AGILITY = 2.79, STAMINA = 1.5, INTELLECT = 0.2, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 14,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
@@ -297,16 +297,16 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Physical DPS-specific stats
-                ATTACK_POWER = 1, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
+                ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 7.9,
                 ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
                 PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.4, ATTACK_POWER_VS_HUMANOIDS = 0.4, ATTACK_POWER_VS_UNDEAD = 0.4,
-                RANGED_ATTACK_POWER = 1.5, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                RANGED_ATTACK_POWER = 1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0.4,
             },
         },
         ["Survival"] = {  -- role: Physical DPS
-            stats = { STRENGTH = 1, AGILITY = 3.0, STAMINA = 1.5, INTELLECT = 0.2, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 3.0,
+            stats = { STRENGTH = 1, AGILITY = 2.79, STAMINA = 1.5, INTELLECT = 0.2, SPIRIT = 0.1 }, armorWeight = 0.15, dpsWeight = 14,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
@@ -317,11 +317,11 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Physical DPS-specific stats
-                ATTACK_POWER = 1, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
+                ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 7.9,
                 ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
                 PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.4, ATTACK_POWER_VS_HUMANOIDS = 0.4, ATTACK_POWER_VS_UNDEAD = 0.4,
-                RANGED_ATTACK_POWER = 1.5, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                RANGED_ATTACK_POWER = 1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
                 HP5 = 0, MP5 = 0.4,
             },
         },
