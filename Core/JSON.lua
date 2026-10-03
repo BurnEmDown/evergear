@@ -2,7 +2,7 @@
 -- vendoring a third-party library -- WoW addons can't `require` anything
 -- from outside their own files, so "vendoring" always means copy-pasting a
 -- whole library's source in anyway, and the actual JSON surface this addon
--- needs (see EQProfiles.lua's SerializeProfile/DeserializeProfile) is small:
+-- needs (see EPProfiles.lua's SerializeProfile/DeserializeProfile) is small:
 -- flat-ish objects of strings/numbers/booleans/nested objects, no need for
 -- unicode escape sequences, numbers in scientific notation, etc. Encode is
 -- pretty-printed (2-space indent) since the output is meant to be copy-

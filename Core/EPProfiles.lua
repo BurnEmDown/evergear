@@ -1,5 +1,8 @@
--- Custom EQ (scoring weight) profiles. See CUSTOM_EQ_PROFILES_PLAN.md for the
--- full design/milestone writeup this implements.
+-- Custom EP (scoring weight) profiles. See CUSTOM_EP_PROFILES_PLAN.md for the
+-- full design/milestone writeup this implements. ("EP" -- previously called
+-- "EQ" in this addon -- is short for the Equipment Points a player's custom
+-- scoring weights produce; renamed throughout per user request, user-facing
+-- text included.)
 --
 -- A "profile" is the same shape as one EverGear.SPEC_PROFILES[class][spec]
 -- entry:

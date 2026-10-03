@@ -30,7 +30,7 @@ local FRAME_WIDTH = 334
 -- BOTTOM_INSET together, not in isolation -- see content's own anchors
 -- further down for how the three relate (content height = FRAME_HEIGHT -
 -- TOP_INSET - BOTTOM_INSET).
--- +26 over the original 595 for the new Profile dropdown row (M3, custom EQ
+-- +26 over the original 595 for the new Profile dropdown row (M3, custom EP
 -- profiles) -- see TOP_INSET just below, which absorbs the same 26px so the
 -- paperdoll content panel's own size is unaffected.
 local FRAME_HEIGHT = 621
@@ -163,7 +163,7 @@ mainFrame:SetScript("OnDragStop", function(self)
     self:StopMovingOrSizing()
     SaveWindowPosition()
 end)
--- Closes the EQ profile editor (Core/ProfileEditor.lua) along with the main
+-- Closes the EP profile editor (Core/ProfileEditor.lua) along with the main
 -- window -- that window is parented to UIParent, not mainFrame (it has to
 -- outlive a RefreshUI-driven re-anchor and sit beside mainFrame rather than
 -- inside it), so it doesn't auto-hide with mainFrame the way a true child
@@ -264,10 +264,10 @@ UIDropDownMenu_Initialize(specDropdown, function()
 end)
 UIDropDownMenu_SetSelectedValue(specDropdown, EverGear:GetCharDB().spec)
 
--- ===== Profile dropdown (custom EQ profiles, M3) =====
--- Lists "Default" (the read-only builtin EQ:GetBuiltinProfile weights) plus
--- whatever custom profiles the player has saved for their CURRENT class+spec
--- (EverGear:GetProfileList -- Core/EQProfiles.lua). Selecting one writes
+-- ===== Profile dropdown (custom EP profiles, M3) =====
+-- Lists "Default" (the read-only builtin EverGear:GetBuiltinProfile weights)
+-- plus whatever custom profiles the player has saved for their CURRENT
+-- class+spec (EverGear:GetProfileList -- Core/EPProfiles.lua). Selecting one writes
 -- charDB.profileId; GetScoringProfile (Upgrades.lua) already resolves that
 -- through EverGear:GetActiveProfile on every score, so just changing the
 -- dropdown + RefreshUI is the entire wiring needed here -- no separate
@@ -284,11 +284,11 @@ UIDropDownMenu_SetWidth(profileDropdown, 150)
 
 -- Small label above the dropdown -- unlike the spec dropdown (self-evident
 -- from showing real spec names like "Arms"/"Fury"), "Default" alone doesn't
--- read as EQ-profile selection on its own, per user feedback on the M3
+-- read as EP-profile selection on its own, per user feedback on the M3
 -- layout.
 local profileLabel = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 profileLabel:SetPoint("BOTTOM", profileDropdown, "TOP", -8, 2)
-profileLabel:SetText("EQ Profile")
+profileLabel:SetText("EP Profile")
 profileLabel:SetTextColor(unpack(THEME.goldDim))
 
 local function ProfileDropdown_OnClick(self)
@@ -337,8 +337,8 @@ profileEditorButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Note_01")
 profileEditorButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 profileEditorButton:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-    GameTooltip:SetText("EQ profiles")
-    GameTooltip:AddLine("Create, edit, and manage custom EQ scoring profiles.", 0.8, 0.8, 0.8, true)
+    GameTooltip:SetText("EP profiles")
+    GameTooltip:AddLine("Create, edit, and manage custom EP scoring profiles.", 0.8, 0.8, 0.8, true)
     GameTooltip:Show()
 end)
 profileEditorButton:SetScript("OnLeave", function() GameTooltip:Hide() end)

@@ -1,6 +1,6 @@
-# Custom EQ Profiles — Plan
+# Custom EP Profiles — Plan
 
-Feature request: let a player define their own EQ (Equipment Quality / scoring)
+Feature request: let a player define their own EP (Equipment Points / scoring)
 weights per class+spec, on top of the built-in defaults already hand-tuned in
 `EverGear.SPEC_PROFILES` (Core/Upgrades.lua), and export/import them as JSON.
 
@@ -9,6 +9,16 @@ independently testable, without re-litigating the design every step. Read the
 "Assumptions / open questions" section first -- a couple of calls in there
 affect several milestones at once, so flag now if any should change before
 work starts on M1.
+
+## Terminology note
+
+This feature and every reference to it -- in this doc, in code comments, and
+in the addon's own in-game text -- was originally called "EQ" (profiles,
+editor, etc.). Renamed to "EP" throughout per user request (this doc's own
+filename included: `CUSTOM_EQ_PROFILES_PLAN.md` -> `CUSTOM_EP_PROFILES_PLAN.md`,
+`Core/EPProfiles.lua` -> `Core/EPProfiles.lua`). Past `CHANGELOG.md` entries
+are a historical record and were left as originally written rather than
+rewritten to match.
 
 ## What currently exists (context for the design below)
 
@@ -58,13 +68,13 @@ work starts on M1.
    Currently hardcoded as `3.0` in `ScoreItem`. A custom profile gets its own
    `primaryStatWeight` field (default 3.0, same 0-5 range as everything
    else) so it's tunable too, not a silent exception.
-5. **Per-spec, not per-class.** Re-reading "own EQ profiles for each class"
+5. **Per-spec, not per-class.** Re-reading "own EP profiles for each class"
    together with "for their played specs" -- a profile is scoped to one
    class+spec combo (matching how `SPEC_PROFILES` itself is already keyed),
    not one set of weights shared across a whole class's specs. Flag if the
    intent was actually class-wide.
 6. **"Copy to..." works across any class+spec, not just same-class.**
-   Confirmed: "copy my Fury Warrior EQ profile to Arms Warrior." The two
+   Confirmed: "copy my Fury Warrior EP profile to Arms Warrior." The two
    specs don't share the same key set (`offStat` varies by spec -- e.g.
    Fury's is `{AGILITY, INTELLECT, SPIRIT}`, Protection's is
    `{STRENGTH, AGILITY, INTELLECT}`), so a straight table copy can't just
@@ -98,7 +108,7 @@ All of them: range `[0, 5]`, step `0.1`.
 ## Milestones
 
 ### M1 -- Data model & persistence (no UI)
-New `Core/EQProfiles.lua`:
+New `Core/EPProfiles.lua`:
 - `EverGear:GetBuiltinProfile(classToken, specName)` -- read-only accessor
   wrapping today's `SPEC_PROFILES` lookup, now also exposing
   `primaryStatWeight = 3.0` as a real field.
@@ -230,7 +240,7 @@ Fixed by removing the concept entirely:
 - `Core/Upgrades.lua`'s `CLASS_ROLE_PRIMARY_STAT`/`GetPrimaryStat` are gone;
   `ScoreItem` just reads `profile.stats[statName]` directly.
 - The editor's field grid (`EverGear:GetWeightFieldLayout`,
-  Core/EQProfiles.lua) now has one "Core" section covering all 7 of
+  Core/EPProfiles.lua) now has one "Core" section covering all 7 of
   Strength/Agility/Stamina/Intellect/Spirit/Armor/Weapon DPS together
   (previously split across a "Core" section of 4 opaque scalars and a
   separate "Off-Stats" section), per user feedback. JSON export/import's
@@ -245,7 +255,7 @@ Fixed by removing the concept entirely:
 ## Decision: changing spec while the editor is open
 
 Question raised by user: what should happen if the player changes their
-main Spec dropdown while the EQ Profile Editor window is open?
+main Spec dropdown while the EP Profile Editor window is open?
 
 Decision: **nothing happens to the editor automatically** -- it keeps
 showing whatever class+spec it was last pointed at (the character's spec at
@@ -294,7 +304,7 @@ bucketed under "Defensive". Per user feedback, resistances are now their
 own category, placed last -- after "Other", not just after "Defensive" --
 since the player wants them dropped to the very bottom of the list
 regardless of what else is unsorted. `SECONDARY_CATEGORY_ORDER` in
-`Core/EQProfiles.lua` is now `{ "Physical Damage", "Spell Damage",
+`Core/EPProfiles.lua` is now `{ "Physical Damage", "Spell Damage",
 "Defensive", "Other", "Resistances" }`.
 
 ## Profile editor window is no longer draggable

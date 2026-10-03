@@ -1,7 +1,7 @@
--- Profile editor window (M4). See CUSTOM_EQ_PROFILES_PLAN.md. Lets the
--- player create/duplicate/rename/delete/copy custom EQ profiles for their
+-- Profile editor window (M4). See CUSTOM_EP_PROFILES_PLAN.md. Lets the
+-- player create/duplicate/rename/delete/copy custom EP profiles for their
 -- current class+spec, and edit every weight field via a generic grid built
--- from EverGear:GetWeightFieldLayout (EQProfiles.lua) -- not hand-laid-out
+-- from EverGear:GetWeightFieldLayout (EPProfiles.lua) -- not hand-laid-out
 -- per stat, so a new stat key added to SPEC_PROFILES later just shows up
 -- here too.
 --
@@ -76,7 +76,7 @@ editorFrame:Hide()
 
 local editorTitle = editorFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 editorTitle:SetPoint("TOP", 0, -16)
-editorTitle:SetText("EQ Profile Editor")
+editorTitle:SetText("EP Profile Editor")
 editorTitle:SetTextColor(unpack(GOLD))
 
 -- Which class+spec this window is currently browsing -- NOT necessarily the
@@ -169,7 +169,7 @@ end)
 local copyToButton = MakeCrudButton("Copy to...", -102, function()
     EverGear:ShowCopyProfilePopup(editorClassToken, editorSpecName, editingProfileId, workingWeights)
 end)
--- M5: export/import as JSON (see CUSTOM_EQ_PROFILES_PLAN.md). Export sends
+-- M5: export/import as JSON (see CUSTOM_EP_PROFILES_PLAN.md). Export sends
 -- whatever's currently in the grid, same as Duplicate -- including any
 -- not-yet-saved edits ("export this" means what's on screen, not last-saved).
 local exportButton = MakeCrudButton("Export...", -126, function()
@@ -425,7 +425,7 @@ end
 -- ===== New / Duplicate / Rename / Delete popups =====
 
 StaticPopupDialogs["EVERGEAR_NEW_PROFILE"] = {
-    text = "New EQ profile name:",
+    text = "New EP profile name:",
     button1 = "Create",
     button2 = "Cancel",
     hasEditBox = true,
@@ -507,7 +507,7 @@ StaticPopupDialogs["EVERGEAR_RENAME_PROFILE"] = {
 }
 
 StaticPopupDialogs["EVERGEAR_DELETE_PROFILE"] = {
-    text = "Delete this EQ profile? This can't be undone.",
+    text = "Delete this EP profile? This can't be undone.",
     button1 = "Delete",
     button2 = "Cancel",
     OnAccept = function()
@@ -657,7 +657,7 @@ function EverGear:ShowCopyProfilePopup(fromClass, fromSpec, fromProfileId, fromW
 end
 
 -- ===== Export / Import popups (M5) =====
--- See CUSTOM_EQ_PROFILES_PLAN.md M5 and plan assumption 3: WoW addons have no
+-- See CUSTOM_EP_PROFILES_PLAN.md M5 and plan assumption 3: WoW addons have no
 -- filesystem access, so "export/import a JSON file" is copy/paste text via a
 -- selectable multi-line EditBox, not a real file picker. Both popups share a
 -- small scrolling-multiline-EditBox panel builder since the only real

@@ -738,7 +738,7 @@ local EXCLUDED_STAT_KEYS = {
 }
 
 -- Looks up the final scoring profile for a specific class+spec's ACTIVE
--- profile (EverGear:GetActiveProfile, Core/EQProfiles.lua) -- either the
+-- profile (EverGear:GetActiveProfile, Core/EPProfiles.lua) -- either the
 -- read-only builtin from EverGear.SPEC_PROFILES, or the player's own custom
 -- profile if they've selected one for this character. No role-level merging
 -- happens here, so editing one class+spec's entry/profile can never affect
