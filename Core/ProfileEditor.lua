@@ -20,11 +20,29 @@ local GOLD_DIM = { 0.78, 0.63, 0.24 }
 local PARCHMENT = { 0.90, 0.85, 0.72 }
 local PANEL_BG = { 0.05, 0.05, 0.07, 0.85 }
 local PANEL_BORDER = { 0.55, 0.45, 0.20, 1.0 }
--- Tint for the "Copy to...", Export and Import popups' DialogBox backdrop --
--- fully opaque black (vs. that texture's own default, more translucent
--- tint) so these smaller windows read as solid against the 3D world/other
--- UI behind them instead of blending in, per user feedback.
+-- Fully opaque black backing for the "Copy to...", Export and Import
+-- popups, per user feedback that they weren't reading as solid against the
+-- 3D world/other UI behind them. SetBackdropColor on the DialogBox bgFile
+-- alone doesn't fix this -- that texture (Interface\DialogFrame\UI-
+-- DialogBox-Background) has its own baked-in partial alpha in spots, which
+-- a color/alpha tint only multiplies, so it can never get more opaque than
+-- the art asset itself allows. AddOpaquePopupBackground below instead lays
+-- a plain solid-colored texture (WHITE8X8, which has no alpha map of its
+-- own) over the same inset area, guaranteeing full opacity independent of
+-- the dialog art.
 local POPUP_BG_TINT = { 0, 0, 0, 1 }
+
+local function AddOpaquePopupBackground(frame)
+    local bg = frame:CreateTexture(nil, "ARTWORK")
+    bg:SetTexture("Interface\\Buttons\\WHITE8X8")
+    bg:SetVertexColor(unpack(POPUP_BG_TINT))
+    -- Matches the insets passed to each popup's own SetBackdrop (left=11,
+    -- right=12, top=12, bottom=11) so this sits exactly inside the carved
+    -- border artwork rather than covering or falling short of it.
+    bg:SetPoint("TOPLEFT", 11, -12)
+    bg:SetPoint("BOTTOMRIGHT", -12, 11)
+    return bg
+end
 
 -- Forward-declared (assigned further down, where each popup is built) so
 -- CloseOtherProfilePopups below -- and each popup's own Show function --
@@ -92,6 +110,14 @@ editorFrame:SetBackdrop({
 })
 editorFrame:SetFrameStrata("HIGH")
 editorFrame:Hide()
+-- Closes the "Copy to...", Export and Import popups whenever this window
+-- is hidden by ANY path -- its own close button, ToggleProfileEditor,
+-- or (via UI.lua's mainFrame OnHide, which calls EverGearProfileEditor:
+-- Hide()) the main window closing -- rather than leaving one of them open
+-- and orphaned over nothing, per user feedback.
+editorFrame:SetScript("OnHide", function()
+    CloseOtherProfilePopups(nil)
+end)
 
 local editorTitle = editorFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 editorTitle:SetPoint("TOP", 0, -16)
@@ -558,7 +584,7 @@ copyPopup:SetBackdrop({
     tile = true, tileSize = 32, edgeSize = 32,
     insets = { left = 11, right = 12, top = 12, bottom = 11 }
 })
-copyPopup:SetBackdropColor(unpack(POPUP_BG_TINT))
+AddOpaquePopupBackground(copyPopup)
 copyPopup:Hide()
 
 local copyTitle = copyPopup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -733,7 +759,7 @@ exportPopup:SetBackdrop({
     tile = true, tileSize = 32, edgeSize = 32,
     insets = { left = 11, right = 12, top = 12, bottom = 11 }
 })
-exportPopup:SetBackdropColor(unpack(POPUP_BG_TINT))
+AddOpaquePopupBackground(exportPopup)
 exportPopup:Hide()
 
 local exportTitle = exportPopup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -804,7 +830,7 @@ importPopup:SetBackdrop({
     tile = true, tileSize = 32, edgeSize = 32,
     insets = { left = 11, right = 12, top = 12, bottom = 11 }
 })
-importPopup:SetBackdropColor(unpack(POPUP_BG_TINT))
+AddOpaquePopupBackground(importPopup)
 importPopup:Hide()
 
 local importTitle = importPopup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
