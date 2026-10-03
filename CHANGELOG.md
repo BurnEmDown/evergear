@@ -5,6 +5,31 @@ patch digit (`0.0.X`) bumps on every shipped change, no matter how small.
 Moving to `0.1.0` or `1.0.0` is a deliberate decision, not a patch-count
 milestone -- see the "Versioning" section of `README.md`.
 
+## [0.0.13] - 2026-10-03
+
+### Added
+- Excavation Site: Wetlands dungeon, entirely missing from the addon
+  before now: 8 items across its 3 bosses (Saltspine, Shadetooth, Relic
+  Guardian).
+- Verigan's Fist (6953), a Paladin-only quest reward ("Test of
+  Righteousness"), missing from both The Deadmines and Shadowfang Keep's
+  data.
+- Two Stockade quest rewards missing from the scrape: Headbasher and
+  Belt of Vindication ("The Fury Runs Deep").
+
+### Fixed
+- Re-verified and corrected item data for Ragefire Chasm, Ruins of
+  Lordaeron, The Deadmines, Wailing Caverns, Shadowfang Keep, and The
+  Stockade (around 70 items total) against current Wowhead tooltips.
+  Recurring issues: missing or wrong weapon damage/speed/DPS, missing
+  armor and shield block values, wrong spell power/damage/healing
+  amounts, proc effects mislabeled as on-hit procs instead of passive
+  equip auras (and vice versa), flattened weapon-proc damage ranges
+  shown as a single (often wrong) number, and raw internal placeholder
+  text leaking into a couple of tooltip fields instead of real wording.
+- Tarnished Locket (279870, Ruins of Lordaeron) had the wrong
+  Strength/Stamina values.
+
 ## [0.0.12] - 2026-10-02
 
 ### Changed
