@@ -394,6 +394,22 @@ function EverGear:DeserializeProfile(jsonString)
     }
 end
 
+-- Creates a new custom profile for classToken+specName from DESERIALIZED
+-- weights (DeserializeProfile's output -- already shape-validated and
+-- clamped), merging them onto the TARGET spec's own builtin defaults first --
+-- the same merge rule CopyProfile uses (plan assumption 6). This is what
+-- makes importing a profile exported from a different class/spec safe: every
+-- key the target actually uses (its own `stats`/`secondary` set, which can
+-- differ from the exported one) gets a sane value before the imported data
+-- overwrites whatever keys it defines, rather than the new profile ending up
+-- with gaps. The M5 import popup is the only caller; kept here rather than in
+-- ProfileEditor.lua since it's data-layer logic, not UI. Returns the new
+-- profile's id.
+function EverGear:ImportProfileWeights(classToken, specName, name, weights)
+    local merged = MergeWeightsOnto(self:GetBuiltinProfile(classToken, specName), weights)
+    return self:CreateCustomProfile(classToken, specName, name, merged)
+end
+
 -- ===== Field layout for the editor UI (M4) =====
 -- pairs() iteration order over stats{}/secondary{} is NOT guaranteed
 -- stable in Lua, which would make the editor's field grid re-shuffle itself

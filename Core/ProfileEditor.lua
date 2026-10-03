@@ -169,6 +169,15 @@ end)
 local copyToButton = MakeCrudButton("Copy to...", -102, function()
     EverGear:ShowCopyProfilePopup(editorClassToken, editorSpecName, editingProfileId, workingWeights)
 end)
+-- M5: export/import as JSON (see CUSTOM_EQ_PROFILES_PLAN.md). Export sends
+-- whatever's currently in the grid, same as Duplicate -- including any
+-- not-yet-saved edits ("export this" means what's on screen, not last-saved).
+local exportButton = MakeCrudButton("Export...", -126, function()
+    EverGear:ShowExportProfilePopup(editorClassToken, editorSpecName, editingProfileId, workingWeights)
+end)
+local importButton = MakeCrudButton("Import...", -150, function()
+    EverGear:ShowImportProfilePopup(editorClassToken, editorSpecName)
+end)
 
 -- ===== Right column: weight grid (scrollable) =====
 
@@ -645,6 +654,243 @@ function EverGear:ShowCopyProfilePopup(fromClass, fromSpec, fromProfileId, fromW
     end
     copyNameEditBox:SetText(sourceName)
     copyPopup:Show()
+end
+
+-- ===== Export / Import popups (M5) =====
+-- See CUSTOM_EQ_PROFILES_PLAN.md M5 and plan assumption 3: WoW addons have no
+-- filesystem access, so "export/import a JSON file" is copy/paste text via a
+-- selectable multi-line EditBox, not a real file picker. Both popups share a
+-- small scrolling-multiline-EditBox panel builder since the only real
+-- difference between them is editable-vs-read-only and the buttons below it.
+
+local function CreateScrollingTextPanel(parent, width, height)
+    local panel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    panel:SetSize(width, height)
+    panel:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8X8",
+        edgeFile = "Interface\\Buttons\\WHITE8X8",
+        edgeSize = 1,
+    })
+    panel:SetBackdropColor(unpack(PANEL_BG))
+    panel:SetBackdropBorderColor(unpack(PANEL_BORDER))
+
+    local scroll = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
+    scroll:SetPoint("TOPLEFT", 6, -6)
+    -- -26 on the right leaves room for this template's scrollbar, same
+    -- reasoning as the weight grid's own GRID_WIDTH margin above.
+    scroll:SetPoint("BOTTOMRIGHT", -26, 6)
+
+    local editBox = CreateFrame("EditBox", nil, scroll)
+    editBox:SetMultiLine(true)
+    editBox:SetFontObject(ChatFontNormal)
+    editBox:SetWidth(width - 36)
+    editBox:SetAutoFocus(false)
+    editBox:EnableMouse(true)
+    editBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    scroll:SetScrollChild(editBox)
+
+    return panel, editBox
+end
+
+-- ----- Export -----
+
+local exportPopup = CreateFrame("Frame", "EverGearExportProfilePopup", UIParent, "BackdropTemplate")
+exportPopup:SetSize(420, 320)
+exportPopup:SetPoint("CENTER")
+exportPopup:SetFrameStrata("DIALOG")
+exportPopup:EnableMouse(true)
+exportPopup:SetBackdrop({
+    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+    tile = true, tileSize = 32, edgeSize = 32,
+    insets = { left = 11, right = 12, top = 12, bottom = 11 }
+})
+exportPopup:Hide()
+
+local exportTitle = exportPopup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+exportTitle:SetPoint("TOP", 0, -14)
+exportTitle:SetText("Export Profile")
+exportTitle:SetTextColor(unpack(GOLD))
+
+local exportCloseButton = CreateFrame("Button", nil, exportPopup, "UIPanelCloseButton")
+exportCloseButton:SetPoint("TOPRIGHT", -2, -2)
+
+local exportSubtitle = exportPopup:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+exportSubtitle:SetPoint("TOP", exportTitle, "BOTTOM", 0, -4)
+exportSubtitle:SetTextColor(unpack(GOLD_DIM))
+
+local exportHint = exportPopup:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+exportHint:SetPoint("TOP", exportSubtitle, "BOTTOM", 0, -8)
+exportHint:SetWidth(380)
+exportHint:SetJustifyH("CENTER")
+exportHint:SetText("Already selected -- press Ctrl+C to copy, then paste it into a file of your own.")
+exportHint:SetTextColor(unpack(PARCHMENT))
+
+local exportBoxPanel, exportEditBox = CreateScrollingTextPanel(exportPopup, 388, 190)
+exportBoxPanel:SetPoint("TOP", exportHint, "BOTTOM", 0, -10)
+
+-- Read-only in effect: any attempted edit snaps the text back to the stored
+-- export string. Still focusable/selectable so Ctrl+A/Ctrl+C keep working --
+-- an EditBox:Disable()'d box can't be focused at all in this client, which
+-- would break copying, so this is done via a text-revert instead of Disable.
+local currentExportText = ""
+exportEditBox:SetScript("OnTextChanged", function(self, userInput)
+    if userInput and self:GetText() ~= currentExportText then
+        self:SetText(currentExportText)
+        self:HighlightText()
+    end
+end)
+
+local exportDoneButton = CreateFrame("Button", nil, exportPopup, "UIPanelButtonTemplate")
+exportDoneButton:SetSize(100, 22)
+exportDoneButton:SetPoint("BOTTOM", 0, 14)
+exportDoneButton:SetText("Done")
+exportDoneButton:SetScript("OnClick", function() exportPopup:Hide() end)
+
+function EverGear:ShowExportProfilePopup(classToken, specName, profileId, weights)
+    local profiles = self:GetProfileList(classToken, specName)
+    local profileName = "Profile"
+    for _, p in ipairs(profiles) do
+        if p.id == profileId then profileName = p.name end
+    end
+    exportSubtitle:SetText(HumanizeClassToken(classToken) .. " - " .. specName .. " - " .. profileName)
+    currentExportText = self:SerializeProfile(classToken, specName, profileName, weights)
+    exportEditBox:SetText(currentExportText)
+    exportPopup:Show()
+    exportEditBox:SetFocus()
+    exportEditBox:HighlightText()
+end
+
+-- ----- Import -----
+
+local importPopup = CreateFrame("Frame", "EverGearImportProfilePopup", UIParent, "BackdropTemplate")
+importPopup:SetSize(420, 320)
+importPopup:SetPoint("CENTER")
+importPopup:SetFrameStrata("DIALOG")
+importPopup:EnableMouse(true)
+importPopup:SetBackdrop({
+    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+    tile = true, tileSize = 32, edgeSize = 32,
+    insets = { left = 11, right = 12, top = 12, bottom = 11 }
+})
+importPopup:Hide()
+
+local importTitle = importPopup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+importTitle:SetPoint("TOP", 0, -14)
+importTitle:SetText("Import Profile")
+importTitle:SetTextColor(unpack(GOLD))
+
+local importCloseButton = CreateFrame("Button", nil, importPopup, "UIPanelCloseButton")
+importCloseButton:SetPoint("TOPRIGHT", -2, -2)
+
+-- Target is always the editor's CURRENT class+spec (wherever it's browsing,
+-- same as New/Duplicate/Paste-equivalent actions) -- shown here so it's
+-- never a surprise which class+spec the imported profile lands on, same
+-- reasoning as editorSubtitle on the main editor frame.
+local importSubtitle = importPopup:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+importSubtitle:SetPoint("TOP", importTitle, "BOTTOM", 0, -4)
+importSubtitle:SetTextColor(unpack(GOLD_DIM))
+
+local importHint = importPopup:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+importHint:SetPoint("TOP", importSubtitle, "BOTTOM", 0, -8)
+importHint:SetWidth(380)
+importHint:SetJustifyH("CENTER")
+importHint:SetText("Paste exported profile JSON below, then click Import.")
+importHint:SetTextColor(unpack(PARCHMENT))
+
+local importBoxPanel, importEditBox = CreateScrollingTextPanel(importPopup, 388, 160)
+importBoxPanel:SetPoint("TOP", importHint, "BOTTOM", 0, -10)
+
+local importErrorText = importPopup:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+importErrorText:SetPoint("TOP", importBoxPanel, "BOTTOM", 0, -8)
+importErrorText:SetWidth(380)
+importErrorText:SetJustifyH("CENTER")
+importErrorText:SetTextColor(1, 0.3, 0.3)
+
+local importCancelButton = CreateFrame("Button", nil, importPopup, "UIPanelButtonTemplate")
+importCancelButton:SetSize(100, 22)
+importCancelButton:SetPoint("BOTTOMLEFT", 90, 14)
+importCancelButton:SetText("Cancel")
+importCancelButton:SetScript("OnClick", function() importPopup:Hide() end)
+
+local importImportButton = CreateFrame("Button", nil, importPopup, "UIPanelButtonTemplate")
+importImportButton:SetSize(100, 22)
+importImportButton:SetPoint("BOTTOMRIGHT", -90, 14)
+importImportButton:SetText("Import")
+
+-- Holds the already-validated weights between the Import click (which parses
+-- the JSON) and the name-collision follow-up popup's OnAccept, if that one's
+-- needed -- see EVERGEAR_IMPORT_NAME_COLLISION below.
+local pendingImportWeights
+
+local function ImportNameCollides(classToken, specName, name)
+    local profiles = EverGear:GetProfileList(classToken, specName)
+    for _, p in ipairs(profiles) do
+        if p.name == name then return true end
+    end
+    return false
+end
+
+local function FinishImport(name, weights)
+    local id = EverGear:ImportProfileWeights(editorClassToken, editorSpecName, name, weights)
+    importPopup:Hide()
+    SelectProfileForEditing(id)
+    if EverGear.RefreshProfileDropdown then EverGear.RefreshProfileDropdown() end
+end
+
+StaticPopupDialogs["EVERGEAR_IMPORT_NAME_COLLISION"] = {
+    text = "A profile named \"%s\" already exists for %s. Name the imported profile:",
+    button1 = "Create",
+    button2 = "Cancel",
+    hasEditBox = true,
+    maxLetters = 40,
+    OnShow = function(self)
+        local editBox = self.EditBox or self.editBox
+        editBox:SetText((self.data and self.data.suggestedName) or "Imported Profile")
+        editBox:HighlightText()
+        editBox:SetFocus()
+    end,
+    OnAccept = function(self)
+        local editBox = self.EditBox or self.editBox
+        local name = editBox:GetText()
+        if name == "" or not pendingImportWeights then return end
+        FinishImport(name, pendingImportWeights)
+        pendingImportWeights = nil
+    end,
+    OnCancel = function() pendingImportWeights = nil end,
+    EditBoxOnEnterPressed = function(self) self:GetParent().button1:Click() end,
+    timeout = 0, whileDead = true, hideOnEscape = true,
+}
+
+importImportButton:SetScript("OnClick", function()
+    local data, err = EverGear:DeserializeProfile(importEditBox:GetText())
+    if not data then
+        importErrorText:SetText(err or "Couldn't import that profile.")
+        return
+    end
+    importErrorText:SetText("")
+    local name = data.name or "Imported Profile"
+    if ImportNameCollides(editorClassToken, editorSpecName, name) then
+        pendingImportWeights = data.weights
+        importPopup:Hide()
+        StaticPopup_Show(
+            "EVERGEAR_IMPORT_NAME_COLLISION",
+            name,
+            HumanizeClassToken(editorClassToken) .. " " .. editorSpecName,
+            { suggestedName = name .. " (Imported)" }
+        )
+    else
+        FinishImport(name, data.weights)
+    end
+end)
+
+function EverGear:ShowImportProfilePopup(classToken, specName)
+    importSubtitle:SetText(HumanizeClassToken(classToken) .. " - " .. specName)
+    importEditBox:SetText("")
+    importErrorText:SetText("")
+    importPopup:Show()
+    importEditBox:SetFocus()
 end
 
 -- ===== Public entry point (called from UI.lua's button) =====
