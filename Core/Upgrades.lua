@@ -203,7 +203,20 @@ EverGear.SPEC_PROFILES = {
                     id = "mitigation",
                     name = "Mitigation",
                     profile = {
-                        stats = { STRENGTH = 0.02, AGILITY = 0.91, STAMINA = 1, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0.05, dpsWeight = 0,
+                        -- dpsWeight was 0 in the original sixtyupgrades-derived
+                        -- set (pure "ignore the weapon's own damage, only its
+                        -- bonus stats matter" survival scoring) -- confirmed
+                        -- with the player this made ANY weapon with zero bonus
+                        -- stats score a flat 0 regardless of its actual damage,
+                        -- so a plain high-DPS weapon could never beat a
+                        -- low-DPS one with a trivial stat bonus (e.g. a few
+                        -- points of Stamina). 1.0 gives weapon damage a small,
+                        -- real say -- on the same order of magnitude as a
+                        -- Stamina/Dodge/Parry point, not dominant the way it
+                        -- is for the Threat variant (7.5) or pure-DPS specs
+                        -- (14) -- while survival stats still carry the bulk
+                        -- of the score.
+                        stats = { STRENGTH = 0.02, AGILITY = 0.91, STAMINA = 1, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0.05, dpsWeight = 1.0,
                         secondary = {
                             SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                             SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
