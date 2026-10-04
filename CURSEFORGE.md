@@ -17,36 +17,32 @@ Click into a slot and you get the full list: every upgrade candidate for that sl
 ranked best first, where each one drops (quest, vendor, dungeon boss, crafted), and
 how much it actually beats what you're wearing by.
 
-Pick your spec from the dropdown and the scoring follows -- tank, melee DPS, caster,
-healer all weight stats differently, so you're not told a tank piece is an upgrade
-just because it has more Intellect. A look-ahead slider lets you preview upgrades
-above your current level too, for when you want to know what to aim for rather than
-just what you can slap on right now.
+Pick your spec from the dropdown and scoring adjusts to match it. A tank and a caster
+don't care about the same stats, so a piece loaded with Intellect won't show up as an
+upgrade for your Protection Warrior. There's also a look-ahead slider if you want to
+peek at upgrades above your current level instead of only what you can wear today.
 
-Filters go deep: source (quest, vendor, craft, world drop, dungeon drop), weapon type
-(down to splitting 1H and 2H axes/maces/swords), and profession, including a "BoE
-only" toggle so you can browse what a profession makes without needing to level it
-yourself -- just the stuff you could realistically buy or trade for. Suggestions also
-know your class's weapon and armor restrictions, including the level-40 gate on
-Mail/Plate for Hunters, Shamans, Warriors, and Paladins, so you're never pointed at
-gear you can't actually wear.
+You can filter by source (quest, vendor, craft, world drop, dungeon drop), by weapon
+type (axes/maces/swords even split out by 1H vs 2H), and by profession, with a "BoE
+only" option so you can see what a profession makes without having leveled it, limited
+to what you could actually buy or trade for. It also knows what your class can wear,
+so Hunters, Shamans, Warriors, and Paladins won't get pointed at Mail or Plate before
+they've hit the level where they can actually equip it.
 
-Everything -- filters, spec, look-ahead level -- is remembered per character. There's
-a minimap button, and `/evergear` or `/eg` toggles the window if you'd rather not
-click.
+Filters, spec, and look-ahead level all save per character. There's a minimap button
+too, or just type `/evergear` or `/eg`.
 
 ## Why EverGear exists
 
-Classic and TBC have mature, complete item databases to build from. WoW Forever
-doesn't -- it's brand new, so the drop and quest-reward data is still being figured
-out by players and trackers as people actually level through the game. EverGear
-ships with whatever's known at the time and grows from there: bulk data comes from
-community trackers like wowtbc.gg and foreverdb.net, and anything spotted in-game
-that isn't tracked anywhere yet gets added by hand.
+Classic and TBC already have mature item databases built up over years. WoW Forever
+is brand new, so nobody's fully mapped out what drops where yet -- that's still
+happening in real time as people level through it. EverGear works with whatever's
+known at any given moment: most of its data comes from community-sourced loot
+trackers, and anything spotted in-game that hasn't been logged anywhere else gets
+added by hand.
 
-So the data's going to be incomplete for a while, and that's expected, not a bug. If
-EverGear doesn't flag an upgrade you know exists, it's probably just missing from the
-data so far -- it'll get filled in over time.
+That means gaps are inevitable for now. If EverGear doesn't show an upgrade you know
+exists, the data just hasn't caught up yet -- it's not a bug, and it'll get filled in.
 
 ## Status
 
