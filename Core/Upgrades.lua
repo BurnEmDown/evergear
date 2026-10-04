@@ -1255,6 +1255,10 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
         -- rather than suggesting an "upgrade" the player can never get. If
         -- the player's own faction can't be read for some reason, don't
         -- filter (better to over-show than silently hide real options).
+        -- An item BOTH factions can obtain (just via two differently-named
+        -- quests -- source.questByFaction, see GetSourceSummary below) has
+        -- no source.faction at all, so it's never caught by this filter in
+        -- the first place -- nothing extra to do here for that case.
         local factionAllowed = (not itemFaction) or (not playerInfo.faction) or itemFaction == playerInfo.faction
 
         local filterKey = self:GetWeaponFilterKey(item)
@@ -1298,6 +1302,17 @@ function EverGear:GetSourceSummary(item)
         -- types read the same way at a glance -- zone first (where to go),
         -- then what to do there.
         local questName = source.quest or "Unknown quest"
+        -- Some quests are offered to both factions for the identical reward,
+        -- just under two different quest names (e.g. Gnomeregan's "The Grand
+        -- Betrayal" for Alliance / "Rig Wars" for Horde) -- see schema.md's
+        -- questByFaction. These items are never faction-filtered (no
+        -- source.faction), so show whichever name the VIEWER would actually
+        -- see in their own quest log, falling back to the generic "quest"
+        -- name above if their faction can't be read for some reason.
+        if source.questByFaction then
+            local playerFaction = self:GetPlayerInfo().faction
+            questName = (playerFaction and source.questByFaction[playerFaction]) or questName
+        end
         if source.zone then
             return source.zone .. " (Quest: " .. questName .. ")"
         end

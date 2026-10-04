@@ -5,6 +5,16 @@ patch digit (`0.0.X`) bumps on every shipped change, no matter how small.
 Moving to `0.1.0` or `1.0.0` is a deliberate decision, not a patch-count
 milestone -- see the "Versioning" section of `README.md`.
 
+## [0.0.16] - 2026-10-04
+
+### Fixed
+- Gnomeregan's Civinad Robes, Triprunner Dungarees, and Dual Reinforced
+  Leggings were marked Horde-only ("Rig Wars"), so Alliance players were
+  told they could never get them -- in reality Alliance gets the same
+  3 items from their own version of the quest ("The Grand Betrayal").
+  These are no longer faction-filtered, and the detail panel now shows
+  whichever quest name matches the viewer's own faction.
+
 ## [0.0.15] - 2026-10-04
 
 ### Added
