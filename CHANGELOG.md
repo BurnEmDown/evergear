@@ -5,6 +5,58 @@ patch digit (`0.0.X`) bumps on every shipped change, no matter how small.
 Moving to `0.1.0` or `1.0.0` is a deliberate decision, not a patch-count
 milestone -- see the "Versioning" section of `README.md`.
 
+## [0.0.15] - 2026-10-04
+
+### Added
+- Custom EP (Equipment Points) profiles: create, duplicate, rename, and
+  delete your own weight profiles per class/spec, with every stat exposed
+  as an explicit per-stat weight grid instead of a single "Primary Stat"
+  dropdown.
+- A builtin profile can now offer multiple variants for one spec (e.g.
+  Warrior Protection: Mitigation vs. Threat), selectable from the same
+  dropdown as custom profiles.
+- "Copy to..." popup to copy a profile's weights across specs or classes,
+  plus Export/Import of a profile as copy-pasteable JSON text.
+- Weapon scoring now accounts for actual speed and damage range, not just
+  DPS: four new per-profile weights (`avgDamageWeight`, `maxDamageWeight`,
+  `fastWeaponWeight`, `slowWeaponWeight`) alongside the existing
+  `dpsWeight`.
+
+### Changed
+- Every class's builtin EP weights updated to match sixtyupgrades.com's
+  published weight sets (Warrior, Hunter, Rogue, Warlock, Mage, Priest,
+  Paladin, Shaman, and Druid), replacing earlier hand-tuned placeholders.
+  Paladin Protection was left untouched (not covered by sixtyupgrades).
+- Weight range raised from 0-5 (step 0.1) to 0-100 (step 0.01) so
+  real sixtyupgrades-scale weights (e.g. Haste = 100) aren't clipped.
+- Secondary combat stats renamed from speculative TBC-style "ratings"
+  (Hit Rating, Crit Rating, Haste Rating, etc.) to the flat percentages
+  WoW Forever actually grants, with every existing weight rescaled to
+  preserve each profile's relative emphasis. Expertise and Resilience
+  removed outright -- confirmed to not exist as mechanics in this game.
+- Profile editor moved next to the main window (opens to its left and
+  stacks with the upgrade-suggestions panel instead of overlapping it),
+  reorganized its weight grid (secondary stats grouped and ordered,
+  resistances moved to their own section at the bottom), and no longer
+  drags around the screen.
+
+### Fixed
+- A crash opening the New/Duplicate/Rename profile popups caused by a nil
+  editBox reference.
+- `DEFENSE_SKILL_RATING` was mapped to a key no profile ever defined, so a
+  live-equipped item's Defense silently scored via a generic fallback
+  instead of each profile's real Defense weight.
+- The profile editor's "Copy to...", Export, and Import popups weren't
+  actually opaque (the background tint couldn't exceed the dialog art's
+  own built-in transparency), could be opened several at once stacked on
+  top of each other, and stayed open if the editor itself was closed
+  (including when closing the main window). Also resized Copy To
+  (taller, narrower) and the Weapon Types panel (slightly taller).
+- The gear-upgrade suggestion panel would sometimes fail to open on the
+  first click of a slot, only opening on the second -- a background
+  item-cache-refresh event triggered by that same click could silently
+  close the panel before the player ever saw it.
+
 ## [0.0.14] - 2026-10-03
 
 ### Changed
