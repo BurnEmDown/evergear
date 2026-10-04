@@ -2,54 +2,57 @@
 
 **A leveling gear-upgrade advisor for WoW Forever.**
 
-Open your character panel's evil twin: EverGear shows every equipment slot with a
-badge on top telling you at a glance whether an upgrade exists, how big it is, or
-whether you're already Best-in-Slot. Click any slot to see exactly which items beat
-what you're wearing, where to get them, and why.
+Think of it as your character panel's evil twin. Every equipment slot gets a little
+badge telling you whether something better exists, how much better, or whether
+you're already sitting on the best-in-slot item. Click a slot and you'll see exactly
+which items beat what you've got, where to find them, and why they're worth the trip.
 
 ## Features
 
-- **Paperdoll-style upgrade view** -- every gear slot laid out like your character
-  panel, each with a floating badge ("+14", "BIS", or nothing) so you can tell your
-  whole kit's status at a glance without opening a single tooltip.
-- **Click a slot for details** -- see every upgrade candidate for that slot ranked
-  best-first, where it comes from (quest, vendor, dungeon boss, crafted), and how it
-  compares to what you have equipped.
-- **Spec-aware scoring** -- pick your spec from the dropdown and EverGear weights
-  stats around the right role (tank/melee DPS/caster/healer) instead of treating
-  every stat as equally useful.
-- **Look-ahead slider** -- preview upgrades above your current level, so you know
-  what to aim for instead of only seeing what you can equip right now.
-- **Fine-grained filters** -- toggle suggestions by source (quest / vendor / craft /
-  world drop / dungeon drop), by weapon type (including 1H/2H split for
-  axes/maces/swords), and by profession. A per-profession "BoE only" option lets you
-  browse a profession's crafted gear even without having it yourself, restricted to
-  items you could actually buy or trade for.
-- **Class/armor-aware** -- suggestions respect your class's usable weapon and armor
-  types, including the level-40 gate on Mail/Plate proficiency for
-  Hunters/Shamans/Warriors/Paladins, so you're never shown gear you can't wear yet.
-- **Per-character settings** -- filters, spec, and look-ahead level are remembered
-  separately for each of your characters.
-- Minimap button, plus `/evergear` or `/eg` to toggle the window.
+Every slot is laid out paperdoll-style, same as your character panel, with a badge
+floating over it: "+14", "BIS", or nothing at all if there's nothing worth showing.
+One glance tells you how your whole kit is doing, no tooltips required.
+
+Click into a slot and you get the full list: every upgrade candidate for that slot,
+ranked best first, where each one drops (quest, vendor, dungeon boss, crafted), and
+how much it actually beats what you're wearing by.
+
+Pick your spec from the dropdown and the scoring follows -- tank, melee DPS, caster,
+healer all weight stats differently, so you're not told a tank piece is an upgrade
+just because it has more Intellect. A look-ahead slider lets you preview upgrades
+above your current level too, for when you want to know what to aim for rather than
+just what you can slap on right now.
+
+Filters go deep: source (quest, vendor, craft, world drop, dungeon drop), weapon type
+(down to splitting 1H and 2H axes/maces/swords), and profession, including a "BoE
+only" toggle so you can browse what a profession makes without needing to level it
+yourself -- just the stuff you could realistically buy or trade for. Suggestions also
+know your class's weapon and armor restrictions, including the level-40 gate on
+Mail/Plate for Hunters, Shamans, Warriors, and Paladins, so you're never pointed at
+gear you can't actually wear.
+
+Everything -- filters, spec, look-ahead level -- is remembered per character. There's
+a minimap button, and `/evergear` or `/eg` toggles the window if you'd rather not
+click.
 
 ## Why EverGear exists
 
-WoW Forever is brand new, so unlike Classic/TBC there's no mature, complete item
-database to pull from yet -- drop and quest-reward data is still being discovered by
-players and community trackers as people level through the game. EverGear ships with
-whatever data exists at any given time and grows as more is discovered: bulk data is
-pulled from community trackers (wowtbc.gg, foreverdb.net), and anything found in-game
+Classic and TBC have mature, complete item databases to build from. WoW Forever
+doesn't -- it's brand new, so the drop and quest-reward data is still being figured
+out by players and trackers as people actually level through the game. EverGear
+ships with whatever's known at the time and grows from there: bulk data comes from
+community trackers like wowtbc.gg and foreverdb.net, and anything spotted in-game
 that isn't tracked anywhere yet gets added by hand.
 
-**In practice, this means the data is incomplete and will keep growing.** If EverGear
-doesn't suggest an upgrade you know exists, it's very likely just missing from the
-data yet, not a bug -- and it'll get filled in over time.
+So the data's going to be incomplete for a while, and that's expected, not a bug. If
+EverGear doesn't flag an upgrade you know exists, it's probably just missing from the
+data so far -- it'll get filled in over time.
 
 ## Status
 
-Actively developed. Version is shown in small text bottom-left of the addon's own
-window. See the [CHANGELOG](https://github.com/BurnEmDown/evergear/blob/master/CHANGELOG.md)
-for what's shipped in each version.
+Actively developed. The version number sits in small text at the bottom-left of the
+addon's window. Check the [CHANGELOG](https://github.com/BurnEmDown/evergear/blob/master/CHANGELOG.md)
+for what's shipped in each release.
 
 ## Install
 
