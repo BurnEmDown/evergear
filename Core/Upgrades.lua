@@ -105,13 +105,16 @@ end
 -- at exactly 0 for every melee/physical spec, and melee-exclusive stats
 -- (attack power, physical hit/crit/haste, expertise, armor penetration,
 -- the tank-defense cluster) are listed at exactly 0 for every caster/
--- healer spec -- explicitly, rather than simply omitted, so they can NEVER
--- fall through to the generic "unmapped stat" 0.3-per-point fallback
--- further down and accidentally get counted as real value. That fallback
--- gap is exactly how a Warrior once saw a weak spell-power mace outscore a
--- much better weapon (SPELL_POWER/SPELL_DAMAGE fell through to 0.3/point
--- instead of being recognized as caster-only) -- see git history on this
--- file if the details matter.
+-- healer spec -- explicitly, rather than simply omitted. The generic
+-- "unmapped stat" fallback further down is 0 (any stat no profile lists an
+-- opinion on scores as flatly irrelevant, never a default positive), so an
+-- explicit 0 here is no longer load-bearing the way it used to be -- but it
+-- stays, since it documents the intent and survives if the fallback is ever
+-- changed again. This used to be a real bug: the fallback was once 0.3/
+-- point, and a Warrior once saw a weak spell-power mace outscore a much
+-- better weapon because SPELL_POWER/SPELL_DAMAGE fell through to that
+-- default instead of being recognized as caster-only -- see git history on
+-- this file if the details matter.
 --
 -- Hit/Crit/Haste/Dodge/Parry/Block (and the spell equivalents) are named
 -- HIT_CHANCE/CRIT_CHANCE/HASTE/DODGE_CHANCE/PARRY_CHANCE/BLOCK_CHANCE/
@@ -821,7 +824,9 @@ EverGear.SPEC_PROFILES = {
 -- numeric (weapon damage range) -- never fed into the generic per-stat loop.
 -- HERBALISM/LOCKPICKING are profession-skill bonuses (gathering/utility, not
 -- combat) -- never worth anything to any of the 4 combat role profiles, so
--- excluded outright rather than left to fall through to the 0.3 fallback.
+-- excluded outright rather than left in the generic per-stat loop at all
+-- (harmless either way now that the unmapped-stat fallback below is 0, but
+-- kept explicit since these were never meant to be scored by ScoreItem).
 local EXCLUDED_STAT_KEYS = {
     ARMOR = true, WEAPON_DPS = true, WEAPON_SPEED = true, WEAPON_DAMAGE = true,
     HERBALISM = true, LOCKPICKING = true,
@@ -898,7 +903,15 @@ local function ScoreItem(stats, profile, armorValue, dps)
             elseif profile.secondary[statName] then
                 weight = profile.secondary[statName]
             else
-                weight = 0.3  -- unmapped fallback
+                weight = 0  -- unmapped fallback -- see comment above ScoreItem:
+                            -- a stat no profile has an opinion on (including
+                            -- a stray data-quality fabrication) should never
+                            -- contribute value by default. Previously 0.3/
+                            -- point, which is exactly how a fabricated
+                            -- SPELL_DAMAGE/SPELL_HEALING on Crested Scepter
+                            -- (Blackfathom Deeps, since corrected) skewed its
+                            -- score under every melee/tank profile that
+                            -- hadn't explicitly zeroed those keys.
             end
             score = score + (value * weight)
         end
