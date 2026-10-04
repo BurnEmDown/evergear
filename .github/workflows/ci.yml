@@ -41,20 +41,22 @@ jobs:
         with:
           args: -d
 
+      - name: Read zip name
+        id: zip
+        run: |
+          ZIP=$(basename "$(ls .release/*.zip | head -n 1)" .zip)
+          echo "name=$ZIP" >> "$GITHUB_OUTPUT"
+
       - name: Upload zip to run summary
         uses: actions/upload-artifact@v4
         with:
-          name: EverGear-${{ steps.package.outputs.project_version }}
+          name: ${{ steps.zip.outputs.name }}
           path: .release/*.zip
           include-hidden-files: true # .release is a dot-dir, skipped by default
           if-no-files-found: error
 
       - name: Summary
-        run: |
-          {
-            echo "### EverGear ${{ steps.package.outputs.project_version }}"
-            echo "Release type: \`${{ steps.package.outputs.release_type }}\` (untagged builds are alpha)"
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: echo "### ${{ steps.zip.outputs.name }}" >> "$GITHUB_STEP_SUMMARY"
 
   tag:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'

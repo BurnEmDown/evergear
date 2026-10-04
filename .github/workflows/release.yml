@@ -33,25 +33,25 @@ jobs:
           exit 1
 
       - name: Package and upload to CurseForge
-        id: package
         uses: BigWigsMods/packager@v2
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           # Uncomment to also create a GitHub Release with the zip attached:
           # GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Read zip name
+        id: zip
+        run: |
+          ZIP=$(basename "$(ls .release/*.zip | head -n 1)" .zip)
+          echo "name=$ZIP" >> "$GITHUB_OUTPUT"
+
       - name: Upload zip to run summary
         uses: actions/upload-artifact@v4
         with:
-          name: EverGear-${{ steps.package.outputs.project_version }}
+          name: ${{ steps.zip.outputs.name }}
           path: .release/*.zip
           include-hidden-files: true
           if-no-files-found: error
 
       - name: Summary
-        run: |
-          {
-            echo "### Released EverGear ${{ steps.package.outputs.project_version }}"
-            echo "Release type: \`${{ steps.package.outputs.release_type }}\`"
-            echo "Previous: \`${{ steps.package.outputs.previous_version }}\`"
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: echo "### Released ${{ steps.zip.outputs.name }}" >> "$GITHUB_STEP_SUMMARY"
