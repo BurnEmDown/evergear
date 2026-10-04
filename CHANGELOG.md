@@ -5,6 +5,28 @@ patch digit (`0.0.X`) bumps on every shipped change, no matter how small.
 Moving to `0.1.0` or `1.0.0` is a deliberate decision, not a patch-count
 milestone -- see the "Versioning" section of `README.md`.
 
+## [0.0.17] - 2026-10-05
+
+### Added
+- Precision Bow (world drop), the first world-drop item in the addon.
+
+### Changed
+- Protection Warrior (Mitigation) scoring: weapon DPS now counts a little
+  (it used to count for nothing, so a weapon with no bonus stats always
+  scored 0 however good its damage was), and Strength is now weighted the
+  same as Stamina instead of almost nothing. A plain caster mace could
+  previously outrank a Strength/Stamina tank weapon on a couple of
+  Stamina points alone.
+
+### Fixed
+- Golden Iron Destroyer, Solid Iron Maul and Bronze Battle Axe were marked
+  one-handed but are two-handed, so they ignored the "exclude two-handed"
+  filter. Golden Iron Destroyer's bogus "Spell Power 4" is now +4 Spell
+  Damage and +4 Healing.
+- Crested Scepter's Spell Damage and Healing (+32 each) were removed in
+  0.0.16 by mistake -- they're real, and are back. Its Spirit is now
+  Intellect, and its damage range is corrected to 33-62.
+
 ## [0.0.16] - 2026-10-04
 
 ### Added
