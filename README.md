@@ -57,13 +57,15 @@ update, re-run that command and update this value if it changes.
 The `.toc`'s `## Version:` line is `@project-version@`, a keyword the
 [BigWigsMods packager](https://github.com/BigWigsMods/packager) substitutes for the
 real version at package time, rather than a number hand-edited to match
-`EverGear.VERSION`. `.github/workflows/ci.yaml` does the packaging:
+`EverGear.VERSION`. `.github/workflows/ci.yml` and `release.yml` do the packaging:
 
-- **Pull requests:** builds the addon zip and attaches it to the workflow run as an
-  artifact. Nothing is published.
-- **Merge to master:** builds the zip, uploads it to CurseForge as a new release, then
-  tags the commit `v<EverGear.VERSION>`. If that tag already exists (the version wasn't
-  bumped), it skips the upload and tagging.
+- **Pull requests:** `ci.yml` builds the addon zip and attaches it to the workflow run
+  as an artifact. Nothing is published.
+- **Merge to master:** `ci.yml` builds again, then reads `EverGear.VERSION`. If tag
+  `v<version>` doesn't exist yet, it creates and pushes it and triggers `release.yml`
+  on that tag, which uploads to CurseForge. If the tag exists (version not bumped),
+  nothing is released.
+- If the CurseForge upload fails, re-run the Release job; the tag stays.
 
 To release: bump `EverGear.VERSION` in `Core/Constants.lua`, add its `CHANGELOG.md`
 entry, and merge. The upload needs a `CF_API_TOKEN` repo secret (Settings → Secrets and

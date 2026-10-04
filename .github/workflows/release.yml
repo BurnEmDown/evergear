@@ -1,0 +1,57 @@
+name: Release
+
+# Runs on a version tag. Normally dispatched by ci.yml after it tags master;
+# also runs if someone pushes a v* tag by hand. HEAD is tagged, so the packager
+# marks the file as a release and uploads it to CurseForge using the
+# X-Curse-Project-ID from EverGear.toc.
+#
+# Required secret: CF_API_TOKEN (https://authors.curseforge.com/#/settings/api-tokens)
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+
+permissions:
+  contents: write # needed only if GITHUB_OAUTH below is enabled
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Refuse to run off a tag
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          echo "::error::Release must run on a v* tag, got ${{ github.ref }}" >&2
+          exit 1
+
+      - name: Package and upload to CurseForge
+        id: package
+        uses: BigWigsMods/packager@v2
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          # Uncomment to also create a GitHub Release with the zip attached:
+          # GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload zip to run summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: EverGear-${{ steps.package.outputs.project_version }}
+          path: .release/*.zip
+          include-hidden-files: true
+          if-no-files-found: error
+
+      - name: Summary
+        run: |
+          {
+            echo "### Released EverGear ${{ steps.package.outputs.project_version }}"
+            echo "Release type: \`${{ steps.package.outputs.release_type }}\`"
+            echo "Previous: \`${{ steps.package.outputs.previous_version }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
