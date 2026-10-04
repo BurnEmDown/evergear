@@ -868,7 +868,7 @@ end
 --     what "weapon damage" special abilities (Heroic Strike, Mortal Strike,
 --     Execute, etc.) actually roll against each swing, confirmed random
 --     between the weapon's low and high end rather than weighted toward the
---     top -- see CUSTOM_EP_PROFILES_PLAN.md for the writeup. Two weapons
+--     top. Two weapons
 --     with the same average score identically here even if their min/max
 --     spread differs, which is mechanically correct for expected damage.
 --   maxDamageWeight: per point of the weapon's highest possible roll --

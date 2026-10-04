@@ -1,4 +1,4 @@
--- Profile editor window (M4). See CUSTOM_EP_PROFILES_PLAN.md. Lets the
+-- Profile editor window. Lets the
 -- player create/duplicate/rename/delete/copy custom EP profiles for their
 -- current class+spec, and edit every weight field via a generic grid built
 -- from EverGear:GetWeightFieldLayout (EPProfiles.lua) -- not hand-laid-out
@@ -214,7 +214,7 @@ end)
 local copyToButton = MakeCrudButton("Copy to...", -102, function()
     EverGear:ShowCopyProfilePopup(editorClassToken, editorSpecName, editingProfileId, workingWeights)
 end)
--- M5: export/import as JSON (see CUSTOM_EP_PROFILES_PLAN.md). Export sends
+-- Export/import as JSON. Export sends
 -- whatever's currently in the grid, same as Duplicate -- including any
 -- not-yet-saved edits ("export this" means what's on screen, not last-saved).
 local exportButton = MakeCrudButton("Export...", -126, function()
@@ -710,9 +710,9 @@ function EverGear:ShowCopyProfilePopup(fromClass, fromSpec, fromProfileId, fromW
     copyPopup:Show()
 end
 
--- ===== Export / Import popups (M5) =====
--- See CUSTOM_EP_PROFILES_PLAN.md M5 and plan assumption 3: WoW addons have no
--- filesystem access, so "export/import a JSON file" is copy/paste text via a
+-- ===== Export / Import popups =====
+-- WoW addons have no filesystem access, so "export/import a JSON file" is
+-- copy/paste text via a
 -- selectable multi-line EditBox, not a real file picker. Both popups share a
 -- small scrolling-multiline-EditBox panel builder since the only real
 -- difference between them is editable-vs-read-only and the buttons below it.
@@ -988,8 +988,7 @@ end
 
 -- Called by UI.lua's Spec dropdown (SpecDropdown_OnClick) whenever the
 -- player's LIVE spec changes, passing the spec it was on just before and the
--- one it's on now -- see CUSTOM_EP_PROFILES_PLAN.md's "changing spec while
--- the editor is open" decision and its follow-up revision.
+-- one it's on now.
 --
 -- Only follows the live spec change if the editor was showing the spec that
 -- was JUST live (i.e. nobody has navigated it elsewhere via "Copy to..." --

@@ -1,5 +1,5 @@
--- Custom EP (scoring weight) profiles. See CUSTOM_EP_PROFILES_PLAN.md for the
--- full design/milestone writeup this implements. ("EP" -- previously called
+-- Custom EP (scoring weight) profiles.
+-- ("EP" -- previously called
 -- "EQ" in this addon -- is short for the Equipment Points a player's custom
 -- scoring weights produce; renamed throughout per user request, user-facing
 -- text included.)
