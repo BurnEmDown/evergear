@@ -59,6 +59,11 @@ jobs:
         with:
           args: -d
 
+      - name: Debug - where did the packager put things
+        if: always()
+        run: |
+          echo "::notice::pwd=$(pwd) release=$(ls -a .release 2>&1 | tr '\n' ' ') zips=$(find . -name '*.zip' -not -path './.git/*' 2>&1 | tr '\n' ' ')"
+
       - name: Upload zip as workflow artifact
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
