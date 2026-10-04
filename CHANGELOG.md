@@ -5,6 +5,16 @@ patch digit (`0.0.X`) bumps on every shipped change, no matter how small.
 Moving to `0.1.0` or `1.0.0` is a deliberate decision, not a patch-count
 milestone -- see the "Versioning" section of `README.md`.
 
+## [0.0.17] - 2026-10-04
+
+### Added
+- Razorfen Kraul: 40 items across its 8 bosses, trash, and quest rewards
+  (Willix the Importer, Mortality Wanes, and the Alliance/Horde pair The
+  Crone of the Kraul / A Vengeful Fate). 37 confirmed with real stats;
+  3 Forever-only boss drops (Roogug's Severed Head, Geomancer Headdress,
+  Death Prophet Spine) are in as unconfirmed placeholders pending a stat
+  source.
+
 ## [0.0.16] - 2026-10-04
 
 ### Fixed
