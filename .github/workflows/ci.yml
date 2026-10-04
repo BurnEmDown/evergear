@@ -1,0 +1,105 @@
+name: CI
+
+# build   Every PR update and every push to master: package the addon with
+#         BigWigsMods/packager (no upload) and attach the zip to the run.
+#
+# tag     Push to master only. Reads EverGear.VERSION from Core/Constants.lua.
+#         If tag v<version> does not exist yet: create an annotated tag, push
+#         it, and dispatch release.yml on that tag. release.yml does the
+#         CurseForge upload (see that file).
+#
+#         If the tag already exists nothing happens, so merging without a
+#         version bump never publishes a duplicate.
+#
+# Why dispatch instead of letting the tag push trigger release.yml: events
+# caused by GITHUB_TOKEN don't start workflows, except workflow_dispatch and
+# repository_dispatch. Using dispatch avoids needing a PAT.
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # packager derives @project-version@ and the changelog from tags
+
+      - name: Package (no upload)
+        id: package
+        uses: BigWigsMods/packager@v2
+        with:
+          args: -d
+
+      - name: Read zip name
+        id: zip
+        run: |
+          ZIP=$(basename "$(ls .release/*.zip | head -n 1)" .zip)
+          echo "name=$ZIP" >> "$GITHUB_OUTPUT"
+
+      - name: Upload zip to run summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.zip.outputs.name }}
+          path: .release/*.zip
+          include-hidden-files: true # .release is a dot-dir, skipped by default
+          if-no-files-found: error
+
+      - name: Summary
+        run: echo "### ${{ steps.zip.outputs.name }}" >> "$GITHUB_STEP_SUMMARY"
+
+  tag:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the tag
+      actions: write  # dispatch release.yml
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read addon version
+        id: version
+        run: |
+          VERSION=$(grep -oP 'EverGear\.VERSION = "\K[^"]+' Core/Constants.lua)
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::EverGear.VERSION in Core/Constants.lua is '$VERSION'; expected X.Y.Z" >&2
+            exit 1
+          fi
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether tag exists
+        id: exists
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::${{ steps.version.outputs.tag }} already exists; not releasing. Bump EverGear.VERSION to release."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create and push annotated tag
+        if: steps.exists.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.version.outputs.tag }}" -m "EverGear ${{ steps.version.outputs.tag }}"
+          git push origin "refs/tags/${{ steps.version.outputs.tag }}"
+
+      - name: Dispatch release
+        if: steps.exists.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run release.yml --ref "${{ steps.version.outputs.tag }}"
