@@ -7,7 +7,18 @@ milestone -- see the "Versioning" section of `README.md`.
 
 ## [0.0.16] - 2026-10-04
 
+### Added
+- Razorfen Kraul: 40 items across its 8 bosses, trash, and quest rewards
+  (Willix the Importer, Mortality Wanes, and the Alliance/Horde pair The
+  Crone of the Kraul / A Vengeful Fate).
+
 ### Fixed
+- Gnomeregan's Civinad Robes, Triprunner Dungarees, and Dual Reinforced
+  Leggings were marked Horde-only ("Rig Wars"), so Alliance players were
+  told they could never get them -- in reality Alliance gets the same
+  3 items from their own version of the quest ("The Grand Betrayal").
+  These are no longer faction-filtered, and the detail panel now shows
+  whichever quest name matches the viewer's own faction.
 - 17 items across 11 zone/crafted data files had the wrong one-hand/
   two-hand flag (wowtbc.gg's own scrape data was wrong), letting them
   slip past the "exclude two-handed weapons" filter regardless of what
@@ -22,34 +33,18 @@ milestone -- see the "Versioning" section of `README.md`.
   and +32 Spell Healing that don't exist on the real item, plus a wrong
   weapon damage range -- this was inflating its suggestion score even
   for melee/tank specs with no use for spell power.
-- Razorfen Kraul: corrected Armor on Ferine Leggings, Whisperwind
-  Headdress, Heart of Agamaggan, Batwing Mantle, and Tusken Helm (which
-  also gets a separate +120 Armor buff beyond its base value).
+- Razorfen Kraul: corrected stats, item level, and/or weapon damage on
+  25 of its 40 items (re-verified against WoW Forever's own game
+  database rather than Wowhead tooltip fetches, which turned out to be
+  unreliable for this dungeon), plus Armor corrections on Ferine
+  Leggings, Whisperwind Headdress, Heart of Agamaggan, Batwing Mantle,
+  and Tusken Helm (which also gets a separate +120 Armor buff beyond its
+  base value).
 - Gear scoring: a stat no EP profile has an explicit weight for used to
   silently score at a flat 0.3-per-point default instead of 0 -- this is
   exactly how Crested Scepter's fabricated spell power was skewing its
   score under Protection Warrior Mitigation and every other profile that
   hadn't explicitly zeroed those keys out.
-
-## [0.0.17] - 2026-10-04
-
-### Added
-- Razorfen Kraul: 40 items across its 8 bosses, trash, and quest rewards
-  (Willix the Importer, Mortality Wanes, and the Alliance/Horde pair The
-  Crone of the Kraul / A Vengeful Fate). 37 confirmed with real stats;
-  3 Forever-only boss drops (Roogug's Severed Head, Geomancer Headdress,
-  Death Prophet Spine) are in as unconfirmed placeholders pending a stat
-  source.
-
-## [0.0.16] - 2026-10-04
-
-### Fixed
-- Gnomeregan's Civinad Robes, Triprunner Dungarees, and Dual Reinforced
-  Leggings were marked Horde-only ("Rig Wars"), so Alliance players were
-  told they could never get them -- in reality Alliance gets the same
-  3 items from their own version of the quest ("The Grand Betrayal").
-  These are no longer faction-filtered, and the detail panel now shows
-  whichever quest name matches the viewer's own faction.
 
 ## [0.0.15] - 2026-10-04
 
