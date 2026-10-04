@@ -65,6 +65,7 @@ jobs:
         with:
           name: EverGear-${{ steps.version.outputs.tag }}
           path: .release/*.zip
+          include-hidden-files: true   # .release is a dot-directory, skipped by default
           if-no-files-found: error
 
       # ----- Merge to master: release -----
@@ -90,6 +91,7 @@ jobs:
         with:
           name: EverGear-${{ steps.version.outputs.tag }}
           path: .release/*.zip
+          include-hidden-files: true   # .release is a dot-directory, skipped by default
           if-no-files-found: error
 
       - name: Note skipped release
