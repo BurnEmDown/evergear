@@ -62,6 +62,7 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh -o /tmp/release.sh
           bash /tmp/release.sh -d -r /tmp/rel > /tmp/pkg.log 2>&1; echo "exit=$?" >> /tmp/pkg.log
           echo "::notice::pkglog=$(tail -n 25 /tmp/pkg.log | tr '\n' '|')"
+          echo "::notice::src=$(grep -n -B14 -A3 'future tag' /tmp/release.sh | tr '\n' '|')"
           echo "::notice::rel=$(ls -a /tmp/rel 2>&1 | tr '\n' ' ')"
 
       - name: Upload zip as workflow artifact
