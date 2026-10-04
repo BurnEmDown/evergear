@@ -23,28 +23,6 @@ on:
     types: [opened, synchronize, reopened, closed]
 
 jobs:
-#
-#   build    Runs on every pull request and every push to master. Builds the addon
-#            zip (no upload) and attaches it to the run as a downloadable artifact.
-#
-#   release  Runs only on a push to master (i.e. a merged PR), and only after
-#            build succeeded. Uploads a new release to CurseForge, then tags the
-#            commit v<EverGear.VERSION>.
-#
-# The version comes from Core/Constants.lua, so bump it (and CHANGELOG.md) in the
-# PR as usual. If a v<version> tag already exists, release does nothing, so
-# merging a change without bumping the version can't publish a duplicate.
-#
-# Note: BigWigsMods/packager builds and uploads in one go and has no "upload this
-# existing zip" mode, so the release job runs the packager again (a fresh build
-# from the same commit) rather than reusing build's zip.
-on:
-  pull_request:
-  push:
-    branches:
-      - master
-
-jobs:
   build:
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
