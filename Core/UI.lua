@@ -30,7 +30,10 @@ local FRAME_WIDTH = 334
 -- BOTTOM_INSET together, not in isolation -- see content's own anchors
 -- further down for how the three relate (content height = FRAME_HEIGHT -
 -- TOP_INSET - BOTTOM_INSET).
-local FRAME_HEIGHT = 595
+-- +26 over the original 595 for the new Profile dropdown row (M3, custom EP
+-- profiles) -- see TOP_INSET just below, which absorbs the same 26px so the
+-- paperdoll content panel's own size is unaffected.
+local FRAME_HEIGHT = 621
 
 local LEFT_MARGIN = 24
 local RIGHT_MARGIN = 24
@@ -41,8 +44,9 @@ local TOP_Y = -10
 local ROW_SPACING = 42
 local ICON_SIZE = 37
 -- Distance from the window's top edge to where the paperdoll content panel
--- starts: title + spec dropdown + look-ahead row + filter checkbox rows.
-local TOP_INSET = 190
+-- starts: title + spec dropdown + profile dropdown + look-ahead row + filter
+-- checkbox rows.
+local TOP_INSET = 216
 -- Distance from the window's bottom edge to where the paperdoll content
 -- panel ends -- the plain window background left below it.
 local BOTTOM_INSET = 7
@@ -164,6 +168,19 @@ mainFrame:SetScript("OnDragStop", function(self)
     self:StopMovingOrSizing()
     SaveWindowPosition()
 end)
+-- Closes the EP profile editor (Core/ProfileEditor.lua) along with the main
+-- window -- that window is parented to UIParent, not mainFrame (it has to
+-- outlive a RefreshUI-driven re-anchor and sit beside mainFrame rather than
+-- inside it), so it doesn't auto-hide with mainFrame the way a true child
+-- frame would. Fires for every path that hides mainFrame (its own close
+-- button, ToggleUI, /reload while shown, etc), not just one of them, since
+-- it's a frame script rather than something wired into a specific button.
+-- EverGearProfileEditor is that frame's own global name (ProfileEditor.lua
+-- loads before this file in the .toc, so it already exists here); guarded
+-- in case that ever isn't true.
+mainFrame:SetScript("OnHide", function()
+    if EverGearProfileEditor then EverGearProfileEditor:Hide() end
+end)
 mainFrame:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
     edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
@@ -220,12 +237,29 @@ controlsPanel:SetBackdropBorderColor(unpack(THEME.panelBorder))
 EverGear:GetCharDB().spec = EverGear:GetCharDB().spec or EverGear:GetDefaultSpec(EverGear:GetPlayerInfo().classToken)
 
 local specDropdown = CreateFrame("Frame", "EverGearSpecDropdown", mainFrame, "UIDropDownMenuTemplate")
-specDropdown:SetPoint("TOP", mainFrame, "TOP", -8, -34)
+-- -44, not -34 -- dropped 10px per user feedback on the M3 layout.
+specDropdown:SetPoint("TOP", mainFrame, "TOP", -8, -44)
 UIDropDownMenu_SetWidth(specDropdown, 150)
 
+-- Forward-declared: the Profile dropdown is built just below (needs the spec
+-- dropdown to exist first so it can anchor under it), but changing spec has
+-- to reset+refresh it too (a profile id from the OLD spec means nothing for
+-- the new one -- plan's M3) -- same "local name; ...; name = function"
+-- pattern this file already uses for weaponFilterPanel/professionFilterPanel.
+local RefreshProfileDropdown
+
 local function SpecDropdown_OnClick(self)
-    EverGear:GetCharDB().spec = self.value
+    local charDB = EverGear:GetCharDB()
+    local oldSpec = charDB.spec
+    charDB.spec = self.value
+    charDB.profileId = EverGear:GetDefaultProfileId(EverGear:GetPlayerInfo().classToken, charDB.spec)
     UIDropDownMenu_SetSelectedValue(specDropdown, self.value)
+    if RefreshProfileDropdown then RefreshProfileDropdown() end
+    -- Re-points the EP profile editor at the new spec too, but only if it
+    -- was still showing the spec we're switching away from -- see
+    -- NotifyLiveSpecChanged's own comment (Core/ProfileEditor.lua) for why
+    -- that guard matters.
+    if EverGear.NotifyLiveSpecChanged then EverGear:NotifyLiveSpecChanged(oldSpec, self.value) end
     EverGear:RefreshUI()
 end
 
@@ -240,6 +274,89 @@ UIDropDownMenu_Initialize(specDropdown, function()
     end
 end)
 UIDropDownMenu_SetSelectedValue(specDropdown, EverGear:GetCharDB().spec)
+
+-- ===== Profile dropdown (custom EP profiles, M3) =====
+-- Lists "Default" (the read-only builtin EverGear:GetBuiltinProfile weights)
+-- plus whatever custom profiles the player has saved for their CURRENT
+-- class+spec (EverGear:GetProfileList -- Core/EPProfiles.lua). Selecting one writes
+-- charDB.profileId; GetScoringProfile (Upgrades.lua) already resolves that
+-- through EverGear:GetActiveProfile on every score, so just changing the
+-- dropdown + RefreshUI is the entire wiring needed here -- no separate
+-- scoring-side change.
+EverGear:GetCharDB().profileId = EverGear:GetCharDB().profileId
+    or EverGear:GetDefaultProfileId(EverGear:GetPlayerInfo().classToken, EverGear:GetCharDB().spec)
+
+local profileDropdown = CreateFrame("Frame", "EverGearProfileDropdown", mainFrame, "UIDropDownMenuTemplate")
+-- +1, not -14 -- raised 15px per user feedback. Anchored directly off
+-- specDropdown (not chained through profileLabel below) so this offset
+-- alone determines its position -- the label is purely cosmetic and
+-- doesn't feed into anything else's layout math.
+profileDropdown:SetPoint("TOP", specDropdown, "BOTTOM", 0, 1)
+UIDropDownMenu_SetWidth(profileDropdown, 150)
+
+-- Small label above the dropdown -- unlike the spec dropdown (self-evident
+-- from showing real spec names like "Arms"/"Fury"), "Default" alone doesn't
+-- read as EP-profile selection on its own, per user feedback on the M3
+-- layout.
+local profileLabel = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+profileLabel:SetPoint("BOTTOM", profileDropdown, "TOP", -8, 2)
+profileLabel:SetText("EP Profile")
+profileLabel:SetTextColor(unpack(THEME.goldDim))
+
+local function ProfileDropdown_OnClick(self)
+    EverGear:GetCharDB().profileId = self.value
+    UIDropDownMenu_SetSelectedValue(profileDropdown, self.value)
+    EverGear:RefreshUI()
+end
+
+-- Re-resolves and re-selects the current class+spec's profile list -- called
+-- after a spec change (which just reset profileId to "default") and usable
+-- later by the M4 editor window after a profile is created/renamed/deleted,
+-- so the dropdown never shows a stale list or a vanished id.
+RefreshProfileDropdown = function()
+    local charDB = EverGear:GetCharDB()
+    UIDropDownMenu_Initialize(profileDropdown, function()
+        local playerInfo = EverGear:GetPlayerInfo()
+        local profiles = EverGear:GetProfileList(playerInfo.classToken, charDB.spec)
+        for _, profile in ipairs(profiles) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = profile.name
+            info.value = profile.id
+            info.func = ProfileDropdown_OnClick
+            UIDropDownMenu_AddButton(info)
+        end
+    end)
+    UIDropDownMenu_SetSelectedValue(profileDropdown, charDB.profileId)
+end
+RefreshProfileDropdown()
+-- Exposed globally so Core/ProfileEditor.lua (M4) can tell this dropdown to
+-- re-read the profile list after a create/rename/delete/copy -- this file's
+-- own RefreshProfileDropdown is a plain local, not reachable from another
+-- file otherwise.
+EverGear.RefreshProfileDropdown = RefreshProfileDropdown
+
+-- Small icon button opening the profile editor window (Core/ProfileEditor.lua,
+-- M4) -- where "Default" is the only option stops being true. Sits directly
+-- to the LEFT of the Profile dropdown at the same height, per user feedback
+-- (previously stacked in the weaponFilterButton/professionFilterButton
+-- corner-icon column further down this file -- moved out of there since it's
+-- really about the dropdown right next to it, not a filter panel toggle like
+-- those two).
+local profileEditorButton = CreateFrame("Button", "EverGearProfileEditorButton", mainFrame)
+profileEditorButton:SetSize(20, 20)
+profileEditorButton:SetPoint("RIGHT", profileDropdown, "LEFT", -4, 2)
+profileEditorButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Note_01")
+profileEditorButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+profileEditorButton:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    GameTooltip:SetText("EP profiles")
+    GameTooltip:AddLine("Create, edit, and manage custom EP scoring profiles.", 0.8, 0.8, 0.8, true)
+    GameTooltip:Show()
+end)
+profileEditorButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+profileEditorButton:SetScript("OnClick", function()
+    EverGear:ToggleProfileEditor()
+end)
 
 -- ===== Look-ahead slider =====
 -- Lets the player preview upgrades above their current level (e.g. "what
@@ -263,7 +380,9 @@ end
 
 local lookaheadRow = CreateFrame("Frame", nil, mainFrame)
 lookaheadRow:SetSize(200, 34)
-lookaheadRow:SetPoint("TOP", mainFrame, "TOP", 0, -60)
+-- -106: -60 originally, +26 to clear the new Profile dropdown row (M3), then
+-- +20 more per user feedback on that layout.
+lookaheadRow:SetPoint("TOP", mainFrame, "TOP", 0, -106)
 
 local lookaheadLabel = lookaheadRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 lookaheadLabel:SetPoint("TOP", lookaheadRow, "TOP", 0, 0)
@@ -399,7 +518,9 @@ end
 -- mainFrame's actual width rather than a hardcoded number.
 local FILTER_SLOT_WIDTH = 92
 local FILTER_ROW_GAP = 26
-local FILTER_TOP_Y = -104   -- shifted down to clear the look-ahead label+slider row
+-- -150: -104 originally, +26 to clear the new Profile dropdown row (M3),
+-- then +20 more per user feedback on that layout.
+local FILTER_TOP_Y = -150
 local FILTER_ROW_1_COUNT = 3
 
 local function RepositionFilters()
@@ -777,6 +898,15 @@ local function SafeGetItemIcon(itemId)
     return nil
 end
 
+-- Exposed so Core/ProfileEditor.lua can hide a stale detail panel when IT
+-- opens (same side, left, as of the profile editor's reposition below) --
+-- otherwise a detail panel left open from an earlier item click would sit at
+-- its old anchor, now directly under/behind the freshly-opened editor
+-- window instead of following it.
+function EverGear:HideUpgradeDetail()
+    detailPanel:Hide()
+end
+
 function EverGear:ShowUpgradeDetail(slotToken)
     local btn = slotButtons[slotToken]
     if not btn then return end
@@ -850,7 +980,19 @@ function EverGear:ShowUpgradeDetail(slotToken)
 
     detailPanel:ClearAllPoints()
     if btn.side == "left" then
-        detailPanel:SetPoint("TOPRIGHT", mainFrame, "TOPLEFT", -8, 0)
+        -- The profile editor (Core/ProfileEditor.lua) now also opens to the
+        -- LEFT of mainFrame, same side as a left-slot's detail panel -- per
+        -- user feedback, anchor this panel below the editor instead of
+        -- beside mainFrame directly when the editor is open, so the two
+        -- windows stack vertically instead of landing on top of each other.
+        -- EverGearProfileEditor is that frame's own global name (ProfileEditor.lua
+        -- loads before this file in the .toc, so it already exists here).
+        local editor = EverGearProfileEditor
+        if editor and editor:IsShown() then
+            detailPanel:SetPoint("TOPRIGHT", editor, "BOTTOMRIGHT", 0, -8)
+        else
+            detailPanel:SetPoint("TOPRIGHT", mainFrame, "TOPLEFT", -8, 0)
+        end
     else
         detailPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
     end
@@ -955,8 +1097,11 @@ local function RefreshWeaponFilterCheckboxes()
     end
 end
 
--- +26 over the plain grid height for the extra "Usable Only" button row.
-weaponFilterPanel:SetSize(WEAPON_PANEL_WIDTH, 92 + math.ceil(#weaponFilterEntries / WEAPON_COLS) * WEAPON_ROW_HEIGHT)
+-- +26 over the plain grid height for the extra "Usable Only" button row,
+-- +5 more per user feedback (the panel is anchored by its TOPLEFT corner
+-- when shown, so growing its height here extends the bottom edge downward
+-- without moving the top).
+weaponFilterPanel:SetSize(WEAPON_PANEL_WIDTH, 97 + math.ceil(#weaponFilterEntries / WEAPON_COLS) * WEAPON_ROW_HEIGHT)
 
 local weaponFilterUsableButton = CreateFrame("Button", nil, weaponFilterPanel, "UIPanelButtonTemplate")
 weaponFilterUsableButton:SetSize(150, 20)
@@ -1328,10 +1473,23 @@ local itemInfoWatcher = CreateFrame("Frame")
 itemInfoWatcher:RegisterEvent("GET_ITEM_INFO_RECEIVED")
 itemInfoWatcher:SetScript("OnEvent", function(_, _, _, success)
     if not success then return end
+    -- Captured BEFORE RefreshUI runs, not after: RefreshUI unconditionally
+    -- calls detailPanel:Hide() as its very first line (it has no way to know
+    -- whether the panel's current candidates are still valid), so checking
+    -- detailPanel:IsShown() afterward was always false and this reopen never
+    -- fired. That was the actual cause of a since-reported bug ("the first
+    -- time I click a gear slot the suggestions window doesn't open, but it
+    -- does the 2nd time") -- showing the detail panel for a slot almost
+    -- always looks up brand-new candidate items the player has never seen
+    -- (see the quality-color lookup above), which is exactly the kind of
+    -- cache miss this watcher exists to catch: the click shows the panel,
+    -- then this event fires moments later for that same cache miss, and
+    -- RefreshUI silently closed it again with nothing to reopen it.
+    local wasDetailShown = detailPanel:IsShown()
     if mainFrame:IsShown() then
         EverGear:RefreshUI()
     end
-    if detailPanel:IsShown() and currentDetailSlot then
+    if wasDetailShown and currentDetailSlot then
         EverGear:ShowUpgradeDetail(currentDetailSlot)
     end
 end)

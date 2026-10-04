@@ -77,35 +77,14 @@ function EverGear:GetRoleForSpec(classToken, specName)
     return specs[1].role
 end
 
-local CLASS_FALLBACK_STAT = {
-    WARRIOR = "STRENGTH", PALADIN = "STRENGTH", HUNTER = "AGILITY", ROGUE = "AGILITY",
-    PRIEST = "INTELLECT", SHAMAN = "INTELLECT", MAGE = "INTELLECT", WARLOCK = "INTELLECT", DRUID = "INTELLECT",
-}
-
-local CLASS_ROLE_PRIMARY_STAT = {
-    WARRIOR = { ["Physical DPS"] = "STRENGTH", ["Tank"] = "STRENGTH" },
-    PALADIN = { ["Physical DPS"] = "STRENGTH", ["Tank"] = "STRENGTH", ["Healer"] = "INTELLECT" },
-    HUNTER  = { ["Physical DPS"] = "AGILITY" },
-    ROGUE   = { ["Physical DPS"] = "AGILITY" },
-    -- Priest's Healer role is Spirit-primary (not Intellect, unlike every
-    -- other healer role) -- Discipline/Holy specifically, per the author.
-    PRIEST  = { ["Caster DPS"] = "INTELLECT", ["Healer"] = "SPIRIT" },
-    -- Shaman's Physical DPS role (Enhancement) is Strength-primary here, and
-    -- its Healer role (Restoration) is Spirit-primary -- both deliberate
-    -- departures from the other classes sharing those same role names.
-    SHAMAN  = { ["Physical DPS"] = "STRENGTH", ["Caster DPS"] = "INTELLECT", ["Healer"] = "SPIRIT" },
-    MAGE    = { ["Caster DPS"] = "INTELLECT" },
-    WARLOCK = { ["Caster DPS"] = "INTELLECT" },
-    -- Druid's Healer role (Restoration) is Spirit-primary, same departure as
-    -- Priest/Shaman's healer roles.
-    DRUID   = { ["Physical DPS"] = "AGILITY", ["Caster DPS"] = "INTELLECT", ["Healer"] = "SPIRIT", ["Tank"] = "AGILITY" },
-}
-
-function EverGear:GetPrimaryStat(classToken, role)
-    local roleMap = CLASS_ROLE_PRIMARY_STAT[classToken]
-    if roleMap and roleMap[role] then return roleMap[role] end
-    return CLASS_FALLBACK_STAT[classToken] or "STAMINA"
-end
+-- There used to be a CLASS_ROLE_PRIMARY_STAT table + GetPrimaryStat(classToken,
+-- role) here, used by ScoreItem to decide which one stat got a profile's
+-- generic `primaryStatWeight`. Removed per user feedback -- it made a
+-- profile's grid show an opaque "Primary Stat" row with no indication of
+-- which actual stat it affected. Every spec below now just names its own
+-- stats directly in its `stats` table (e.g. a Warrior's is
+-- `{ STRENGTH = 3.0, ... }`), so there's no separate "which stat is
+-- primary" lookup left to do -- see SPEC_PROFILES and ScoreItem below.
 
 -- Per-class-spec scoring profile: which secondary stats matter, plus how
 -- much Stamina/armor/weapon-DPS/off-stats (STR/AGI/INT/SPI when not the
@@ -157,93 +136,142 @@ end
 EverGear.SPEC_PROFILES = {
     WARRIOR = {
         ["Arms"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { AGILITY = 0.3, INTELLECT = 0.05, SPIRIT = 0.1 },
+            -- Same sixtyupgrades-derived weights as Fury (both are the same
+            -- physical-DPS role for this class, and only Fury's JSON was
+            -- provided) -- every key the source JSON omitted is an explicit
+            -- 0 here (confirmed convention), not a mechanically-rescaled
+            -- placeholder. Revisit if Arms ever gets its own distinct set.
+            stats = { STRENGTH = 2, AGILITY = 1, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Physical DPS-specific stats
-                ATTACK_POWER = 0.5, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
-                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
-                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0.1,
-                PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
-                RANGED_ATTACK_POWER = 0.1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                -- HASTE here stands in for sixtyupgrades' "speed" --
+                -- confirmed to mean the Haste stat, not the weapon's own
+                -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
+                ATTACK_POWER = 1, HIT_CHANCE = 20, CRIT_CHANCE = 20, HASTE = 50,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
+                PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
+                RANGED_ATTACK_POWER = 0, DEFENSE = 0, THREAT_REDUCTION = 0,
                 HP5 = 0, MP5 = 0,
             },
         },
         ["Fury"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { AGILITY = 0.3, INTELLECT = 0.05, SPIRIT = 0.1 },
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder.
+            stats = { STRENGTH = 2, AGILITY = 1, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Physical DPS-specific stats
-                ATTACK_POWER = 0.5, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
-                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
-                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0.1,
-                PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
-                RANGED_ATTACK_POWER = 0.1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                -- HASTE here stands in for sixtyupgrades' "speed" --
+                -- confirmed to mean the Haste stat, not the weapon's own
+                -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
+                ATTACK_POWER = 1, HIT_CHANCE = 20, CRIT_CHANCE = 20, HASTE = 50,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
+                PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
+                RANGED_ATTACK_POWER = 0, DEFENSE = 0, THREAT_REDUCTION = 0,
                 HP5 = 0, MP5 = 0,
             },
         },
         ["Protection"] = {  -- role: Tank
-            staminaWeight = 2.5, armorWeight = 0.3, dpsWeight = 1.0,
-            offStat = { AGILITY = 0.3, INTELLECT = 0.05, SPIRIT = 0.1 },
-            secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
-                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
-                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
-                NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Tank-specific stats
-                DODGE_CHANCE = 15.84, PARRY_CHANCE = 13.86, BLOCK_CHANCE = 11.88,
-                BLOCK_VALUE = 0.5, ATTACK_POWER = 0.2, HIT_CHANCE = 4.74,
-                CRIT_CHANCE = 4.4, HASTE = 1.58, ARMOR_PENETRATION = 0.05,
-                DEFENSE = 1.0, PHYSICAL_DAMAGE = 0.1, ATTACK_POWER_VS_BEASTS = 0.05, ATTACK_POWER_VS_HUMANOIDS = 0.05,
-                ATTACK_POWER_VS_UNDEAD = 0.05, RANGED_ATTACK_POWER = 0.05, THREAT_REDUCTION = 0,
-                HP5 = 0.4, MP5 = 0,
+            -- Two sixtyupgrades-derived default profiles, not one blended
+            -- set: Mitigation (survive the hit) and Threat (hold aggro) pull
+            -- in genuinely different directions for a tank (e.g. Mitigation
+            -- wants Stamina/Dodge/Parry/Defense/Block Value for
+            -- damage-reduction, Threat wants Attack Power/Hit/Crit/DPS to
+            -- generate aggro), so the player picks whichever matches what
+            -- they're optimizing for instead of EverGear guessing a
+            -- compromise. Both are zero-filled per the sixtyupgrades
+            -- convention -- every key the source JSON omitted (including
+            -- Block Chance, which both sets omit) is an explicit 0, not the
+            -- old mechanically-rescaled placeholder.
+            variants = {
+                {
+                    id = "mitigation",
+                    name = "Mitigation",
+                    profile = {
+                        stats = { STRENGTH = 0.02, AGILITY = 0.91, STAMINA = 1, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0.05, dpsWeight = 0,
+                        secondary = {
+                            SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                            SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                            FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
+                            NATURE_DAMAGE = 0,
+                            ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                            SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                            DODGE_CHANCE = 16.29, PARRY_CHANCE = 16.29, BLOCK_CHANCE = 0,
+                            BLOCK_VALUE = 0.43, ATTACK_POWER = 0, HIT_CHANCE = 0,
+                            CRIT_CHANCE = 0, HASTE = 0, ARMOR_PENETRATION = 0,
+                            DEFENSE = 2.61, PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0,
+                            ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
+                            -- sixtyupgrades' Mitigation set also lists a flat
+                            -- "health" weight distinct from Stamina -- no
+                            -- equivalent stat exists in this game's data
+                            -- model (never confirmed as a real itemized
+                            -- stat), so it's dropped rather than folded into
+                            -- HP5/Stamina.
+                            HP5 = 0, MP5 = 0,
+                        },
+                    },
+                },
+                {
+                    id = "threat",
+                    name = "Threat",
+                    profile = {
+                        stats = { STRENGTH = 2, AGILITY = 1.05, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 7.5,
+                        secondary = {
+                            SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                            SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                            FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
+                            NATURE_DAMAGE = 0,
+                            ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                            SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                            DODGE_CHANCE = 0, PARRY_CHANCE = 7.47, BLOCK_CHANCE = 0,
+                            BLOCK_VALUE = 0.9, ATTACK_POWER = 1, HIT_CHANCE = 27,
+                            CRIT_CHANCE = 22, HASTE = 0, ARMOR_PENETRATION = 0,
+                            DEFENSE = 0.22, PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0,
+                            ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
+                            HP5 = 0, MP5 = 0,
+                        },
+                    },
+                },
             },
         },
     },
     PALADIN = {
         ["Holy"] = {  -- role: Healer
-            staminaWeight = 1.2, armorWeight = 0.08, dpsWeight = 0.1,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 0.3 },
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder -- including SPELL_POWER,
+            -- which this set omits in favor of SPELL_DAMAGE/SPELL_HEALING
+            -- alone. The source JSON's "mana" (0.06) is folded into
+            -- MANA_REGEN, same as Priest Holy/Discipline.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 1, SPIRIT = 0.5 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Healer-specific stats
-                SPIRIT = 1, SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_CHANCE = 13,
-                SPELL_CRIT_CHANCE = 8.8, SPELL_HASTE = 6.32, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
-                SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.6,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
+                SPELL_CRIT_CHANCE = 20, SPELL_HASTE = 0, MANA_REGEN = 0.06, SPELL_PENETRATION = 0,
+                SPELL_DAMAGE = 1, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 3,
             },
         },
         ["Protection"] = {  -- role: Tank
-            staminaWeight = 2.5, armorWeight = 0.3, dpsWeight = 1.0,
-            offStat = { STRENGTH = 0.5, AGILITY = 0.5, INTELLECT = 0.25, SPIRIT = 0.05 },
+            stats = { STRENGTH = 3.0, AGILITY = 0.5, STAMINA = 2.5, INTELLECT = 0.25, SPIRIT = 0.05 }, armorWeight = 0.3, dpsWeight = 1.0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 1.2, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
@@ -263,522 +291,527 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Retribution"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 3, AGILITY = 1, INTELLECT = 0.1, SPIRIT = 0.1 },
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder.
+            stats = { STRENGTH = 2, AGILITY = 1, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0.5, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Physical DPS-specific stats
-                ATTACK_POWER = 1, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
-                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
-                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0.1,
-                PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
-                RANGED_ATTACK_POWER = 0, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                ATTACK_POWER = 1, HIT_CHANCE = 20, CRIT_CHANCE = 15, HASTE = 50,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
+                PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
+                RANGED_ATTACK_POWER = 0, DEFENSE = 0, THREAT_REDUCTION = 0,
                 HP5 = 0, MP5 = 0,
             },
         },
     },
     HUNTER = {
         ["Beast Mastery"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 1, INTELLECT = 0.2, SPIRIT = 0.1 },
+            stats = { STRENGTH = 0, AGILITY = 2.79, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
+                -- sixtyupgrades-derived weights: every key the source JSON
+                -- omitted is an explicit 0 here (confirmed convention), not a
+                -- mechanically-rescaled placeholder -- this is a pure-DPS EP
+                -- metric, not a survivability-aware one.
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Physical DPS-specific stats
-                ATTACK_POWER = 1, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
-                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
-                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
-                PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.4, ATTACK_POWER_VS_HUMANOIDS = 0.4, ATTACK_POWER_VS_UNDEAD = 0.4,
-                RANGED_ATTACK_POWER = 1.5, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.4,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                -- HASTE here stands in for sixtyupgrades' "rangedSpeed" --
+                -- confirmed to mean the Haste stat, not the weapon's own
+                -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
+                ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 100,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
+                PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
+                RANGED_ATTACK_POWER = 1, DEFENSE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Marksmanship"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 1, INTELLECT = 0.2, SPIRIT = 0.1 },
+            stats = { STRENGTH = 0, AGILITY = 2.79, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
+                -- sixtyupgrades-derived weights: every key the source JSON
+                -- omitted is an explicit 0 here (confirmed convention), not a
+                -- mechanically-rescaled placeholder -- this is a pure-DPS EP
+                -- metric, not a survivability-aware one.
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Physical DPS-specific stats
-                ATTACK_POWER = 1, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
-                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
-                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
-                PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.4, ATTACK_POWER_VS_HUMANOIDS = 0.4, ATTACK_POWER_VS_UNDEAD = 0.4,
-                RANGED_ATTACK_POWER = 1.5, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.4,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                -- HASTE here stands in for sixtyupgrades' "rangedSpeed" --
+                -- confirmed to mean the Haste stat, not the weapon's own
+                -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
+                ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 100,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
+                PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
+                RANGED_ATTACK_POWER = 1, DEFENSE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Survival"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 1, INTELLECT = 0.2, SPIRIT = 0.1 },
+            stats = { STRENGTH = 0, AGILITY = 2.79, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
+                -- sixtyupgrades-derived weights: every key the source JSON
+                -- omitted is an explicit 0 here (confirmed convention), not a
+                -- mechanically-rescaled placeholder -- this is a pure-DPS EP
+                -- metric, not a survivability-aware one.
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Physical DPS-specific stats
-                ATTACK_POWER = 1, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
-                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
-                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
-                PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.4, ATTACK_POWER_VS_HUMANOIDS = 0.4, ATTACK_POWER_VS_UNDEAD = 0.4,
-                RANGED_ATTACK_POWER = 1.5, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.4,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                -- HASTE here stands in for sixtyupgrades' "rangedSpeed" --
+                -- confirmed to mean the Haste stat, not the weapon's own
+                -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
+                ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 100,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
+                PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
+                RANGED_ATTACK_POWER = 1, DEFENSE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
     },
     ROGUE = {
         ["Assassination"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 1, INTELLECT = 0.05, SPIRIT = 0.1 },
+            -- sixtyupgrades-derived "Dagger (Subtlety/Assassination)"
+            -- weights: every key the source JSON omitted is an explicit 0
+            -- here (confirmed convention), not a mechanically-rescaled
+            -- placeholder.
+            stats = { STRENGTH = 1.1, AGILITY = 1.8, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Physical DPS-specific stats
-                ATTACK_POWER = 0.9, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
-                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
-                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
-                PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
-                RANGED_ATTACK_POWER = 0.1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                -- HASTE here stands in for sixtyupgrades' "speed" --
+                -- confirmed to mean the Haste stat, not the weapon's own
+                -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
+                ATTACK_POWER = 1, HIT_CHANCE = 16, CRIT_CHANCE = 20, HASTE = 50,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
+                PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
+                RANGED_ATTACK_POWER = 0, DEFENSE = 0, THREAT_REDUCTION = 0,
                 HP5 = 0, MP5 = 0,
             },
         },
         ["Combat"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 1, INTELLECT = 0.05, SPIRIT = 0.1 },
+            -- sixtyupgrades-derived "Combat (Swords)" weights: every key
+            -- the source JSON omitted is an explicit 0 here (confirmed
+            -- convention), not a mechanically-rescaled placeholder.
+            stats = { STRENGTH = 1.1, AGILITY = 1.9, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Physical DPS-specific stats
-                ATTACK_POWER = 0.9, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
-                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
-                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
-                PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
-                RANGED_ATTACK_POWER = 0.1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                -- HASTE here stands in for sixtyupgrades' "speed" --
+                -- confirmed to mean the Haste stat, not the weapon's own
+                -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
+                ATTACK_POWER = 1, HIT_CHANCE = 18, CRIT_CHANCE = 23, HASTE = 50,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
+                PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
+                RANGED_ATTACK_POWER = 0, DEFENSE = 0, THREAT_REDUCTION = 0,
                 HP5 = 0, MP5 = 0,
             },
         },
         ["Subtlety"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 1, INTELLECT = 0.05, SPIRIT = 0.1 },
+            -- Same sixtyupgrades-derived "Dagger" weights as Assassination
+            -- (one JSON was given for both) -- see Assassination's comment
+            -- for the zero-fill convention.
+            stats = { STRENGTH = 1.1, AGILITY = 1.8, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Physical DPS-specific stats
-                ATTACK_POWER = 0.9, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
-                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
-                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0,
-                PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
-                RANGED_ATTACK_POWER = 0.1, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                ATTACK_POWER = 1, HIT_CHANCE = 16, CRIT_CHANCE = 20, HASTE = 50,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
+                PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
+                RANGED_ATTACK_POWER = 0, DEFENSE = 0, THREAT_REDUCTION = 0,
                 HP5 = 0, MP5 = 0,
             },
         },
     },
     PRIEST = {
         ["Discipline"] = {  -- role: Healer (Spirit-primary for Priest -- see CLASS_ROLE_PRIMARY_STAT)
-            staminaWeight = 1.2, armorWeight = 0.08, dpsWeight = 0.1,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 1 },
+            -- sixtyupgrades-derived weights (same JSON given for both
+            -- Discipline and Holy): every key the source JSON omitted is an
+            -- explicit 0 here (confirmed convention), not a mechanically-
+            -- rescaled placeholder -- including SPELL_POWER, which this set
+            -- omits in favor of SPELL_DAMAGE/SPELL_HEALING alone. The
+            -- source JSON's "mana" (0.07) is folded into MANA_REGEN per
+            -- user confirmation.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 1.16, SPIRIT = 0.83 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Healer-specific stats (Spirit itself hits the primary-stat 3.0
-                -- weight now, so it's deliberately not repeated here)
-                SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_CHANCE = 13,
-                SPELL_CRIT_CHANCE = 8.8, SPELL_HASTE = 6.32, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
-                SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.6,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
+                SPELL_CRIT_CHANCE = 0, SPELL_HASTE = 0, MANA_REGEN = 0.07, SPELL_PENETRATION = 0,
+                SPELL_DAMAGE = 1, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 3.5,
             },
         },
         ["Holy"] = {  -- role: Healer (Spirit-primary for Priest -- see CLASS_ROLE_PRIMARY_STAT)
-            staminaWeight = 1.2, armorWeight = 0.08, dpsWeight = 0.1,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 1 },
+            -- Same sixtyupgrades-derived weights as Discipline (one JSON
+            -- was given for both) -- see Discipline's comment for the
+            -- zero-fill convention and the "mana"->MANA_REGEN fold.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 1.16, SPIRIT = 0.83 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Healer-specific stats (Spirit itself hits the primary-stat 3.0
-                -- weight now, so it's deliberately not repeated here)
-                SPELL_POWER = 0.8, SPELL_HEALING = 1.4, SPELL_HIT_CHANCE = 13,
-                SPELL_CRIT_CHANCE = 8.8, SPELL_HASTE = 6.32, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
-                SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.6,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
+                SPELL_CRIT_CHANCE = 0, SPELL_HASTE = 0, MANA_REGEN = 0.07, SPELL_PENETRATION = 0,
+                SPELL_DAMAGE = 1, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 3.5,
             },
         },
         ["Shadow"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 1 },
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder -- including SPELL_POWER,
+            -- which this set omits in favor of SPELL_DAMAGE alone.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.04, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Caster DPS-specific stats
-                SPELL_POWER = 1.2, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 0.8,
-                -- Shadow Damage weighted well above the other schools -- it's
-                -- this spec's entire kit (Mind Flay/Shadow Word: Pain/etc).
-                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 1, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
-                NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.5,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HIT_CHANCE = 10, SPELL_CRIT_CHANCE = 2.4, SPELL_HASTE = 0,
+                MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
+                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 1, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
+                NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
     },
     SHAMAN = {
         ["Elemental"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0.05, AGILITY = 0.05, INTELLECT = 0.3, SPIRIT = 0.3 },
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder -- including SPELL_POWER,
+            -- which this set omits in favor of SPELL_DAMAGE alone.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.13, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Caster DPS-specific stats
-                SPELL_POWER = 0.8, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 0.8,
-                -- Nature Damage weighted well above the other schools -- it's
-                -- Elemental's actual nuke school (Lightning Bolt/Chain Lightning).
-                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
-                NATURE_DAMAGE = 1, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.5,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HIT_CHANCE = 10, SPELL_CRIT_CHANCE = 8, SPELL_HASTE = 0,
+                MANA_REGEN = 0, SPELL_PENETRATION = 2.7, SPELL_DAMAGE = 1,
+                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
+                NATURE_DAMAGE = 1, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Enhancement"] = {  -- role: Physical DPS (Strength-primary for Shaman -- see CLASS_ROLE_PRIMARY_STAT)
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { AGILITY = 1, INTELLECT = 0.3, SPIRIT = 0.3 },
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder. HASTE stands in for
+            -- sixtyupgrades' "speed" (confirmed to mean the Haste stat).
+            stats = { STRENGTH = 2, AGILITY = 1.17, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Physical DPS-specific stats
-                ATTACK_POWER = 0.5, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
-                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
-                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 3.96, BLOCK_VALUE = 0.1,
-                PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
-                RANGED_ATTACK_POWER = 0.4, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.4,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                ATTACK_POWER = 1, HIT_CHANCE = 24, CRIT_CHANCE = 23.38, HASTE = 50,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
+                PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
+                RANGED_ATTACK_POWER = 0, DEFENSE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Restoration"] = {  -- role: Healer (Spirit-primary for Shaman -- see CLASS_ROLE_PRIMARY_STAT)
-            staminaWeight = 1.2, armorWeight = 0.08, dpsWeight = 0.1,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 1 },
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder -- including SPELL_POWER,
+            -- which this set omits in favor of SPELL_DAMAGE/SPELL_HEALING
+            -- alone. The source JSON's "mana" (0.07) is folded into
+            -- MANA_REGEN, same as Priest Holy/Discipline.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.5, SPIRIT = 0.5 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Healer-specific stats (Spirit itself hits the primary-stat 3.0
-                -- weight now, so it's deliberately not repeated here)
-                SPELL_POWER = 0.8, SPELL_HEALING = 1.2, SPELL_HIT_CHANCE = 13,
-                SPELL_CRIT_CHANCE = 8.8, SPELL_HASTE = 6.32, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
-                SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.6,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
+                SPELL_CRIT_CHANCE = 0, SPELL_HASTE = 0, MANA_REGEN = 0.07, SPELL_PENETRATION = 0,
+                SPELL_DAMAGE = 1, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 3,
             },
         },
     },
     MAGE = {
         ["Arcane"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.1 },
+            -- No sixtyupgrades JSON was given for Arcane -- derived from
+            -- Fire's (same crit/hit/intellect), swapping ARCANE_DAMAGE in
+            -- for FIRE_DAMAGE as the nuke school. See Fire's comment for the
+            -- zero-fill convention.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.2, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Caster DPS-specific stats
-                SPELL_POWER = 1, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 1,
-                -- ARCANE_DAMAGE weighted higher than the other schools -- Arcane is
-                -- this spec's actual nuke school, so +Arcane spell damage items are
-                -- worth more to it than the flat 0.4 every caster gets by default.
-                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.7, FROST_DAMAGE = 0.4,
-                NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.5,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HIT_CHANCE = 13, SPELL_CRIT_CHANCE = 12, SPELL_HASTE = 0,
+                MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
+                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 1, FROST_DAMAGE = 0,
+                NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Fire"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.1 },
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder -- including SPELL_POWER,
+            -- which this set omits in favor of SPELL_DAMAGE alone.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.2, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Caster DPS-specific stats
-                SPELL_POWER = 1, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 1,
-                -- FIRE_DAMAGE weighted higher than the other schools -- Fire is this
-                -- spec's actual nuke school, so +Fire spell damage items are worth
-                -- more to it than the flat 0.4 every caster gets by default.
-                FIRE_DAMAGE = 0.7, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
-                NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.5,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HIT_CHANCE = 13, SPELL_CRIT_CHANCE = 12, SPELL_HASTE = 0,
+                MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
+                FIRE_DAMAGE = 1, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
+                NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Frost"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.1 },
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.19, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Caster DPS-specific stats
-                SPELL_POWER = 1, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 1,
-                -- FROST_DAMAGE weighted higher than the other schools -- Frost is
-                -- this spec's actual nuke school, so +Frost spell damage items are
-                -- worth more to it than the flat 0.4 every caster gets by default.
-                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.7,
-                NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.5,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HIT_CHANCE = 13.58, SPELL_CRIT_CHANCE = 10.95, SPELL_HASTE = 0,
+                MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
+                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 1,
+                NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
     },
     WARLOCK = {
         ["Affliction"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.01 },
+            -- sixtyupgrades-derived weights (same JSON given for all 3
+            -- Warlock specs): every key the source JSON omitted is an
+            -- explicit 0 here (confirmed convention), not a mechanically-
+            -- rescaled placeholder -- including SPELL_POWER, which this set
+            -- omits in favor of SPELL_DAMAGE alone.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.28, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Caster DPS-specific stats
-                SPELL_POWER = 1, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 1,
-                -- Shadow is this spec's nuke school; Fire is not used, so it stays
-                -- at the universal flat default rather than being boosted.
-                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.7, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
-                NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
-                HP5 = 0.2, MP5 = 0.5,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HIT_CHANCE = 19.53, SPELL_CRIT_CHANCE = 12.64, SPELL_HASTE = 0,
+                MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
+                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 1, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
+                NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Demonology"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.01 },
+            -- Same sixtyupgrades-derived weights as Affliction (one JSON
+            -- was given for all 3 Warlock specs) -- see Affliction's comment
+            -- for the zero-fill convention.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.28, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Caster DPS-specific stats
-                SPELL_POWER = 1, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 1,
-                -- Fire and Shadow are both relevant nuke schools for Demonology's kit,
-                -- so both get the boosted weight instead of the universal 0.4.
-                FIRE_DAMAGE = 0.7, SHADOW_DAMAGE = 0.7, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
-                NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
-                HP5 = 0.2, MP5 = 0.5,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HIT_CHANCE = 19.53, SPELL_CRIT_CHANCE = 12.64, SPELL_HASTE = 0,
+                MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
+                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 1, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
+                NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Destruction"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.01 },
+            -- Same sixtyupgrades-derived weights as Affliction (one JSON
+            -- was given for all 3 Warlock specs) -- see Affliction's comment
+            -- for the zero-fill convention.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.28, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Caster DPS-specific stats
-                SPELL_POWER = 1, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 1,
-                -- Fire and Shadow are both relevant nuke schools for Destruction's kit,
-                -- so both get the boosted weight instead of the universal 0.4.
-                FIRE_DAMAGE = 0.7, SHADOW_DAMAGE = 0.7, ARCANE_DAMAGE = 0.4, FROST_DAMAGE = 0.4,
-                NATURE_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
-                HP5 = 0.2, MP5 = 0.5,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HIT_CHANCE = 19.53, SPELL_CRIT_CHANCE = 12.64, SPELL_HASTE = 0,
+                MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
+                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 1, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
+                NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
     },
     DRUID = {
         ["Balance"] = {  -- role: Caster DPS
-            staminaWeight = 1.0, armorWeight = 0.1, dpsWeight = 0.3,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, SPIRIT = 0.5 },
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder -- including SPELL_POWER
+            -- and NATURE_DAMAGE (Balance's kit does both Arcane and Nature
+            -- damage in practice, but this set only weights Arcane).
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.11, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Caster DPS-specific stats
-                SPELL_POWER = 0.8, SPELL_HIT_CHANCE = 18.2, SPELL_CRIT_CHANCE = 13.2, SPELL_HASTE = 7.9,
-                MANA_REGEN = 0.4, SPELL_PENETRATION = 0.3, SPELL_DAMAGE = 0.8,
-                -- Nature and Arcane Damage weighted above the other schools --
-                -- Balance's kit spans both (Starfire is Arcane, Wrath/Moonfire
-                -- are Nature).
-                FIRE_DAMAGE = 0.4, SHADOW_DAMAGE = 0.4, ARCANE_DAMAGE = 0.7, FROST_DAMAGE = 0.4,
-                NATURE_DAMAGE = 0.7, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.5,
-            },
-        },
-        ["Feral (DPS)"] = {  -- role: Physical DPS
-            staminaWeight = 1.5, armorWeight = 0.15, dpsWeight = 3.0,
-            offStat = { STRENGTH = 1, INTELLECT = 0.05, SPIRIT = 0.05 },
-            secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
-                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
-                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
-                NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Physical DPS-specific stats
-                ATTACK_POWER = 0.5, HIT_CHANCE = 12.64, CRIT_CHANCE = 13.2, HASTE = 7.9,
-                ARMOR_PENETRATION = 0.5, DODGE_CHANCE = 3.96,
-                PARRY_CHANCE = 3.96, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
-                PHYSICAL_DAMAGE = 0.3, ATTACK_POWER_VS_BEASTS = 0.15, ATTACK_POWER_VS_HUMANOIDS = 0.15, ATTACK_POWER_VS_UNDEAD = 0.15,
-                RANGED_ATTACK_POWER = 0, DEFENSE = 0.1, THREAT_REDUCTION = 0.2,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HIT_CHANCE = 8.94, SPELL_CRIT_CHANCE = 6.59, SPELL_HASTE = 0,
+                MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
+                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 1, FROST_DAMAGE = 0,
+                NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
                 HP5 = 0, MP5 = 0,
             },
         },
-        ["Feral (Tank)"] = {  -- role: Tank
-            staminaWeight = 2.5, armorWeight = 0.3, dpsWeight = 1.0,
-            offStat = { STRENGTH = 2, INTELLECT = 0.05, SPIRIT = 0.05 },
+        ["Feral (DPS)"] = {  -- role: Physical DPS
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder. The source JSON's "mana"
+            -- (0.04) is folded into MANA_REGEN, same as the healer specs.
+            stats = { STRENGTH = 2.2, AGILITY = 2.02, STAMINA = 0, INTELLECT = 0.67, SPIRIT = 0.08 }, armorWeight = 0, dpsWeight = 14,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
+                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HASTE = 0, MANA_REGEN = 0.04, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
+                NATURE_DAMAGE = 0,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                ATTACK_POWER = 1, HIT_CHANCE = 8.21, CRIT_CHANCE = 8.19, HASTE = 4.17,
+                ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
+                PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
+                PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
+                RANGED_ATTACK_POWER = 0, DEFENSE = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0.46,
+            },
+        },
+        ["Feral (Tank)"] = {  -- role: Tank
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder.
+            --
+            -- "armorBonus" (0.069) is folded additively into armorWeight
+            -- alongside "armor" (0.33, giving 0.4) -- confirmed earlier that
+            -- bonus armor isn't a separate itemized stat in this game, it's
+            -- the same total Armor value shown on the tooltip (just colored
+            -- differently historically), so there's only one ARMOR number
+            -- per item to apply a single weight to. This is my best
+            -- approximation of two sixtyupgrades inputs that both ultimately
+            -- score against that one number -- flagging in case a different
+            -- split was intended.
+            --
+            -- "health" (0.167, a flat Health distinct from Stamina) has no
+            -- equivalent key in this game's data model -- same situation as
+            -- this spec's own Mitigation profile elsewhere -- and is
+            -- dropped rather than folded into Stamina.
+            stats = { STRENGTH = 2.2, AGILITY = 1.57, STAMINA = 2.2, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0.4, dpsWeight = 14,
+            secondary = {
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Tank-specific stats
-                DODGE_CHANCE = 15.84, PARRY_CHANCE = 13.86, BLOCK_CHANCE = 0,
-                BLOCK_VALUE = 0, ATTACK_POWER = 0.2, HIT_CHANCE = 4.74,
-                CRIT_CHANCE = 4.4, HASTE = 1.58, ARMOR_PENETRATION = 0.05,
-                DEFENSE = 1.0, PHYSICAL_DAMAGE = 0.1, ATTACK_POWER_VS_BEASTS = 0.05, ATTACK_POWER_VS_HUMANOIDS = 0.05,
-                ATTACK_POWER_VS_UNDEAD = 0.05, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
-                HP5 = 0.4, MP5 = 0,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                DODGE_CHANCE = 0, PARRY_CHANCE = 0, BLOCK_CHANCE = 0,
+                BLOCK_VALUE = 0, ATTACK_POWER = 1, HIT_CHANCE = 36.1,
+                CRIT_CHANCE = 25.8, HASTE = 26.6, ARMOR_PENETRATION = 0,
+                DEFENSE = 0.46, PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0,
+                ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 0,
             },
         },
         ["Restoration"] = {  -- role: Healer (Spirit-primary for Druid -- see CLASS_ROLE_PRIMARY_STAT)
-            staminaWeight = 1.2, armorWeight = 0.08, dpsWeight = 0.1,
-            offStat = { STRENGTH = 0, AGILITY = 0.05, INTELLECT = 0.5 },
+            -- sixtyupgrades-derived weights: every key the source JSON
+            -- omitted is an explicit 0 here (confirmed convention), not a
+            -- mechanically-rescaled placeholder -- including SPELL_POWER,
+            -- which this set omits in favor of SPELL_DAMAGE/SPELL_HEALING
+            -- alone. The source JSON's "mana" (0.02) is folded into
+            -- MANA_REGEN, same as the other healer specs.
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.3, SPIRIT = 0.46 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                -- Melee-exclusive stats -- 0 for this caster/healer role
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
                 DEFENSE = 0,
-                -- Universal utility stats
-                ARCANE_RESISTANCE = 0.1, FIRE_RESISTANCE = 0.1, FROST_RESISTANCE = 0.1, NATURE_RESISTANCE = 0.1,
-                SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
-                -- Healer-specific stats (Spirit itself hits the primary-stat 3.0
-                -- weight now, so it's deliberately not repeated here)
-                SPELL_POWER = 0.8, SPELL_HEALING = 1.2, SPELL_HIT_CHANCE = 13,
-                SPELL_CRIT_CHANCE = 8.8, SPELL_HASTE = 6.32, MANA_REGEN = 0.6, SPELL_PENETRATION = 0.05,
-                SPELL_DAMAGE = 0.4, THREAT_REDUCTION = 0.2,
-                HP5 = 0, MP5 = 0.6,
+                ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
+                SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
+                SPELL_POWER = 0, SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
+                SPELL_CRIT_CHANCE = 10, SPELL_HASTE = 0, MANA_REGEN = 0.02, SPELL_PENETRATION = 0,
+                SPELL_DAMAGE = 1, THREAT_REDUCTION = 0,
+                HP5 = 0, MP5 = 3,
             },
         },
     },
@@ -794,43 +827,76 @@ local EXCLUDED_STAT_KEYS = {
     HERBALISM = true, LOCKPICKING = true,
 }
 
--- Looks up the final scoring profile + off-stat weights for a specific
--- class+spec directly from EverGear.SPEC_PROFILES above -- no role-level
--- merging happens here anymore, so editing one class+spec's entry can never
--- affect another's.
+-- Looks up the final scoring profile for a specific class+spec's ACTIVE
+-- profile (EverGear:GetActiveProfile, Core/EPProfiles.lua) -- either the
+-- read-only builtin from EverGear.SPEC_PROFILES, or the player's own custom
+-- profile if they've selected one for this character. No role-level merging
+-- happens here, so editing one class+spec's entry/profile can never affect
+-- another's.
 local function GetScoringProfile(classToken, specName)
-    local classProfiles = EverGear.SPEC_PROFILES[classToken]
-    local profile = classProfiles and classProfiles[specName]
-    if not profile then
-        -- Defensive fallback: should never happen since every CLASS_SPECS
-        -- entry (Upgrades.lua, above) has a matching SPEC_PROFILES entry
-        -- generated for it -- but better to fall back to a safe, sane
-        -- default than error out entirely if the two ever drift apart.
-        profile = EverGear.SPEC_PROFILES.WARRIOR.Arms
-    end
-    return profile, profile.offStat
+    return EverGear:GetActiveProfile(classToken, specName)
+end
+
+-- "39 - 60 Damage" -> 39, 60. Also handles the single-value form some ranged/
+-- thrown weapons use ("18 Damage", no dash). Returns nil, nil if `text` isn't
+-- a weapon damage string at all (non-weapon items, or a live-read item whose
+-- tooltip scan below found nothing).
+local function ParseWeaponDamageRange(text)
+    if type(text) ~= "string" then return nil, nil end
+    local lo, hi = text:match("(%d+)%s*%-%s*(%d+)")
+    if lo and hi then return tonumber(lo), tonumber(hi) end
+    local single = text:match("^(%d+)%s*Damage$")
+    if single then return tonumber(single), tonumber(single) end
+    return nil, nil
 end
 
 -- Computes a single comparable score from a stats table (our own item.stats
 -- shape, or the live-read equivalent from NormalizeLiveStats below), plus
 -- armor value and weapon DPS (0 for non-weapon/non-armor items). `profile`
--- and `offStatWeights` come from GetScoringProfile (class+spec-aware, with
--- role defaults as the fallback) -- this function itself doesn't know or
--- care whether either came from a role default or a per-spec override.
-local function ScoreItem(stats, primaryStat, profile, offStatWeights, armorValue, dps)
+-- comes from GetScoringProfile (class+spec-aware) -- this function itself
+-- doesn't know or care whether it came from a builtin or a custom profile.
+--
+-- Weapon scoring beyond raw DPS: a weapon's speed and its damage range carry
+-- real, independent information DPS alone collapses away, so a profile can
+-- weight them on top of (not instead of) dpsWeight --
+--   avgDamageWeight: per point of average per-hit damage (dps * speed) --
+--     what "weapon damage" special abilities (Heroic Strike, Mortal Strike,
+--     Execute, etc.) actually roll against each swing, confirmed random
+--     between the weapon's low and high end rather than weighted toward the
+--     top -- see CUSTOM_EP_PROFILES_PLAN.md for the writeup. Two weapons
+--     with the same average score identically here even if their min/max
+--     spread differs, which is mechanically correct for expected damage.
+--   maxDamageWeight: per point of the weapon's highest possible roll --
+--     doesn't affect expected DPS, but is the right number for someone
+--     explicitly optimizing burst/crit-ceiling rather than average output.
+--     Zero by default on every builtin profile; it's here for a player who
+--     wants to tune for it deliberately, not a standard scoring factor.
+--   fastWeaponWeight / slowWeaponWeight: per point of attacks-per-second
+--     (1/speed) or of speed itself -- two one-directional fields rather than
+--     one signed "speed preference" field, so they clamp/clone/import the
+--     same way every other weight here does. A spec that wants fast weapons
+--     (poison/proc uptime) sets fastWeaponWeight; one that wants slow
+--     weapons (Windfury, big-hit-based abilities) sets slowWeaponWeight --
+--     ordinarily only one of the two is ever nonzero for a given profile.
+-- All four read with an `or 0` fallback so a profile created before these
+-- fields existed (every builtin profile as of this writing) scores them as
+-- flatly irrelevant rather than erroring on a missing key.
+--
+-- Every main stat (STRENGTH/AGILITY/STAMINA/INTELLECT/SPIRIT) is weighted
+-- straight out of profile.stats -- there's no more separate "primary stat"
+-- concept here; each spec's profile just names its own stats explicitly
+-- (see SPEC_PROFILES above), so a Warrior's grid says "Strength", not
+-- "Primary Stat".
+local function ScoreItem(stats, profile, armorValue, dps)
     local score = 0
 
     for statName, value in pairs(stats or {}) do
         if type(value) == "number" and not EXCLUDED_STAT_KEYS[statName] then
             local weight
-            if statName == primaryStat then
-                weight = 3.0
-            elseif statName == "STAMINA" then
-                weight = profile.staminaWeight
+            if profile.stats[statName] then
+                weight = profile.stats[statName]
             elseif profile.secondary[statName] then
                 weight = profile.secondary[statName]
-            elseif offStatWeights[statName] then
-                weight = offStatWeights[statName]
             else
                 weight = 0.3  -- unmapped fallback
             end
@@ -840,6 +906,20 @@ local function ScoreItem(stats, primaryStat, profile, offStatWeights, armorValue
 
     score = score + ((armorValue or 0) * profile.armorWeight)
     score = score + ((dps or 0) * profile.dpsWeight)
+
+    local weaponSpeed = stats and stats.WEAPON_SPEED
+    if weaponSpeed and weaponSpeed > 0 then
+        local avgDamage = (dps or 0) * weaponSpeed
+        score = score + (avgDamage * (profile.avgDamageWeight or 0))
+        score = score + ((1 / weaponSpeed) * (profile.fastWeaponWeight or 0))
+        score = score + (weaponSpeed * (profile.slowWeaponWeight or 0))
+
+        local _, maxDamage = ParseWeaponDamageRange(stats.WEAPON_DAMAGE)
+        if maxDamage then
+            score = score + (maxDamage * (profile.maxDamageWeight or 0))
+        end
+    end
+
     return score
 end
 
@@ -863,6 +943,35 @@ local function ScanArmorFromLink(itemLink)
         end
     end
     return 0
+end
+
+-- GetItemStats() exposes a weapon's DPS (ITEM_MOD_DAMAGE_PER_SECOND_SHORT,
+-- see DPS_API_KEY below) but not its speed or its damage range -- same gap as
+-- Armor above, same fix: scan the rendered tooltip text. Returns
+-- (weaponDamageText, weaponSpeed) -- either or both nil if this isn't a
+-- weapon/the lines weren't found. weaponDamageText comes back in the exact
+-- "39 - 60 Damage" shape ParseWeaponDamageRange (above) expects, so a
+-- live-read item's stats.WEAPON_DAMAGE is interchangeable with a database
+-- item's.
+local function ScanWeaponRangeFromLink(itemLink)
+    if not itemLink then return nil, nil end
+    scanTooltip:ClearLines()
+    scanTooltip:SetHyperlink(itemLink)
+    local damageText, speed
+    for i = 1, scanTooltip:NumLines() do
+        local line = _G["EverGear_ScanTooltipTextLeft" .. i]
+        local text = line and line:GetText()
+        if text then
+            if not damageText then
+                damageText = text:match("^%d+ %- %d+ Damage$") or text:match("^%d+ Damage$")
+            end
+            if not speed then
+                local spd = text:match("^Speed ([%d%.]+)$")
+                if spd then speed = tonumber(spd) end
+            end
+        end
+    end
+    return damageText, speed
 end
 
 -- Maps GetItemStats()/C_Item.GetItemStats() key names to our own stat names,
@@ -923,6 +1032,13 @@ local function NormalizeLiveStats(itemLink)
 
     local armorValue = ScanArmorFromLink(itemLink)
     local dpsValue = apiStats[DPS_API_KEY] or 0
+    -- Only a weapon has DPS at all -- skip the extra tooltip scan for every
+    -- other slot.
+    if dpsValue > 0 then
+        local damageText, speed = ScanWeaponRangeFromLink(itemLink)
+        if damageText then stats.WEAPON_DAMAGE = damageText end
+        if speed then stats.WEAPON_SPEED = speed end
+    end
     return stats, armorValue, dpsValue
 end
 
@@ -1078,9 +1194,7 @@ end
 function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     local playerInfo = self:GetPlayerInfo()
     local charDB = self:GetCharDB()
-    local role = self:GetRoleForSpec(playerInfo.classToken, charDB.spec)
-    local primaryStat = self:GetPrimaryStat(playerInfo.classToken, role)
-    local profile, offStatWeights = GetScoringProfile(playerInfo.classToken, charDB.spec)
+    local profile = GetScoringProfile(playerInfo.classToken, charDB.spec)
 
     -- Look-ahead: show items up to the slider's chosen level (set via UI.lua's
     -- slider, player's current level - 30). EverGearDB.lookaheadLevel is an
@@ -1104,7 +1218,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     else
         equippedStats, equippedArmor, equippedDPS = NormalizeLiveStats(equippedItemLink)
     end
-    local currentScore = ScoreItem(equippedStats, primaryStat, profile, offStatWeights, equippedArmor, equippedDPS)
+    local currentScore = ScoreItem(equippedStats, profile, equippedArmor, equippedDPS)
 
     -- Player-chosen weapon-type opt-outs (e.g. a tank who never wants
     -- two-handers suggested even though their class/spec can technically use
@@ -1162,7 +1276,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
         then
             local armorValue = (item.stats and item.stats.ARMOR) or 0
             local dpsValue = (item.stats and item.stats.WEAPON_DPS) or 0
-            local score = ScoreItem(item.stats, primaryStat, profile, offStatWeights, armorValue, dpsValue)
+            local score = ScoreItem(item.stats, profile, armorValue, dpsValue)
             if score > currentScore then
                 table.insert(candidates, { item = item, score = score })
             end
