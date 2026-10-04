@@ -5,6 +5,32 @@ patch digit (`0.0.X`) bumps on every shipped change, no matter how small.
 Moving to `0.1.0` or `1.0.0` is a deliberate decision, not a patch-count
 milestone -- see the "Versioning" section of `README.md`.
 
+## [0.0.16] - 2026-10-04
+
+### Fixed
+- 17 items across 11 zone/crafted data files had the wrong one-hand/
+  two-hand flag (wowtbc.gg's own scrape data was wrong), letting them
+  slip past the "exclude two-handed weapons" filter regardless of what
+  was checked -- e.g. Woodsman Sword and Heavy Copper Broadsword kept
+  showing up as suggestions with 2H unchecked. Includes Bonecracker,
+  Steady Bastard Sword, Trogg Slicer, Dwarven Tree Chopper, Logsplitter,
+  Coldridge Hammer, Samophlange Screwdriver, Zhovur Axe, Copper Claymore,
+  Copper Battle Axe, Edge of the People's Militia, Goblin Smasher
+  (wrongly 1H, actually 2H), and Brushwood Blade, Defender Axe,
+  Thornroot Club (wrongly 2H, actually 1H).
+- Crested Scepter (Blackfathom Deeps) had a fabricated +32 Spell Damage
+  and +32 Spell Healing that don't exist on the real item, plus a wrong
+  weapon damage range -- this was inflating its suggestion score even
+  for melee/tank specs with no use for spell power.
+- Razorfen Kraul: corrected Armor on Ferine Leggings, Whisperwind
+  Headdress, Heart of Agamaggan, Batwing Mantle, and Tusken Helm (which
+  also gets a separate +120 Armor buff beyond its base value).
+- Gear scoring: a stat no EP profile has an explicit weight for used to
+  silently score at a flat 0.3-per-point default instead of 0 -- this is
+  exactly how Crested Scepter's fabricated spell power was skewing its
+  score under Protection Warrior Mitigation and every other profile that
+  hadn't explicitly zeroed those keys out.
+
 ## [0.0.17] - 2026-10-04
 
 ### Added
