@@ -5,20 +5,6 @@ patch digit (`0.0.X`) bumps on every shipped change, no matter how small.
 Moving to `0.1.0` or `1.0.0` is a deliberate decision, not a patch-count
 milestone -- see the "Versioning" section of `README.md`.
 
-## [0.0.18] - 2026-10-04
-
-### Fixed
-- Re-verified all 40 Razorfen Kraul items against WoW Forever's own game
-  database (not just Wowhead tooltip fetches, which turned out to be
-  unreliable for this dungeon -- see below) and corrected 25 of them: wrong
-  item level on 13 items, wrong weapon damage ranges on 7 weapons, and wrong
-  or missing stats on 19 items -- several had spell power/healing replaced
-  with unrelated Spirit, one (Ferine Leggings) had a completely wrong stat
-  set, and one (Mourning Shawl) had a fabricated negative Spirit value.
-  Armor totals were left as-is since the source data doesn't expose the
-  underlying formula, but were independently spot-checked on 2 items and
-  matched exactly.
-
 ## [0.0.17] - 2026-10-04
 
 ### Added
