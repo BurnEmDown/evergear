@@ -57,23 +57,17 @@ update, re-run that command and update this value if it changes.
 The `.toc`'s `## Version:` line is `@project-version@`, a keyword the
 [BigWigsMods packager](https://github.com/BigWigsMods/packager) substitutes for the
 real version at package time, rather than a number hand-edited to match
-`EverGear.VERSION`. `.github/workflows/release.yml` runs the packager automatically
-whenever a tag is pushed to this repo:
+`EverGear.VERSION`. `.github/workflows/ci.yaml` does the packaging:
 
-1. Bump `EverGear.VERSION` in `Core/Constants.lua` and add its `CHANGELOG.md` entry, as
-   usual.
-2. Commit, then tag that commit to match -- e.g. for `EverGear.VERSION = "0.0.12"`:
-   ```
-   git tag v0.0.12
-   git push origin v0.0.12
-   ```
-3. The workflow builds a release zip with `@project-version@` replaced by the tag name,
-   and uploads it to CurseForge/WoWInterface/Wago for whichever of the `CF_API_KEY`,
-   `WOWI_API_TOKEN`, `WAGO_API_TOKEN` repo secrets are set (Settings → Secrets and
-   variables → Actions) -- it silently skips any target that isn't configured yet, so
-   this is safe to leave partially set up. Once the addon has a CurseForge project, also
-   add `## X-Curse-Project-ID: <id>` to the `.toc` so the packager knows which project to
-   upload to.
+- **Pull requests:** builds the addon zip and attaches it to the workflow run as an
+  artifact. Nothing is published.
+- **Merge to master:** builds the zip, uploads it to CurseForge as a new release, then
+  tags the commit `v<EverGear.VERSION>`. If that tag already exists (the version wasn't
+  bumped), it skips the upload and tagging.
+
+To release: bump `EverGear.VERSION` in `Core/Constants.lua`, add its `CHANGELOG.md`
+entry, and merge. The upload needs a `CF_API_KEY` repo secret (Settings → Secrets and
+variables → Actions) and `## X-Curse-Project-ID: <id>` in the `.toc`.
 
 A zip delivered directly in chat (rather than via a pushed tag) still has the literal
 `@project-version@` string substituted for the real version number before it's handed

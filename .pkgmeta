@@ -1,3 +1,6 @@
 package-as: EverGear
 ignore:
   - assets
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
