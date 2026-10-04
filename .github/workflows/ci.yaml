@@ -21,6 +21,7 @@ on:
   push:
     branches:
       - master
+      - debug-ci-zip
 
 jobs:
   build:
@@ -55,6 +56,11 @@ jobs:
         with:
           args: -d
 
+      - name: Debug
+        if: always()
+        run: |
+          echo "::notice::ref=$GITHUB_REF release=$(ls -a .release 2>&1 | tr '\n' ' ') zips=$(find . -name '*.zip' -not -path './.git/*' 2>&1 | tr '\n' ' ') tags=$(git tag --points-at HEAD | tr '\n' ' ') describe=$(git describe --tags 2>&1)"
+
       - name: Upload zip as workflow artifact
         uses: actions/upload-artifact@v4
         with:
@@ -65,7 +71,7 @@ jobs:
 
   release:
     needs: build
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     permissions:
       contents: write   # needed to push the version tag
