@@ -66,7 +66,7 @@ real version at package time, rather than a number hand-edited to match
   bumped), it skips the upload and tagging.
 
 To release: bump `EverGear.VERSION` in `Core/Constants.lua`, add its `CHANGELOG.md`
-entry, and merge. The upload needs a `CF_API_KEY` repo secret (Settings → Secrets and
+entry, and merge. The upload needs a `CF_API_TOKEN` repo secret (Settings → Secrets and
 variables → Actions) and `## X-Curse-Project-ID: <id>` in the `.toc`.
 
 A zip delivered directly in chat (rather than via a pushed tag) still has the literal

@@ -73,7 +73,8 @@ jobs:
         if: github.event_name == 'push' && steps.exists.outputs.released == 'false'
         uses: BigWigsMods/packager@v2
         env:
-          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_API_KEY: ${{ secrets.CF_API_TOKEN }}   # older name, in case the packager version still reads it
 
       - name: Build zip (version already released, no upload)
         if: github.event_name == 'push' && steps.exists.outputs.released == 'true'
