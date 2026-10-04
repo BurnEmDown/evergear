@@ -59,7 +59,10 @@ jobs:
       - name: Debug
         if: always()
         run: |
-          echo "::notice::ref=$GITHUB_REF release=$(ls -a .release 2>&1 | tr '\n' ' ') zips=$(find . -name '*.zip' -not -path './.git/*' 2>&1 | tr '\n' ' ') tags=$(git tag --points-at HEAD | tr '\n' ' ') describe=$(git describe --tags 2>&1)"
+          curl -fsSL https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh -o /tmp/release.sh
+          bash /tmp/release.sh -d -r /tmp/rel > /tmp/pkg.log 2>&1; echo "exit=$?" >> /tmp/pkg.log
+          echo "::notice::pkglog=$(tail -n 25 /tmp/pkg.log | tr '\n' '|')"
+          echo "::notice::rel=$(ls -a /tmp/rel 2>&1 | tr '\n' ' ')"
 
       - name: Upload zip as workflow artifact
         uses: actions/upload-artifact@v4
