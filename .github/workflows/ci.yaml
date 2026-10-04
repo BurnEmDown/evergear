@@ -1,26 +1,33 @@
 name: CI
 
-# Pull requests: build the addon zip and attach it to the run as a downloadable
-# artifact (nothing is published).
-# Push to master (i.e. a merged PR): build the same zip, upload it to CurseForge
-# as a new release, then tag that commit with the current EverGear.VERSION.
+# Two separate jobs:
+#
+#   build    Runs on every pull request and every push to master. Builds the addon
+#            zip (no upload) and attaches it to the run as a downloadable artifact.
+#
+#   release  Runs only on a push to master (i.e. a merged PR), and only after
+#            build succeeded. Uploads a new release to CurseForge, then tags the
+#            commit v<EverGear.VERSION>.
 #
 # The version comes from Core/Constants.lua, so bump it (and CHANGELOG.md) in the
-# PR as usual. If a v<version> tag already exists, the master run builds the zip
-# but skips the upload and tagging, so merging a change without bumping the
-# version can't publish a duplicate release.
+# PR as usual. If a v<version> tag already exists, release does nothing, so
+# merging a change without bumping the version can't publish a duplicate.
+#
+# Note: BigWigsMods/packager builds and uploads in one go and has no "upload this
+# existing zip" mode, so the release job runs the packager again (a fresh build
+# from the same commit) rather than reusing build's zip.
 on:
   pull_request:
   push:
     branches:
       - master
 
-permissions:
-  contents: write   # needed to push the version tag on master
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,30 +44,18 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Check whether this version is already released
-        id: exists
-        run: |
-          if git ls-remote --exit-code --tags origin "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
-            echo "released=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "released=false" >> "$GITHUB_OUTPUT"
-          fi
-
       # The packager substitutes @project-version@ from the nearest git tag, so
-      # tag the checked-out commit locally (not pushed yet) to give the zip the
-      # right version.
+      # tag the checked-out commit locally (never pushed from this job) to give
+      # the zip the right version.
       - name: Tag commit locally for the packager
         run: git tag -f "${{ steps.version.outputs.tag }}"
 
-      # ----- Pull requests: build only -----
       - name: Build zip (no upload)
-        if: github.event_name == 'pull_request'
         uses: BigWigsMods/packager@v2
         with:
           args: -d
 
       - name: Upload zip as workflow artifact
-        if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: EverGear-${{ steps.version.outputs.tag }}
@@ -68,33 +63,37 @@ jobs:
           include-hidden-files: true   # .release is a dot-directory, skipped by default
           if-no-files-found: error
 
-      # ----- Merge to master: release -----
-      - name: Build zip and upload to CurseForge
-        if: github.event_name == 'push' && steps.exists.outputs.released == 'false'
+  release:
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to push the version tag
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check whether this version is already released
+        id: exists
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/${{ needs.build.outputs.tag }}" >/dev/null 2>&1; then
+            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Tag ${{ needs.build.outputs.tag }} already exists, so nothing was uploaded to CurseForge. Bump EverGear.VERSION to release."
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Tag commit locally for the packager
+        if: steps.exists.outputs.released == 'false'
+        run: git tag "${{ needs.build.outputs.tag }}"
+
+      - name: Upload to CurseForge
+        if: steps.exists.outputs.released == 'false'
         uses: BigWigsMods/packager@v2
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CF_API_KEY: ${{ secrets.CF_API_TOKEN }}   # older name, in case the packager version still reads it
-
-      - name: Build zip (version already released, no upload)
-        if: github.event_name == 'push' && steps.exists.outputs.released == 'true'
-        uses: BigWigsMods/packager@v2
-        with:
-          args: -d
 
       - name: Push version tag
-        if: github.event_name == 'push' && steps.exists.outputs.released == 'false'
-        run: git push origin "${{ steps.version.outputs.tag }}"
-
-      - name: Keep the zip as a workflow artifact too
-        if: github.event_name == 'push'
-        uses: actions/upload-artifact@v4
-        with:
-          name: EverGear-${{ steps.version.outputs.tag }}
-          path: .release/*.zip
-          include-hidden-files: true   # .release is a dot-directory, skipped by default
-          if-no-files-found: error
-
-      - name: Note skipped release
-        if: github.event_name == 'push' && steps.exists.outputs.released == 'true'
-        run: echo "::notice::Tag ${{ steps.version.outputs.tag }} already exists, so nothing was uploaded to CurseForge. Bump EverGear.VERSION to release."
+        if: steps.exists.outputs.released == 'false'
+        run: git push origin "${{ needs.build.outputs.tag }}"
