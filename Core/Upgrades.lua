@@ -216,7 +216,18 @@ EverGear.SPEC_PROFILES = {
                         -- is for the Threat variant (7.5) or pure-DPS specs
                         -- (14) -- while survival stats still carry the bulk
                         -- of the score.
-                        stats = { STRENGTH = 0.02, AGILITY = 0.91, STAMINA = 1, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0.05, dpsWeight = 1.0,
+                        --
+                        -- STRENGTH was 0.02 in the original sixtyupgrades set
+                        -- (pure "doesn't reduce damage taken" discounting) --
+                        -- confirmed with the player this let a 2-point
+                        -- Stamina edge outweigh a 5-point Strength edge
+                        -- between two otherwise-comparable weapons, which
+                        -- doesn't match how they want Mitigation to value a
+                        -- str/stam tank weapon. Raised to 1 (player's
+                        -- explicit ask: "should still be worth at least 1")
+                        -- -- same per-point weight as Stamina now, rather
+                        -- than nearly irrelevant.
+                        stats = { STRENGTH = 1, AGILITY = 0.91, STAMINA = 1, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0.05, dpsWeight = 1.0,
                         secondary = {
                             SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                             SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
