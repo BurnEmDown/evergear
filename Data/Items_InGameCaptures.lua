@@ -5,80 +5,79 @@
 EverGear = EverGear or {}
 EverGear.Items = EverGear.Items or {}
 
+EverGear.Items[12047] = {id = 12047, name = "Spectral Necklace of the Beast", slot = "NeckSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 30, minLevel = 25, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {AGILITY = 2, STAMINA = 4, STRENGTH = 2}}
+EverGear.Items[12977] = {id = 12977, name = "Magefist Gloves", slot = "HandsSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 20, minLevel = 15, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {INTELLECT = 5, SPIRIT = 4, STAMINA = 3, ARMOR = 23}}
+EverGear.Items[12998] = {id = 12998, name = "Magician's Mantle", slot = "ShoulderSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 25, minLevel = 20, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {INTELLECT = 9, SPELL_POWER = 5, ARMOR = 32}}
+EverGear.Items[13062] = {id = 13062, name = "Thunderwood", slot = "RangedSlot", armorType = nil, weaponType = "wand", isTwoHand = nil, classes = nil, ilvl = 27, minLevel = 22, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {SPELL_POWER = 6, WEAPON_DAMAGE = "36 - 67 Nature Damage", WEAPON_DPS = 27.1, WEAPON_SPEED = 1.9}}
+EverGear.Items[14177] = {id = 14177, name = "Watcher's Cuffs of the Physician", slot = "WristSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 26, minLevel = 21, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {INTELLECT = 4, SPELL_DAMAGE = 1, SPELL_HEALING = 4, SPIRIT = 2, ARMOR = 17}}
+EverGear.Items[249394] = {id = 249394, name = "Orb of Mystic Insight", slot = "SecondaryHandSlot", armorType = nil, weaponType = "offhand", isTwoHand = nil, classes = nil, ilvl = 30, minLevel = 25, confirmed = true, bindType = "BoE", source = {type = "craft", profession = "Enchanting"}, stats = {INTELLECT = 6, SPELL_POWER = 7}}
+EverGear.Items[271670] = {id = 271670, name = "Curl of Life", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 24, confirmed = true, bindType = nil, source = {type = "quest", zone = "Excavation Site: Wetlands", quest = "Horrors in the Highland", faction = "Alliance"}, stats = {HP5 = 5, SPELL_POWER = 5, STAMINA = 7}}
+EverGear.Items[271767] = {id = 271767, name = "Healer's Staff", slot = "MainHandSlot", armorType = nil, weaponType = "staff", isTwoHand = true, classes = nil, ilvl = 33, minLevel = 24, confirmed = true, bindType = nil, source = {type = "quest", zone = "Excavation Site: Wetlands", quest = "Prehistoric Prism", questByFaction = {Alliance = "Prehistoric Prism", Horde = "Earthen Echo"}}, stats = {MP5 = 5, SPELL_DAMAGE = 22, SPELL_HEALING = 67, STAMINA = 12, WEAPON_DAMAGE = "43 - 65 Damage", WEAPON_DPS = 20.8, WEAPON_SPEED = 2.6}}
+EverGear.Items[271769] = {id = 271769, name = "Daewyn's Girdle", slot = "WaistSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 24, confirmed = true, bindType = nil, source = {type = "quest", zone = "Excavation Site: Wetlands", quest = "Fallen in the Fen"}, stats = {HP5 = 10, SPELL_POWER = 6, SPIRIT = 9, ARMOR = 28}}
+EverGear.Items[273026] = {id = 273026, name = "Garb of Florid Feathers", slot = "ChestSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = 26, confirmed = true, bindType = nil, source = {type = "dungeonDrop", zone = "Excavation Site: Wetlands", boss = "Shadetooth"}, stats = {AGILITY = 6, INTELLECT = 13, STAMINA = 6, ARMOR = 105}}
+EverGear.Items[277204] = {id = 277204, name = "Erudite's Amulet", slot = "NeckSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 23, minLevel = 20, confirmed = true, bindType = nil, source = {type = "quest", zone = "Library books", quest = "Friend of the Library"}, stats = {AGILITY = 2, STAMINA = 3}}
+EverGear.Items[277234] = {id = 277234, name = "Alacritous Treads", slot = "FeetSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 28, minLevel = 16, confirmed = true, bindType = nil, source = {type = "quest", zone = "Redridge Mountains", quest = "WANTED: Incinerator Gar'im", faction = "Alliance"}, stats = {AGILITY = 5, STRENGTH = 5, ARMOR = 132}}
+EverGear.Items[280766] = {id = 280766, name = "Satchel of Potions", slot = "TrinketSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = nil, confirmed = true, bindType = nil, source = {type = "quest", zone = "Excavation Site: Wetlands", quest = "Heartwoven", questByFaction = {Alliance = "Heartwoven", Horde = "Changing Tastes"}}, stats = {USE_1 = "Reach into the bag and hope for the best. (10 Min Cooldown)"}}
+EverGear.Items[281318] = {id = 281318, name = "Bouquet of Auberdine Flowers", slot = "SecondaryHandSlot", armorType = nil, weaponType = "offhand", isTwoHand = nil, classes = nil, ilvl = 29, minLevel = 22, confirmed = true, bindType = nil, source = {type = "quest", zone = "Wetlands", quest = "Bloom of the Heavens"}, stats = {INTELLECT = 4, STAMINA = 4}}
 EverGear.Items[2933] = {id = 2933, name = "Seal of Wrynn", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = nil, confirmed = true, bindType = nil, source = {type = "quest", zone = "The Stockade", quest = "Stockade chain quest (title not recorded)", faction = "Alliance"}, stats = {AGILITY = 3, INTELLECT = 4, SPIRIT = 3, STAMINA = 4, STRENGTH = 3}}
-EverGear.Items[15689] = {id = 15689, name = "Trader's Ring", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 35, minLevel = nil, confirmed = true, bindType = nil, source = {type = "quest", zone = "Desolace", quest = "Kodo Roundup"}, stats = {STAMINA = 8}}
-EverGear.Items[15697] = {id = 15697, name = "Kodo Rustler Boots", slot = "FeetSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 38, minLevel = nil, confirmed = true, bindType = nil, source = {type = "quest", zone = "Desolace", quest = "Kodo Roundup"}, stats = {INTELLECT = 8, SPIRIT = 5, STAMINA = 3, ARMOR = 35}}
+EverGear.Items[6617] = {id = 6617, name = "Sage's Mantle of the Owl", slot = "ShoulderSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 30, minLevel = 25, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {INTELLECT = 5, SPIRIT = 5, ARMOR = 32}}
+EverGear.Items[6677] = {id = 6677, name = "Spellcrafter Wand", slot = "RangedSlot", armorType = nil, weaponType = "wand", isTwoHand = nil, classes = nil, ilvl = 26, minLevel = 17, confirmed = true, bindType = nil, source = {type = "quest", zone = "Stormwind City", quest = "Retrieval for Mauren", faction = "Alliance"}, stats = {SPELL_POWER = 4, WEAPON_DAMAGE = "24 - 45 Arcane Damage", WEAPON_DPS = 20.3, WEAPON_SPEED = 1.7}}
+EverGear.Items[271667] = {id = 271667, name = "Ironwood Destroyer", slot = "MainHandSlot", armorType = nil, weaponType = "mace", isTwoHand = true, classes = nil, ilvl = 33, minLevel = 24, confirmed = true, bindType = nil, source = {type = "quest", zone = "Excavation Site: Wetlands", quest = "Horrors in the Highland", faction = "Alliance"}, stats = {ATTACK_POWER = 24, SPIRIT = 7, STAMINA = 9, WEAPON_DAMAGE = "75 - 114 Damage", WEAPON_DPS = 27.8, WEAPON_SPEED = 3.4}}
+EverGear.Items[271716] = {id = 271716, name = "Explorer's League Dustcover", slot = "BackSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 24, confirmed = true, bindType = nil, source = {type = "quest", zone = "Excavation Site: Wetlands", quest = "Prehistoric Prism", faction = "Alliance"}, stats = {AGILITY = 4, INTELLECT = 7, STRENGTH = 4, ARMOR = 25}}
+EverGear.Items[271768] = {id = 271768, name = "Songblade Stabilizer", slot = "WaistSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 24, confirmed = true, bindType = nil, source = {type = "quest", zone = "Excavation Site: Wetlands", quest = "Fallen in the Fen"}, stats = {DODGE_CHANCE = 0.7, STAMINA = 10, ARMOR = 128}}
+EverGear.Items[2916] = {id = 2916, name = "Gold Lion Shield", slot = "SecondaryHandSlot", armorType = nil, weaponType = "shield", isTwoHand = nil, classes = nil, ilvl = 34, minLevel = 26, confirmed = true, bindType = nil, source = {type = "quest", zone = "Wetlands", quest = "A Grim Task", faction = "Alliance"}, stats = {BLOCK_VALUE = 13, SPIRIT = 3, STAMINA = 5, STRENGTH = 2, ARMOR = 645}}
+EverGear.Items[3047] = {id = 3047, name = "Lambent Scale Gloves", slot = "HandsSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 27, minLevel = 22, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {AGILITY = 3, STRENGTH = 6, ARMOR = 118}}
+EverGear.Items[5003] = {id = 5003, name = "Crystal Starfire Medallion", slot = "NeckSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = 26, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {INTELLECT = 4, SPIRIT = 3, STAMINA = 4}}
+EverGear.Items[15698] = {id = 15698, name = "Wrangling Spaulders", slot = "ShoulderSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 38, minLevel = 30, confirmed = true, bindType = nil, source = {type = "quest", zone = "Desolace", quest = "Kodo Roundup"}, stats = {AGILITY = 2, STAMINA = 6, STRENGTH = 8, ARMOR = 167}}
+EverGear.Items[2043] = {id = 2043, name = "Ring of Forlorn Spirits", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 35, minLevel = 22, confirmed = true, bindType = nil, source = {type = "quest", zone = "Duskwood", quest = "The Legend of Stalvan", faction = "Alliance"}, stats = {SPELL_POWER = 8, STAMINA = 2}}
+EverGear.Items[271664] = {id = 271664, name = "Hornbeam Heft", slot = "MainHandSlot", armorType = nil, weaponType = "axe", isTwoHand = false, classes = nil, ilvl = 33, minLevel = 24, confirmed = true, bindType = nil, source = {type = "quest", zone = "Excavation Site: Wetlands", quest = "Horrors in the Highland", faction = "Alliance"}, stats = {SPIRIT = 3, STAMINA = 6, STRENGTH = 3, WEAPON_DAMAGE = "36 - 67 Damage", WEAPON_DPS = 21.5, WEAPON_SPEED = 2.4}}
+EverGear.Items[3561] = {id = 3561, name = "Resilient Poncho", slot = "BackSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 26, minLevel = 18, confirmed = true, bindType = nil, source = {type = "quest", zone = "Wetlands", quest = "Apprentice's Duties", faction = "Alliance"}, stats = {STAMINA = 5, ARMOR = 20}}
+EverGear.Items[4072] = {id = 4072, name = "Glimmering Mail Gauntlets", slot = "HandsSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 30, minLevel = 25, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {AGILITY = 3, STRENGTH = 7, ARMOR = 124}}
+EverGear.Items[9801] = {id = 9801, name = "Superior Belt of the Tiger", slot = "WaistSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 25, minLevel = 20, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {AGILITY = 4, STRENGTH = 4, ARMOR = 48}}
+EverGear.Items[252521] = {id = 252521, name = "Stalker's Leather Belt", slot = "WaistSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 35, minLevel = 30, confirmed = true, bindType = "BoE", source = {type = "craft", profession = "Leatherworking"}, stats = {AGILITY = 9, INTELLECT = 6, SPIRIT = 4, STAMINA = 6, ARMOR = 63}}
+EverGear.Items[5964] = {id = 5964, name = "Barbaric Shoulders", slot = "ShoulderSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 35, minLevel = 30, confirmed = true, bindType = "BoE", source = {type = "craft", profession = "Leatherworking"}, stats = {AGILITY = 5, STAMINA = 6, STRENGTH = 5, ARMOR = 76}}
+EverGear.Items[7746] = {id = 7746, name = "Explorers' League Commendation", slot = "NeckSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 40, minLevel = 28, confirmed = true, bindType = nil, source = {type = "quest", zone = "Ironforge", quest = "Mythology of the Titans", faction = "Alliance"}, stats = {SPIRIT = 9, STAMINA = 9}}
+EverGear.Items[13124] = {id = 13124, name = "Ravasaur Scale Boots", slot = "FeetSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 35, minLevel = 30, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {SPIRIT = 5, STAMINA = 11, STRENGTH = 3, ARMOR = 161}}
+EverGear.Items[277254] = {id = 277254, name = "Truthseeker's Bow", slot = "RangedSlot", armorType = nil, weaponType = "bow", isTwoHand = nil, classes = nil, ilvl = 45, minLevel = 30, confirmed = true, bindType = nil, source = {type = "quest", zone = "Library books", quest = "Greater Friend of the Library"}, stats = {AGILITY = 7, STAMINA = 3, WEAPON_DAMAGE = "46 - 87 Damage", WEAPON_DPS = 23.7, WEAPON_SPEED = 2.8}}
+EverGear.Items[281634] = {id = 281634, name = "Field Researcher's Loop", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 35, minLevel = nil, confirmed = true, bindType = nil, source = {type = "quest", zone = "Library books", quest = "Greater Friend of the Library"}, stats = {AGILITY = 7, STAMINA = 7}}
+EverGear.Items[4107] = {id = 4107, name = "Tiger Hunter Gloves", slot = "HandsSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 37, minLevel = 28, confirmed = true, bindType = nil, source = {type = "quest", zone = "Stranglethorn Vale", quest = "Tiger Mastery"}, stats = {AGILITY = 8, STRENGTH = 7, ARMOR = 65}}
+EverGear.Items[6790] = {id = 6790, name = "Ring of Calm", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 32, minLevel = 30, confirmed = true, bindType = nil, source = {type = "quest", zone = "Desolace", quest = "Centaur Bounty", faction = "Alliance"}, stats = {SPIRIT = 7}}
+EverGear.Items[15689] = {id = 15689, name = "Trader's Ring", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 35, minLevel = 30, confirmed = true, bindType = nil, source = {type = "quest", zone = "Desolace", quest = "Kodo Roundup"}, stats = {STAMINA = 8}}
+EverGear.Items[15697] = {id = 15697, name = "Kodo Rustler Boots", slot = "FeetSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 38, minLevel = 30, confirmed = true, bindType = nil, source = {type = "quest", zone = "Desolace", quest = "Kodo Roundup"}, stats = {INTELLECT = 8, SPIRIT = 5, STAMINA = 3, ARMOR = 35}}
+EverGear.Items[17704] = {id = 17704, name = "Edge of Winter", slot = "MainHandSlot", armorType = nil, weaponType = "axe", isTwoHand = false, classes = nil, ilvl = 38, minLevel = 33, confirmed = true, source = {type = "craft", profession = "Blacksmithing"}, bindType = "BoE", stats = {ONHIT_1 = "Blasts a target for 27 Frost damage.", STAMINA = 3, WEAPON_DAMAGE = "40 - 75 Damage", WEAPON_DPS = 20.5, WEAPON_SPEED = 2.8}}
+EverGear.Items[17721] = {id = 17721, name = "Gloves of the Greatfather", slot = "HandsSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 38, minLevel = 33, confirmed = true, source = {type = "craft", profession = "Leatherworking"}, bindType = "BoE", stats = {ARMOR = 66, NATURE_DAMAGE = 10, SPELL_DAMAGE = 24, SPELL_HEALING = 26}}
 EverGear.Items[6727] = {id = 6727, name = "Razzeric's Racing Grips", slot = "HandsSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 41, minLevel = nil, confirmed = true, source = {type = "quest", zone = "Thousand Needles", quest = nil}, bindType = nil, stats = {AGILITY = 8, ARMOR = 70, STAMINA = 9}}
+EverGear.Items[217287] = {id = 217287, name = "Greater Mystic Wand", slot = "RangedSlot", armorType = nil, weaponType = "wand", isTwoHand = nil, classes = nil, ilvl = 35, minLevel = 30, confirmed = true, bindType = "BoE", source = {type = "craft", profession = "Enchanting"}, stats = {SPELL_POWER = 5, WEAPON_DAMAGE = "40 - 76 Arcane Damage", WEAPON_DPS = 29, WEAPON_SPEED = 2}}
+EverGear.Items[249392] = {id = 249392, name = "Glimmering Staff", slot = "MainHandSlot", armorType = nil, weaponType = "staff", isTwoHand = true, classes = nil, ilvl = 30, minLevel = 25, confirmed = true, bindType = "BoE", source = {type = "craft", profession = "Enchanting"}, stats = {INTELLECT = 11, SPELL_POWER = 34, STAMINA = 11, WEAPON_DAMAGE = "32 - 49 Damage", WEAPON_DPS = 18.4, WEAPON_SPEED = 2.2}}
 EverGear.Items[2954] = {id = 2954, name = "Night Watch Pantaloons", slot = "LegsSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 20, confirmed = true, bindType = nil, source = {type = "quest", zone = "Duskwood", quest = "Morbent Fel", faction = "Alliance"}, stats = {ARMOR = 39, INTELLECT = 8, STAMINA = 9}}
+EverGear.Items[9821] = {id = 9821, name = "Durable Bracers of the Eagle", slot = "WristSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 30, minLevel = 25, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 19, INTELLECT = 4, STAMINA = 4}}
+EverGear.Items[9793] = {id = 9793, name = "Ivycloth Bracelets of the Eagle", slot = "WristSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 25, minLevel = 20, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 17, INTELLECT = 3, STAMINA = 3}}
+EverGear.Items[281313] = {id = 281313, name = "Trusty Sword", slot = "MainHandSlot", armorType = nil, weaponType = "sword", isTwoHand = true, classes = nil, ilvl = 32, minLevel = 24, confirmed = true, bindType = nil, source = {type = "quest", zone = "Wetlands", quest = "Stopping the Cycle", faction = "Alliance"}, stats = {SPIRIT = 12, STAMINA = 12, WEAPON_DAMAGE = "70 - 106 Damage", WEAPON_DPS = 26.7, WEAPON_SPEED = 3.3}}
 EverGear.Items[4505] = {id = 4505, name = "Swampland Trousers", slot = "LegsSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = 28, confirmed = true, bindType = nil, source = {type = "quest", zone = "Wetlands", quest = "The Thandol Span", faction = "Alliance"}, stats = {ARMOR = 38, INTELLECT = 4, STAMINA = 11}}
+EverGear.Items[6597] = {id = 6597, name = "Battleforge Shoulderguards of the Bear", slot = "ShoulderSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 28, minLevel = 23, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 144, STAMINA = 5, STRENGTH = 5}}
+EverGear.Items[7355] = {id = 7355, name = "Elder's Bracers of the Eagle", slot = "WristSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = 26, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 19, INTELLECT = 4, STAMINA = 4}}
+EverGear.Items[15147] = {id = 15147, name = "Ghostwalker Cloak of the Monkey", slot = "BackSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 28, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {AGILITY = 5, ARMOR = 23, STAMINA = 5}}
+EverGear.Items[15249] = {id = 15249, name = "Polished Zweihander of the Prophet", slot = "MainHandSlot", armorType = nil, weaponType = "sword", isTwoHand = true, classes = nil, ilvl = 26, minLevel = 21, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {INTELLECT = 7, SPELL_DAMAGE = 11, SPELL_HEALING = 34, SPIRIT = 5, WEAPON_DAMAGE = "37 - 57 Damage", WEAPON_DPS = 13.1, WEAPON_SPEED = 3.6}}
+EverGear.Items[15284] = {id = 15284, name = "Long Battle Bow", slot = "RangedSlot", armorType = nil, weaponType = "bow", isTwoHand = nil, classes = nil, ilvl = 29, minLevel = 24, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {STRENGTH = 3, WEAPON_DAMAGE = "18 - 34 Damage", WEAPON_DPS = 11.8, WEAPON_SPEED = 2.2}}
+EverGear.Items[2077] = {id = 2077, name = "Magician Staff of the Eagle", slot = "MainHandSlot", armorType = nil, weaponType = "staff", isTwoHand = true, classes = nil, ilvl = 29, minLevel = 24, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {INTELLECT = 7, STAMINA = 7, WEAPON_DAMAGE = "47 - 71 Damage", WEAPON_DPS = 19.7, WEAPON_SPEED = 3}}
+EverGear.Items[4048] = {id = 4048, name = "Emblazoned Hat", slot = "HeadSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = 26, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 77, INTELLECT = 6, SPIRIT = 6, STAMINA = 7}}
+EverGear.Items[6598] = {id = 6598, name = "Dervish Buckler of Shadow Protection", slot = "SecondaryHandSlot", armorType = nil, weaponType = "shield", isTwoHand = nil, classes = nil, ilvl = 28, minLevel = 23, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 545, BLOCK_VALUE = 10, SHADOW_RESISTANCE = 4, STAMINA = 4}}
+EverGear.Items[6605] = {id = 6605, name = "Dervish Gloves of Arcane Protection", slot = "HandsSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 28, minLevel = 23, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARCANE_RESISTANCE = 5, ARMOR = 56, STAMINA = 5}}
+EverGear.Items[7413] = {id = 7413, name = "Infiltrator Cap of the Sorcerer", slot = "HeadSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 28, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 80, INTELLECT = 9, SPELL_POWER = 5, STAMINA = 5}}
+EverGear.Items[9538] = {id = 9538, name = "Talvash's Gold Ring", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 37, minLevel = 10, confirmed = true, bindType = nil, source = {type = "quest", zone = "Ironforge", quest = "Gnome Improvement", faction = "Alliance"}, stats = {SPIRIT = 4, STAMINA = 10}}
+EverGear.Items[9791] = {id = 9791, name = "Ivycloth Tunic of Nature Protection", slot = "ChestSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 29, minLevel = 24, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 42, NATURE_RESISTANCE = 7, STAMINA = 7}}
+EverGear.Items[9802] = {id = 9802, name = "Superior Boots of Stamina", slot = "FeetSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 26, minLevel = 21, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 60, STAMINA = 7}}
+EverGear.Items[9817] = {id = 9817, name = "Fortified Spaulders of the Monkey", slot = "ShoulderSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 26, minLevel = 21, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {AGILITY = 5, ARMOR = 139, STAMINA = 5}}
 
 -- Held back (no known source yet); used by debug mode only.
 EverGear.PendingItems = EverGear.PendingItems or {}
-EverGear.PendingItems[12047] = "Spectral Necklace of the Beast"
-EverGear.PendingItems[12977] = "Magefist Gloves"
-EverGear.PendingItems[12998] = "Magician's Mantle"
-EverGear.PendingItems[13062] = "Thunderwood"
-EverGear.PendingItems[14177] = "Watcher's Cuffs of the Physician"
-EverGear.PendingItems[249394] = "Orb of Mystic Insight"
 EverGear.PendingItems[270053] = "Ring of Ruin"
-EverGear.PendingItems[271670] = "Curl of Life"
-EverGear.PendingItems[271767] = "Healer's Staff"
-EverGear.PendingItems[271769] = "Daewyn's Girdle"
-EverGear.PendingItems[273026] = "Garb of Florid Feathers"
-EverGear.PendingItems[277204] = "Erudite's Amulet"
-EverGear.PendingItems[277234] = "Alacritous Treads"
-EverGear.PendingItems[280766] = "Satchel of Potions"
 EverGear.PendingItems[281258] = "Essene's Hope"
-EverGear.PendingItems[281318] = "Bouquet of Auberdine Flowers"
 EverGear.PendingItems[282283] = "Malignant Root"
-EverGear.PendingItems[6617] = "Sage's Mantle of the Owl"
-EverGear.PendingItems[6677] = "Spellcrafter Wand"
-EverGear.PendingItems[271667] = "Ironwood Destroyer"
-EverGear.PendingItems[271716] = "Explorer's League Dustcover"
 EverGear.PendingItems[281304] = "Prospector's Signet"
-EverGear.PendingItems[270047] = "Sentinel's Boots"
-EverGear.PendingItems[271768] = "Songblade Stabilizer"
-EverGear.PendingItems[2916] = "Gold Lion Shield"
-EverGear.PendingItems[3047] = "Lambent Scale Gloves"
-EverGear.PendingItems[5003] = "Crystal Starfire Medallion"
-EverGear.PendingItems[15698] = "Wrangling Spaulders"
-EverGear.PendingItems[2043] = "Ring of Forlorn Spirits"
-EverGear.PendingItems[271664] = "Hornbeam Heft"
 EverGear.PendingItems[281305] = "Excavation Cloak"
-EverGear.PendingItems[3561] = "Resilient Poncho"
-EverGear.PendingItems[4072] = "Glimmering Mail Gauntlets"
-EverGear.PendingItems[9801] = "Superior Belt of the Tiger"
-EverGear.PendingItems[252521] = "Stalker's Leather Belt"
-EverGear.PendingItems[5964] = "Barbaric Shoulders"
-EverGear.PendingItems[7746] = "Explorers' League Commendation"
-EverGear.PendingItems[13124] = "Ravasaur Scale Boots"
 EverGear.PendingItems[277210] = "Pyrewood Signet Ring"
 EverGear.PendingItems[277246] = "Ruby-Adorned Blade"
-EverGear.PendingItems[277254] = "Truthseeker's Bow"
-EverGear.PendingItems[281634] = "Field Researcher's Loop"
-EverGear.PendingItems[4107] = "Tiger Hunter Gloves"
-EverGear.PendingItems[6790] = "Ring of Calm"
-EverGear.PendingItems[17704] = "Edge of Winter"
-EverGear.PendingItems[17721] = "Gloves of the Greatfather"
 EverGear.PendingItems[19167] = "Blackfury"
 EverGear.PendingItems[276631] = "Coldflame Saber"
-EverGear.PendingItems[217287] = "Greater Mystic Wand"
-EverGear.PendingItems[249392] = "Glimmering Staff"
 EverGear.PendingItems[270059] = "Restorer's Fine Gloves"
-EverGear.PendingItems[9821] = "Durable Bracers of the Eagle"
-EverGear.PendingItems[9793] = "Ivycloth Bracelets of the Eagle"
-EverGear.PendingItems[281313] = "Trusty Sword"
-EverGear.PendingItems[6597] = "Battleforge Shoulderguards of the Bear"
-EverGear.PendingItems[7355] = "Elder's Bracers of the Eagle"
-EverGear.PendingItems[15147] = "Ghostwalker Cloak of the Monkey"
-EverGear.PendingItems[15249] = "Polished Zweihander of the Prophet"
-EverGear.PendingItems[15284] = "Long Battle Bow"
-EverGear.PendingItems[2077] = "Magician Staff of the Eagle"
-EverGear.PendingItems[4048] = "Emblazoned Hat"
-EverGear.PendingItems[6598] = "Dervish Buckler of Shadow Protection"
-EverGear.PendingItems[6605] = "Dervish Gloves of Arcane Protection"
-EverGear.PendingItems[7413] = "Infiltrator Cap of the Sorcerer"
-EverGear.PendingItems[9538] = "Talvash's Gold Ring"
-EverGear.PendingItems[9791] = "Ivycloth Tunic of Nature Protection"
-EverGear.PendingItems[9802] = "Superior Boots of Stamina"
-EverGear.PendingItems[9817] = "Fortified Spaulders of the Monkey"
