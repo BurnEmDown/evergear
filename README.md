@@ -66,6 +66,7 @@ real version at package time, rather than a number hand-edited to match
   on that tag, which uploads to CurseForge. If the tag exists (version not bumped),
   nothing is released.
 - If the CurseForge upload fails, re-run the Release job; the tag stays.
+- To ship, bump `EverGear.VERSION` in the PR. Merging without a bump publishes nothing.
 
 To release: bump `EverGear.VERSION` in `Core/Constants.lua`, add its `CHANGELOG.md`
 entry, and merge. The upload needs a `CF_API_TOKEN` repo secret (Settings → Secrets and
