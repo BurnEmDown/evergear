@@ -47,7 +47,7 @@ local SLOT_FOR_EQUIP_LOC = {
 -- Weapon subclassID (classID 2) -> (weaponType, melee). 2H-ness comes from equipLoc.
 local WEAPON_SUBCLASS = {
     [0] = "axe", [1] = "axe", [2] = "bow", [3] = "gun", [4] = "mace", [5] = "mace",
-    [6] = "polearm", [7] = "sword", [8] = "sword", [10] = "staff", [13] = "fist",
+    [6] = "polearm", [7] = "sword", [8] = "sword", [10] = "staff", [13] = "fist weapon",
     [15] = "dagger", [16] = "thrown", [18] = "crossbow", [19] = "wand",
 }
 local RANGED_WEAPON_TYPES = { bow = true, gun = true, crossbow = true, thrown = true, wand = true }
