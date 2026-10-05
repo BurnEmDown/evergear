@@ -9,6 +9,8 @@ EverGear.Items[2933] = {id = 2933, name = "Seal of Wrynn", slot = "FingerSlot", 
 EverGear.Items[15689] = {id = 15689, name = "Trader's Ring", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 35, minLevel = nil, confirmed = true, bindType = nil, source = {type = "quest", zone = "Desolace", quest = "Kodo Roundup"}, stats = {STAMINA = 8}}
 EverGear.Items[15697] = {id = 15697, name = "Kodo Rustler Boots", slot = "FeetSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 38, minLevel = nil, confirmed = true, bindType = nil, source = {type = "quest", zone = "Desolace", quest = "Kodo Roundup"}, stats = {INTELLECT = 8, SPIRIT = 5, STAMINA = 3, ARMOR = 35}}
 EverGear.Items[6727] = {id = 6727, name = "Razzeric's Racing Grips", slot = "HandsSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 41, minLevel = nil, confirmed = true, source = {type = "quest", zone = "Thousand Needles", quest = nil}, bindType = nil, stats = {AGILITY = 8, ARMOR = 70, STAMINA = 9}}
+EverGear.Items[2954] = {id = 2954, name = "Night Watch Pantaloons", slot = "LegsSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 20, confirmed = true, bindType = nil, source = {type = "quest", zone = "Duskwood", quest = "Morbent Fel", faction = "Alliance"}, stats = {ARMOR = 39, INTELLECT = 8, STAMINA = 9}}
+EverGear.Items[4505] = {id = 4505, name = "Swampland Trousers", slot = "LegsSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = 28, confirmed = true, bindType = nil, source = {type = "quest", zone = "Wetlands", quest = "The Thandol Span", faction = "Alliance"}, stats = {ARMOR = 38, INTELLECT = 4, STAMINA = 11}}
 
 -- Held back (no known source yet); used by debug mode only.
 EverGear.PendingItems = EverGear.PendingItems or {}
@@ -63,11 +65,9 @@ EverGear.PendingItems[276631] = "Coldflame Saber"
 EverGear.PendingItems[217287] = "Greater Mystic Wand"
 EverGear.PendingItems[249392] = "Glimmering Staff"
 EverGear.PendingItems[270059] = "Restorer's Fine Gloves"
-EverGear.PendingItems[2954] = "Night Watch Pantaloons"
 EverGear.PendingItems[9821] = "Durable Bracers of the Eagle"
 EverGear.PendingItems[9793] = "Ivycloth Bracelets of the Eagle"
 EverGear.PendingItems[281313] = "Trusty Sword"
-EverGear.PendingItems[4505] = "Swampland Trousers"
 EverGear.PendingItems[6597] = "Battleforge Shoulderguards of the Bear"
 EverGear.PendingItems[7355] = "Elder's Bracers of the Eagle"
 EverGear.PendingItems[15147] = "Ghostwalker Cloak of the Monkey"
