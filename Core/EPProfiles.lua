@@ -9,7 +9,8 @@
 --   {
 --     stats = { STRENGTH = 3.0, AGILITY = 0.3, STAMINA = 1.5, INTELLECT = 0.05, SPIRIT = 0.1 },
 --     armorWeight = 0.15,
---     dpsWeight = 3.0,
+--     dpsWeight = 3.0,         -- melee weapon DPS (main hand / off hand)
+--     rangedDpsWeight = 0,     -- ranged-slot weapon DPS (bow/gun/crossbow/thrown/wand)
 --     secondary = { ATTACK_POWER = 0.5, SPELL_POWER = 0, ... },
 --   }
 -- `stats` always names all 5 main stats explicitly by their real name --
@@ -235,6 +236,9 @@ function EverGear:GetBuiltinProfile(classToken, specName, profileId)
         stats = CloneWeights(source.stats),
         armorWeight = self:ClampWeight(source.armorWeight),
         dpsWeight = self:ClampWeight(source.dpsWeight),
+        -- DPS weight for ranged-slot weapons; a SPEC_PROFILES entry that doesn't set
+        -- one scores ranged weapons with dpsWeight, exactly as before the split.
+        rangedDpsWeight = self:ClampWeight(source.rangedDpsWeight ~= nil and source.rangedDpsWeight or source.dpsWeight),
         -- Weapon speed/damage-range scoring, beyond raw DPS (see ScoreItem's
         -- comment in Upgrades.lua for what each one means). `or 0` via
         -- ClampWeight(nil) is deliberate: every SPEC_PROFILES entry as of
@@ -411,7 +415,7 @@ end
 -- without it.
 
 local SCALAR_WEIGHT_KEYS = {
-    "armorWeight", "dpsWeight",
+    "armorWeight", "dpsWeight", "rangedDpsWeight",
     "avgDamageWeight", "maxDamageWeight", "fastWeaponWeight", "slowWeaponWeight",
 }
 local SUBTABLE_WEIGHT_KEYS = { "stats", "secondary" }
@@ -541,7 +545,8 @@ local CORE_STAT_FIELDS = {
 }
 local CORE_SCALAR_FIELDS = {
     { key = "armorWeight", label = "Armor" },
-    { key = "dpsWeight", label = "Weapon DPS" },
+    { key = "dpsWeight", label = "Melee Weapon DPS" },
+    { key = "rangedDpsWeight", label = "Ranged Weapon DPS" },
     { key = "avgDamageWeight", label = "Avg Weapon Damage" },
     { key = "maxDamageWeight", label = "Max Weapon Damage" },
     { key = "fastWeaponWeight", label = "Fast Weapon" },
