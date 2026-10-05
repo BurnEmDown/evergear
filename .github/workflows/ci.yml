@@ -50,7 +50,7 @@ jobs:
       - name: Upload zip to run summary
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.zip.outputs.name }}
+          name: download-${{ steps.zip.outputs.name }}   # differs from the zip inside, so the downloaded artifact zip can be extracted next to it
           path: .release/*.zip
           include-hidden-files: true # .release is a dot-dir, skipped by default
           if-no-files-found: error
