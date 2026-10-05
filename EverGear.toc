@@ -34,6 +34,7 @@ Data\Items_ScarletMonasteryGraveyard.lua
 Data\Items_ExcavationSiteWetlands.lua
 Data\Items_RazorfenKraul.lua
 Data\Items_WorldDrops.lua
+Data\Items_InGameCaptures.lua
 Data\Items_Crafted_Blacksmithing.lua
 Data\Items_Crafted_Engineering.lua
 Data\Items_Crafted_Leatherworking.lua
