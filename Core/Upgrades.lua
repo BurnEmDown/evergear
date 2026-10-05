@@ -136,6 +136,12 @@ end
 -- percentage), so ARMOR_PENETRATION kept its old per-point weight unchanged
 -- -- only its name lost the misleading "_RATING" suffix.
 --
+-- dpsWeight is the MELEE weapon DPS weight (main/off hand); rangedDpsWeight is the
+-- ranged-slot one (bow/gun/crossbow/thrown/wand). Hunters weight ranged far above
+-- melee; melee classes ignore ranged (0); wand users (Mage/Warlock/Priest) value
+-- their wand while leveling -- 2.0 per wand DPS for the damage specs (roughly 2 spell
+-- damage per DPS point on their scale), 1.0 for Priest Disc/Holy, whose scale is
+-- much larger. All hand-picked, not derived -- tune freely.
 EverGear.SPEC_PROFILES = {
     WARRIOR = {
         ["Arms"] = {  -- role: Physical DPS
@@ -490,7 +496,7 @@ EverGear.SPEC_PROFILES = {
             -- omits in favor of SPELL_DAMAGE/SPELL_HEALING alone. The
             -- source JSON's "mana" (0.07) is folded into MANA_REGEN per
             -- user confirmation.
-            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 1.16, SPIRIT = 0.83 }, armorWeight = 0, dpsWeight = 0,
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 1.16, SPIRIT = 0.83 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 1.0,
             secondary = {
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
@@ -509,7 +515,7 @@ EverGear.SPEC_PROFILES = {
             -- Same sixtyupgrades-derived weights as Discipline (one JSON
             -- was given for both) -- see Discipline's comment for the
             -- zero-fill convention and the "mana"->MANA_REGEN fold.
-            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 1.16, SPIRIT = 0.83 }, armorWeight = 0, dpsWeight = 0,
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 1.16, SPIRIT = 0.83 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 1.0,
             secondary = {
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
@@ -529,7 +535,7 @@ EverGear.SPEC_PROFILES = {
             -- omitted is an explicit 0 here (confirmed convention), not a
             -- mechanically-rescaled placeholder -- including SPELL_POWER,
             -- which this set omits in favor of SPELL_DAMAGE alone.
-            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.04, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.04, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 2.0,
             secondary = {
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
@@ -618,7 +624,7 @@ EverGear.SPEC_PROFILES = {
             -- Fire's (same crit/hit/intellect), swapping ARCANE_DAMAGE in
             -- for FIRE_DAMAGE as the nuke school. See Fire's comment for the
             -- zero-fill convention.
-            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.2, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.2, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 2.0,
             secondary = {
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
@@ -639,7 +645,7 @@ EverGear.SPEC_PROFILES = {
             -- omitted is an explicit 0 here (confirmed convention), not a
             -- mechanically-rescaled placeholder -- including SPELL_POWER,
             -- which this set omits in favor of SPELL_DAMAGE alone.
-            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.2, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.2, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 2.0,
             secondary = {
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
@@ -659,7 +665,7 @@ EverGear.SPEC_PROFILES = {
             -- sixtyupgrades-derived weights: every key the source JSON
             -- omitted is an explicit 0 here (confirmed convention), not a
             -- mechanically-rescaled placeholder.
-            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.19, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.19, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 2.0,
             secondary = {
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
@@ -683,7 +689,7 @@ EverGear.SPEC_PROFILES = {
             -- explicit 0 here (confirmed convention), not a mechanically-
             -- rescaled placeholder -- including SPELL_POWER, which this set
             -- omits in favor of SPELL_DAMAGE alone.
-            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.28, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.28, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 2.0,
             secondary = {
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
@@ -703,7 +709,7 @@ EverGear.SPEC_PROFILES = {
             -- Same sixtyupgrades-derived weights as Affliction (one JSON
             -- was given for all 3 Warlock specs) -- see Affliction's comment
             -- for the zero-fill convention.
-            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.28, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.28, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 2.0,
             secondary = {
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
@@ -723,7 +729,7 @@ EverGear.SPEC_PROFILES = {
             -- Same sixtyupgrades-derived weights as Affliction (one JSON
             -- was given for all 3 Warlock specs) -- see Affliction's comment
             -- for the zero-fill convention.
-            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.28, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
+            stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.28, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 2.0,
             secondary = {
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
