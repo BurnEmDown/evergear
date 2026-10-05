@@ -236,7 +236,8 @@ local function ReadTooltipStats(link)
         if classList then
             classes = {}
             for c in classList:gmatch("[^,]+") do
-                classes[#classes + 1] = (c:gsub("^%s+", ""):gsub("%s+$", ""))
+                -- The database (and IsClassAllowed) use upper-case class tokens, e.g. "ROGUE".
+                classes[#classes + 1] = (c:gsub("^%s+", ""):gsub("%s+$", "")):upper()
             end
         end
     end
