@@ -183,8 +183,12 @@ local function ReadTooltipStats(link)
             end
             return
         end
-        local bonusArmor = text:match("^%+(%d+) Armor$")
-        if bonusArmor then stats.BONUS_ARMOR = tonumber(bonusArmor) return end
+        -- Green "+N Armor" (or a negative "-N Armor" penalty) adjusts the base armor line.
+        local armorSign, bonusArmor = text:match("^([%+%-])(%d+) Armor$")
+        if bonusArmor then
+            stats.BONUS_ARMOR = (stats.BONUS_ARMOR or 0) + tonumber(bonusArmor) * (armorSign == "-" and -1 or 1)
+            return
+        end
         local armor = text:match("^(%d+) Armor$")
         if armor then stats.ARMOR = tonumber(armor) return end
         local block = text:match("^(%d+) Block$")
@@ -247,7 +251,7 @@ local function ReadTooltipStats(link)
     -- Green "+N Armor" is part of the item's armor; the database stores the total.
     if stats.BONUS_ARMOR then
         stats.ARMOR = (stats.ARMOR or 0) + stats.BONUS_ARMOR
-        notes[#notes + 1] = "armor total includes +" .. stats.BONUS_ARMOR .. " bonus armor"
+        notes[#notes + 1] = "armor total includes " .. stats.BONUS_ARMOR .. " bonus armor"
         stats.BONUS_ARMOR = nil
     end
 
@@ -325,6 +329,11 @@ local function NormalizeForCompare(stats)
                 if out[kv[1]] == nil then out[kv[1]] = kv[2] end
             end
         end
+    end
+    -- A database entry that kept bonus armor separate counts toward the same total.
+    if out.BONUS_ARMOR then
+        out.ARMOR = (out.ARMOR or 0) + out.BONUS_ARMOR
+        out.BONUS_ARMOR = nil
     end
     if out.SPELL_POWER then
         out.SPELL_DAMAGE = out.SPELL_DAMAGE or out.SPELL_POWER
