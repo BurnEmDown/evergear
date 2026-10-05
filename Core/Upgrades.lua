@@ -144,7 +144,7 @@ EverGear.SPEC_PROFILES = {
             -- provided) -- every key the source JSON omitted is an explicit
             -- 0 here (confirmed convention), not a mechanically-rescaled
             -- placeholder. Revisit if Arms ever gets its own distinct set.
-            stats = { STRENGTH = 2, AGILITY = 1, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
+            stats = { STRENGTH = 2, AGILITY = 1, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
@@ -167,7 +167,7 @@ EverGear.SPEC_PROFILES = {
             -- sixtyupgrades-derived weights: every key the source JSON
             -- omitted is an explicit 0 here (confirmed convention), not a
             -- mechanically-rescaled placeholder.
-            stats = { STRENGTH = 2, AGILITY = 1, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
+            stats = { STRENGTH = 2, AGILITY = 1, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
@@ -227,7 +227,7 @@ EverGear.SPEC_PROFILES = {
                         -- explicit ask: "should still be worth at least 1")
                         -- -- same per-point weight as Stamina now, rather
                         -- than nearly irrelevant.
-                        stats = { STRENGTH = 1, AGILITY = 0.91, STAMINA = 1, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0.05, dpsWeight = 1.0,
+                        stats = { STRENGTH = 1, AGILITY = 0.91, STAMINA = 1, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0.05, dpsWeight = 1.0, rangedDpsWeight = 0,
                         secondary = {
                             SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                             SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
@@ -254,7 +254,7 @@ EverGear.SPEC_PROFILES = {
                     id = "threat",
                     name = "Threat",
                     profile = {
-                        stats = { STRENGTH = 2, AGILITY = 1.05, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 7.5,
+                        stats = { STRENGTH = 2, AGILITY = 1.05, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 7.5, rangedDpsWeight = 0,
                         secondary = {
                             SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                             SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
@@ -298,7 +298,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Protection"] = {  -- role: Tank
-            stats = { STRENGTH = 3.0, AGILITY = 0.5, STAMINA = 2.5, INTELLECT = 0.25, SPIRIT = 0.05 }, armorWeight = 0.3, dpsWeight = 1.0,
+            stats = { STRENGTH = 3.0, AGILITY = 0.5, STAMINA = 2.5, INTELLECT = 0.25, SPIRIT = 0.05 }, armorWeight = 0.3, dpsWeight = 1.0, rangedDpsWeight = 0,
             secondary = {
                 -- Caster-exclusive stats -- 0 for this melee/physical role
                 SPELL_POWER = 1.2, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
@@ -321,7 +321,7 @@ EverGear.SPEC_PROFILES = {
             -- sixtyupgrades-derived weights: every key the source JSON
             -- omitted is an explicit 0 here (confirmed convention), not a
             -- mechanically-rescaled placeholder.
-            stats = { STRENGTH = 2, AGILITY = 1, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
+            stats = { STRENGTH = 2, AGILITY = 1, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
@@ -340,7 +340,7 @@ EverGear.SPEC_PROFILES = {
     },
     HUNTER = {
         ["Beast Mastery"] = {  -- role: Physical DPS
-            stats = { STRENGTH = 0, AGILITY = 2.79, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
+            stats = { STRENGTH = 0, AGILITY = 2.79, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 3.5, rangedDpsWeight = 14,
             secondary = {
                 -- sixtyupgrades-derived weights: every key the source JSON
                 -- omitted is an explicit 0 here (confirmed convention), not a
@@ -364,7 +364,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Marksmanship"] = {  -- role: Physical DPS
-            stats = { STRENGTH = 0, AGILITY = 2.79, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
+            stats = { STRENGTH = 0, AGILITY = 2.79, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 3.5, rangedDpsWeight = 14,
             secondary = {
                 -- sixtyupgrades-derived weights: every key the source JSON
                 -- omitted is an explicit 0 here (confirmed convention), not a
@@ -388,7 +388,7 @@ EverGear.SPEC_PROFILES = {
             },
         },
         ["Survival"] = {  -- role: Physical DPS
-            stats = { STRENGTH = 0, AGILITY = 2.79, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
+            stats = { STRENGTH = 0, AGILITY = 2.79, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 3.5, rangedDpsWeight = 14,
             secondary = {
                 -- sixtyupgrades-derived weights: every key the source JSON
                 -- omitted is an explicit 0 here (confirmed convention), not a
@@ -418,7 +418,7 @@ EverGear.SPEC_PROFILES = {
             -- weights: every key the source JSON omitted is an explicit 0
             -- here (confirmed convention), not a mechanically-rescaled
             -- placeholder.
-            stats = { STRENGTH = 1.1, AGILITY = 1.8, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
+            stats = { STRENGTH = 1.1, AGILITY = 1.8, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
@@ -441,7 +441,7 @@ EverGear.SPEC_PROFILES = {
             -- sixtyupgrades-derived "Combat (Swords)" weights: every key
             -- the source JSON omitted is an explicit 0 here (confirmed
             -- convention), not a mechanically-rescaled placeholder.
-            stats = { STRENGTH = 1.1, AGILITY = 1.9, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
+            stats = { STRENGTH = 1.1, AGILITY = 1.9, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
@@ -464,7 +464,7 @@ EverGear.SPEC_PROFILES = {
             -- Same sixtyupgrades-derived "Dagger" weights as Assassination
             -- (one JSON was given for both) -- see Assassination's comment
             -- for the zero-fill convention.
-            stats = { STRENGTH = 1.1, AGILITY = 1.8, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
+            stats = { STRENGTH = 1.1, AGILITY = 1.8, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
@@ -573,7 +573,7 @@ EverGear.SPEC_PROFILES = {
             -- omitted is an explicit 0 here (confirmed convention), not a
             -- mechanically-rescaled placeholder. HASTE stands in for
             -- sixtyupgrades' "speed" (confirmed to mean the Haste stat).
-            stats = { STRENGTH = 2, AGILITY = 1.17, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14,
+            stats = { STRENGTH = 2, AGILITY = 1.17, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
@@ -768,7 +768,7 @@ EverGear.SPEC_PROFILES = {
             -- omitted is an explicit 0 here (confirmed convention), not a
             -- mechanically-rescaled placeholder. The source JSON's "mana"
             -- (0.04) is folded into MANA_REGEN, same as the healer specs.
-            stats = { STRENGTH = 2.2, AGILITY = 2.02, STAMINA = 0, INTELLECT = 0.67, SPIRIT = 0.08 }, armorWeight = 0, dpsWeight = 14,
+            stats = { STRENGTH = 2.2, AGILITY = 2.02, STAMINA = 0, INTELLECT = 0.67, SPIRIT = 0.08 }, armorWeight = 0, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0.04, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
@@ -803,7 +803,7 @@ EverGear.SPEC_PROFILES = {
             -- equivalent key in this game's data model -- same situation as
             -- this spec's own Mitigation profile elsewhere -- and is
             -- dropped rather than folded into Stamina.
-            stats = { STRENGTH = 2.2, AGILITY = 1.57, STAMINA = 2.2, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0.4, dpsWeight = 14,
+            stats = { STRENGTH = 2.2, AGILITY = 1.57, STAMINA = 2.2, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0.4, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
                 SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
@@ -916,7 +916,7 @@ end
 -- concept here; each spec's profile just names its own stats explicitly
 -- (see SPEC_PROFILES above), so a Warrior's grid says "Strength", not
 -- "Primary Stat".
-local function ScoreItem(stats, profile, armorValue, dps)
+local function ScoreItem(stats, profile, armorValue, dps, isRanged)
     local score = 0
 
     for statName, value in pairs(stats or {}) do
@@ -942,7 +942,15 @@ local function ScoreItem(stats, profile, armorValue, dps)
     end
 
     score = score + ((armorValue or 0) * profile.armorWeight)
-    score = score + ((dps or 0) * profile.dpsWeight)
+    -- Ranged-slot weapons (bow/gun/crossbow/thrown/wand) use their own DPS weight so
+    -- a Hunter can value its ranged weapon far above its melee one while a melee
+    -- class can ignore ranged DPS entirely. A profile with no rangedDpsWeight (older
+    -- saved/imported data) falls back to dpsWeight, i.e. the previous behavior.
+    local dpsWeight = profile.dpsWeight
+    if isRanged and profile.rangedDpsWeight ~= nil then
+        dpsWeight = profile.rangedDpsWeight
+    end
+    score = score + ((dps or 0) * dpsWeight)
 
     local weaponSpeed = stats and stats.WEAPON_SPEED
     if weaponSpeed and weaponSpeed > 0 then
@@ -1255,7 +1263,8 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     else
         equippedStats, equippedArmor, equippedDPS = NormalizeLiveStats(equippedItemLink)
     end
-    local currentScore = ScoreItem(equippedStats, profile, equippedArmor, equippedDPS)
+    local isRangedSlot = (realSlotToken == "RangedSlot")
+    local currentScore = ScoreItem(equippedStats, profile, equippedArmor, equippedDPS, isRangedSlot)
 
     -- Player-chosen weapon-type opt-outs (e.g. a tank who never wants
     -- two-handers suggested even though their class/spec can technically use
@@ -1317,7 +1326,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
         then
             local armorValue = (item.stats and item.stats.ARMOR) or 0
             local dpsValue = (item.stats and item.stats.WEAPON_DPS) or 0
-            local score = ScoreItem(item.stats, profile, armorValue, dpsValue)
+            local score = ScoreItem(item.stats, profile, armorValue, dpsValue, isRangedSlot)
             if score > currentScore then
                 table.insert(candidates, { item = item, score = score })
             end
