@@ -11,6 +11,7 @@ EverGear.Items[12998] = {id = 12998, name = "Magician's Mantle", slot = "Shoulde
 EverGear.Items[13062] = {id = 13062, name = "Thunderwood", slot = "RangedSlot", armorType = nil, weaponType = "wand", isTwoHand = nil, classes = nil, ilvl = 27, minLevel = 22, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {SPELL_POWER = 6, WEAPON_DAMAGE = "36 - 67 Nature Damage", WEAPON_DPS = 27.1, WEAPON_SPEED = 1.9}}
 EverGear.Items[14177] = {id = 14177, name = "Watcher's Cuffs of the Physician", slot = "WristSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 26, minLevel = 21, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {INTELLECT = 4, SPELL_DAMAGE = 1, SPELL_HEALING = 4, SPIRIT = 2, ARMOR = 17}}
 EverGear.Items[249394] = {id = 249394, name = "Orb of Mystic Insight", slot = "SecondaryHandSlot", armorType = nil, weaponType = "offhand", isTwoHand = nil, classes = nil, ilvl = 30, minLevel = 25, confirmed = true, bindType = "BoE", source = {type = "craft", profession = "Enchanting"}, stats = {INTELLECT = 6, SPELL_POWER = 7}}
+EverGear.Items[270053] = {id = 270053, name = "Ring of Ruin", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 35, minLevel = 22, confirmed = true, bindType = nil, source = {type = "quest", zone = "Duskwood", quest = "The Legend of Stalvan", faction = "Alliance"}, stats = {AGILITY = 6, STRENGTH = 4}}
 EverGear.Items[271670] = {id = 271670, name = "Curl of Life", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 24, confirmed = true, bindType = nil, source = {type = "quest", zone = "Excavation Site: Wetlands", quest = "Horrors in the Highland", faction = "Alliance"}, stats = {HP5 = 5, SPELL_POWER = 5, STAMINA = 7}}
 EverGear.Items[271767] = {id = 271767, name = "Healer's Staff", slot = "MainHandSlot", armorType = nil, weaponType = "staff", isTwoHand = true, classes = nil, ilvl = 33, minLevel = 24, confirmed = true, bindType = nil, source = {type = "quest", zone = "Excavation Site: Wetlands", quest = "Prehistoric Prism", questByFaction = {Alliance = "Prehistoric Prism", Horde = "Earthen Echo"}}, stats = {MP5 = 5, SPELL_DAMAGE = 22, SPELL_HEALING = 67, STAMINA = 12, WEAPON_DAMAGE = "43 - 65 Damage", WEAPON_DPS = 20.8, WEAPON_SPEED = 2.6}}
 EverGear.Items[271769] = {id = 271769, name = "Daewyn's Girdle", slot = "WaistSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 24, confirmed = true, bindType = nil, source = {type = "quest", zone = "Excavation Site: Wetlands", quest = "Fallen in the Fen"}, stats = {HP5 = 10, SPELL_POWER = 6, SPIRIT = 9, ARMOR = 28}}
@@ -72,7 +73,6 @@ EverGear.Items[9817] = {id = 9817, name = "Fortified Spaulders of the Monkey", s
 
 -- Held back (no known source yet); used by debug mode only.
 EverGear.PendingItems = EverGear.PendingItems or {}
-EverGear.PendingItems[270053] = "Ring of Ruin"
 EverGear.PendingItems[282283] = "Malignant Root"
 EverGear.PendingItems[281304] = "Prospector's Signet"
 EverGear.PendingItems[281305] = "Excavation Cloak"
