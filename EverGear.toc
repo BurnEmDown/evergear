@@ -17,6 +17,7 @@ Core\JSON.lua
 Core\EPProfiles.lua
 Core\ProfileEditor.lua
 Core\UI.lua
+Core\Debug.lua
 Core\MinimapButton.lua
 Core\Main.lua
 
