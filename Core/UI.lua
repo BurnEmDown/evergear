@@ -335,6 +335,54 @@ RefreshProfileDropdown()
 -- file otherwise.
 EverGear.RefreshProfileDropdown = RefreshProfileDropdown
 
+-- Re-reads this character's saved spec/profile and makes both dropdowns show it.
+-- Needed because everything above runs when the addon files load, which can be
+-- before the character's name/realm are available (EverGear:GetCharDB keys on them),
+-- so the dropdowns could be built from the wrong settings table -- they then showed
+-- the first spec while scoring (Upgrades.lua reads the real table on every refresh)
+-- used the spec the player actually saved. Called from PLAYER_LOGIN (Core/Main.lua)
+-- and every time the window is shown, when everything is ready. Also writes the
+-- visible text explicitly: UIDropDownMenu_SetSelectedValue alone doesn't update the
+-- displayed text of a dropdown that has never been opened.
+function EverGear:SyncSpecAndProfileDropdowns()
+    local charDB = self:GetCharDB()
+    local classToken = self:GetPlayerInfo().classToken
+    local specs = self.CLASS_SPECS[classToken] or {}
+
+    local valid = false
+    for _, spec in ipairs(specs) do
+        if spec.name == charDB.spec then valid = true break end
+    end
+    if not valid then
+        -- nothing saved yet, or a spec that no longer exists for this class
+        charDB.spec = self:GetDefaultSpec(classToken)
+        charDB.profileId = nil
+    end
+    if not charDB.profileId then
+        charDB.profileId = self:GetDefaultProfileId(classToken, charDB.spec)
+    end
+
+    UIDropDownMenu_SetSelectedValue(specDropdown, charDB.spec)
+    UIDropDownMenu_SetText(specDropdown, charDB.spec)
+    RefreshProfileDropdown()
+
+    -- same explicit-text rule for the profile dropdown; fall back to the default
+    -- profile if the saved id no longer exists (e.g. the profile was deleted)
+    local profiles = self:GetProfileList(classToken, charDB.spec)
+    local shownName
+    for _, profile in ipairs(profiles) do
+        if profile.id == charDB.profileId then shownName = profile.name break end
+    end
+    if not shownName then
+        charDB.profileId = self:GetDefaultProfileId(classToken, charDB.spec)
+        for _, profile in ipairs(profiles) do
+            if profile.id == charDB.profileId then shownName = profile.name break end
+        end
+        UIDropDownMenu_SetSelectedValue(profileDropdown, charDB.profileId)
+    end
+    if shownName then UIDropDownMenu_SetText(profileDropdown, shownName) end
+end
+
 -- Small icon button opening the profile editor window (Core/ProfileEditor.lua,
 -- M4) -- where "Default" is the only option stops being true. Sits directly
 -- to the LEFT of the Profile dropdown at the same height, per user feedback
@@ -776,6 +824,7 @@ content:SetScript("OnSizeChanged", RepositionAll)
 RepositionAll()
 
 mainFrame:SetScript("OnShow", function()
+    EverGear:SyncSpecAndProfileDropdowns()
     RepositionFilters()
     RepositionAll()
     SyncLookaheadBounds()
