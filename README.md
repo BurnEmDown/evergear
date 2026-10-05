@@ -61,7 +61,7 @@ type / level disagree with the game's tooltip, opens a small window listing what
 in the `manual/<slug>.json` shape from `evergear-backend` (Ctrl+C, then paste it where it's
 needed). Captures are also kept in `EverGearDB.debugCaptures`, which the game writes to
 `WTF/Account/<account>/SavedVariables/EverGear.lua` on `/reload` or logout. Addons can't
-write files themselves. Other commands: `/eg debug export`, `/eg debug clear`. Items with a
+write files themselves. Gray and white items are ignored. The window has a "Clear captured" button (also `/eg debug clear`) so each export only holds new captures; `/eg debug export` reopens the JSON box. Items with a
 random suffix ("of the Monkey") are skipped.
 
 ## Releasing

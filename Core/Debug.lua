@@ -271,8 +271,10 @@ function EverGear:BuildLiveItemRecord(link)
         if suffix ~= 0 then return nil, "suffix" end
     end
 
-    local name, _, _, ilvl, minLevel = GetFullInfo(link)
+    local name, _, quality, ilvl, minLevel = GetFullInfo(link)
     if not name then return nil end  -- not cached yet; the next hover will have it
+    -- Gray (0) and white (1) items never matter for upgrades; only flag green and better.
+    if quality and quality < 2 then return nil, "lowQuality" end
 
     -- Quest rewards report a required level of 0 (sometimes 1): the item itself has no
     -- minimum, the quest does. The database prefers the quest's level, which the tooltip
@@ -436,7 +438,7 @@ end
 
 local function BuildWindow()
     debugFrame = CreateFrame("Frame", "EverGearDebugFrame", UIParent, "BackdropTemplate")
-    debugFrame:SetSize(340, 250)
+    debugFrame:SetSize(360, 250)
     debugFrame:SetFrameStrata("DIALOG")
     debugFrame:SetMovable(true)
     debugFrame:EnableMouse(true)
@@ -473,7 +475,7 @@ local function BuildWindow()
 
     nameText = debugFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     nameText:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
-    nameText:SetWidth(304)
+    nameText:SetWidth(324)
     nameText:SetJustifyH("LEFT")
 
     statusText = debugFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -481,7 +483,7 @@ local function BuildWindow()
 
     diffText = debugFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     diffText:SetPoint("TOPLEFT", statusText, "BOTTOMLEFT", 0, -6)
-    diffText:SetWidth(304)
+    diffText:SetWidth(324)
     diffText:SetHeight(80)
     diffText:SetJustifyH("LEFT")
     diffText:SetJustifyV("TOP")
@@ -493,7 +495,7 @@ local function BuildWindow()
     sourceLabel:SetTextColor(unpack(PARCHMENT))
 
     sourceBox = CreateFrame("EditBox", nil, debugFrame, "InputBoxTemplate")
-    sourceBox:SetSize(296, 20)
+    sourceBox:SetSize(316, 20)
     sourceBox:SetPoint("BOTTOMLEFT", 22, 40)
     sourceBox:SetAutoFocus(false)
     sourceBox:SetMaxLetters(200)
@@ -501,7 +503,7 @@ local function BuildWindow()
     sourceBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
 
     captureButton = CreateFrame("Button", nil, debugFrame, "UIPanelButtonTemplate")
-    captureButton:SetSize(110, 22)
+    captureButton:SetSize(100, 22)
     captureButton:SetPoint("BOTTOMLEFT", 18, 14)
     captureButton:SetText("Capture")
     captureButton:SetScript("OnClick", function()
@@ -525,8 +527,18 @@ local function BuildWindow()
     exportButton:SetText("Export JSON")
     exportButton:SetScript("OnClick", ShowExport)
 
+    local clearButton = CreateFrame("Button", nil, debugFrame, "UIPanelButtonTemplate")
+    clearButton:SetSize(100, 22)
+    clearButton:SetPoint("LEFT", exportButton, "RIGHT", 6, 0)
+    clearButton:SetText("Clear captured")
+    clearButton:SetScript("OnClick", function()
+        EverGearDB.debugCaptures = {}
+        print("|cff33ff99EverGear|r debug: captures cleared.")
+        RefreshCaptureUI()
+    end)
+
     countText = debugFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    countText:SetPoint("LEFT", exportButton, "RIGHT", 10, 0)
+    countText:SetPoint("TOPRIGHT", close, "TOPLEFT", -4, -8)
     countText:SetTextColor(unpack(GOLD))
 
     -- Export popup
