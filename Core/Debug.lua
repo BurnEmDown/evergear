@@ -126,19 +126,19 @@ local function ParseEquipText(text)
     if v then return { { "DEFENSE", tonumber(v) } } end
     v = t:match("^increases the block value of your shield by (%d+)%.?$")
     if v then return { { "BLOCK_VALUE", tonumber(v) } } end
-    v = t:match("^improves your chance to hit by (%d+)%%%.?$")
+    v = t:match("^improves your chance to hit by ([%d.]+)%%%.?$")
     if v then return { { "HIT_CHANCE", tonumber(v) } } end
-    v = t:match("^improves your chance to get a critical strike by (%d+)%%%.?$")
+    v = t:match("^improves your chance to get a critical strike by ([%d.]+)%%%.?$")
     if v then return { { "CRIT_CHANCE", tonumber(v) } } end
-    v = t:match("^increases your chance to dodge an attack by (%d+)%%%.?$")
+    v = t:match("^increases your chance to dodge an attack by ([%d.]+)%%%.?$")
     if v then return { { "DODGE_CHANCE", tonumber(v) } } end
-    v = t:match("^increases your chance to parry an attack by (%d+)%%%.?$")
+    v = t:match("^increases your chance to parry an attack by ([%d.]+)%%%.?$")
     if v then return { { "PARRY_CHANCE", tonumber(v) } } end
-    v = t:match("^increases your chance to block attacks with a shield by (%d+)%%%.?$")
+    v = t:match("^increases your chance to block attacks with a shield by ([%d.]+)%%%.?$")
     if v then return { { "BLOCK_CHANCE", tonumber(v) } } end
-    v = t:match("^improves your chance to hit with spells by (%d+)%%%.?$")
+    v = t:match("^improves your chance to hit with spells by ([%d.]+)%%%.?$")
     if v then return { { "SPELL_HIT_CHANCE", tonumber(v) } } end
-    v = t:match("^improves your chance to get a critical strike with spells by (%d+)%%%.?$")
+    v = t:match("^improves your chance to get a critical strike with spells by ([%d.]+)%%%.?$")
     if v then return { { "SPELL_CRIT_CHANCE", tonumber(v) } } end
     for _, school in ipairs(SCHOOLS) do
         v = t:match("^increases damage done by " .. school:lower() .. " spells and effects by up to (%d+)%.?$")
