@@ -1502,7 +1502,12 @@ end
 
 SLASH_EVERGEAR1 = "/evergear"
 SLASH_EVERGEAR2 = "/eg"
-SlashCmdList["EVERGEAR"] = function()
+SlashCmdList["EVERGEAR"] = function(msg)
+    local debugArg = (msg or ""):match("^%s*[Dd][Ee][Bb][Uu][Gg]%s*(.-)%s*$")
+    if debugArg then
+        EverGear:HandleDebugCommand(debugArg)
+        return
+    end
     EverGear:ToggleUI()
 end
 

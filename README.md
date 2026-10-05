@@ -52,6 +52,18 @@ addon's main window. Policy, effective 2026-09-29:
 on 2026-09-30, matching client version 1.30.1.10124. If WoW Forever ships a client
 update, re-run that command and update this value if it changes.
 
+## Debug mode
+
+`/eg debug` toggles a developer mode for keeping the item database honest. While it is on,
+hovering an equippable item that is missing from EverGear's data, or whose stats / slot /
+type / level disagree with the game's tooltip, opens a small window listing what's wrong.
+**Capture** records the item as the game shows it; **Export JSON** shows everything captured
+in the `manual/<slug>.json` shape from `evergear-backend` (Ctrl+C, then paste it where it's
+needed). Captures are also kept in `EverGearDB.debugCaptures`, which the game writes to
+`WTF/Account/<account>/SavedVariables/EverGear.lua` on `/reload` or logout. Addons can't
+write files themselves. Gray and white items are ignored. The window has a "Clear captured" button (also `/eg debug clear`) so each export only holds new captures; `/eg debug export` reopens the JSON box. Items with a
+random suffix ("of the Monkey") are skipped.
+
 ## Releasing
 
 The `.toc`'s `## Version:` line is `@project-version@`, a keyword the
