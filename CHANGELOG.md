@@ -5,6 +5,14 @@ patch digit (`0.0.X`) bumps on every shipped change, no matter how small.
 Moving to `0.1.0` or `1.0.0` is a deliberate decision, not a patch-count
 milestone -- see the "Versioning" section of `README.md`.
 
+## [0.0.24] - 2026-10-06
+
+### Fixed
+- Protection Warriors and Paladins were suggested off-hand-only weapons
+  (e.g. Shoni's Disarming Tool) as upgrades over their shield, because both
+  share the off-hand slot and the weapon's stats could outscore the shield.
+  Tank specs that can use a shield now only get shields in the off-hand slot.
+
 ## [0.0.17] - 2026-10-05
 
 ### Added
