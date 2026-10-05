@@ -1299,6 +1299,18 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     -- see Constants.lua) is deliberately excluded rather than assumed BoE.
     local professionBoEOnly = charDB.professionBoEOnly or {}
 
+    -- A Tank spec whose class can wield a shield (Protection Warrior/Paladin) is
+    -- meant to hold a shield in the off-hand. Off-hand-only WEAPONS (e.g. Shoni's
+    -- Disarming Tool) share SecondaryHandSlot with shields, and their raw stats can
+    -- outscore a shield, so they must never be offered as a "swap" for a shield
+    -- there. Relic-style "offhand" items and shields themselves are untouched.
+    local tankShieldOnly = false
+    if realSlotToken == "SecondaryHandSlot"
+        and CLASS_CAN_USE_SHIELD[playerInfo.classToken]
+        and self:GetRoleForSpec(playerInfo.classToken, charDB.spec) == "Tank" then
+        tankShieldOnly = true
+    end
+
     local candidates = {}
     for _, item in ipairs(self:GetItemsForSlot(realSlotToken)) do
         local itemFaction = item.source and item.source.faction
@@ -1329,6 +1341,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
             and weaponTypeAllowed
             and professionAllowed
             and boeAllowed
+            and not (tankShieldOnly and item.weaponType and item.weaponType ~= "shield" and item.weaponType ~= "offhand")
         then
             local armorValue = (item.stats and item.stats.ARMOR) or 0
             local dpsValue = (item.stats and item.stats.WEAPON_DPS) or 0
