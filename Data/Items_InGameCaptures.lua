@@ -18,6 +18,7 @@ EverGear.Items[273026] = {id = 273026, name = "Garb of Florid Feathers", slot = 
 EverGear.Items[277204] = {id = 277204, name = "Erudite's Amulet", slot = "NeckSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 23, minLevel = 20, confirmed = true, bindType = nil, source = {type = "quest", zone = "Library books", quest = "Friend of the Library"}, stats = {AGILITY = 2, STAMINA = 3}}
 EverGear.Items[277234] = {id = 277234, name = "Alacritous Treads", slot = "FeetSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 28, minLevel = 16, confirmed = true, bindType = nil, source = {type = "quest", zone = "Redridge Mountains", quest = "WANTED: Incinerator Gar'im", faction = "Alliance"}, stats = {AGILITY = 5, STRENGTH = 5, ARMOR = 132}}
 EverGear.Items[280766] = {id = 280766, name = "Satchel of Potions", slot = "TrinketSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = nil, confirmed = true, bindType = nil, source = {type = "quest", zone = "Excavation Site: Wetlands", quest = "Heartwoven", questByFaction = {Alliance = "Heartwoven", Horde = "Changing Tastes"}}, stats = {USE_1 = "Reach into the bag and hope for the best. (10 Min Cooldown)"}}
+EverGear.Items[281258] = {id = 281258, name = "Essene's Hope", slot = "NeckSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = nil, confirmed = true, bindType = nil, source = {type = "quest", zone = "Wetlands", quest = "Sentiments of the Lost"}, stats = {SPIRIT = 7}}
 EverGear.Items[281318] = {id = 281318, name = "Bouquet of Auberdine Flowers", slot = "SecondaryHandSlot", armorType = nil, weaponType = "offhand", isTwoHand = nil, classes = nil, ilvl = 29, minLevel = 22, confirmed = true, bindType = nil, source = {type = "quest", zone = "Wetlands", quest = "Bloom of the Heavens"}, stats = {INTELLECT = 4, STAMINA = 4}}
 EverGear.Items[2933] = {id = 2933, name = "Seal of Wrynn", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = nil, confirmed = true, bindType = nil, source = {type = "quest", zone = "The Stockade", quest = "Stockade chain quest (title not recorded)", faction = "Alliance"}, stats = {AGILITY = 3, INTELLECT = 4, SPIRIT = 3, STAMINA = 4, STRENGTH = 3}}
 EverGear.Items[6617] = {id = 6617, name = "Sage's Mantle of the Owl", slot = "ShoulderSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 30, minLevel = 25, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {INTELLECT = 5, SPIRIT = 5, ARMOR = 32}}
@@ -72,7 +73,6 @@ EverGear.Items[9817] = {id = 9817, name = "Fortified Spaulders of the Monkey", s
 -- Held back (no known source yet); used by debug mode only.
 EverGear.PendingItems = EverGear.PendingItems or {}
 EverGear.PendingItems[270053] = "Ring of Ruin"
-EverGear.PendingItems[281258] = "Essene's Hope"
 EverGear.PendingItems[282283] = "Malignant Root"
 EverGear.PendingItems[281304] = "Prospector's Signet"
 EverGear.PendingItems[281305] = "Excavation Cloak"
