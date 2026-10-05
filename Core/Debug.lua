@@ -82,8 +82,10 @@ for _, s in ipairs(SCHOOLS) do SCHOOL_UPPER[s] = s:upper() end
 -- alone rather than reported as a false mismatch.
 local PARSEABLE = {
     AGILITY = true, STRENGTH = true, STAMINA = true, INTELLECT = true, SPIRIT = true,
-    ARMOR = true, BONUS_ARMOR = true, BLOCK_VALUE = true,
+    ARMOR = true, BLOCK_VALUE = true,
     ATTACK_POWER = true, RANGED_ATTACK_POWER = true,
+    ATTACK_POWER_VS_BEASTS = true, ATTACK_POWER_VS_UNDEAD = true,
+    ATTACK_POWER_VS_HUMANOIDS = true, ATTACK_POWER_VS_ELEMENTALS = true,
     SPELL_DAMAGE = true, SPELL_HEALING = true, MP5 = true, HP5 = true, DEFENSE = true,
     HIT_CHANCE = true, CRIT_CHANCE = true, DODGE_CHANCE = true, PARRY_CHANCE = true,
     BLOCK_CHANCE = true, SPELL_HIT_CHANCE = true, SPELL_CRIT_CHANCE = true,
@@ -96,43 +98,51 @@ end
 -- "Increases damage done by Nature spells" etc. share names with the school list above;
 -- NATURE_DAMAGE is intentionally included.
 
--- Parses the text after "Equip: " into a stat (key, value), or nil if it's not a pattern
--- we know -- those stay as raw EQUIP_n text, which is how the database stores them too.
+-- Parses the text after "Equip: " into a list of { key, value } stats, or nil if it's not a
+-- pattern we know -- those stay as raw EQUIP_n text, which is how the database stores them
+-- too. Matching is case-insensitive ("Restores 2 Mana" / "Restores 2 mana").
 local function ParseEquipText(text)
-    local v
-    v = text:match("^Increases attack power by (%d+)%.?$")
-    if v then return "ATTACK_POWER", tonumber(v) end
-    v = text:match("^Increases ranged attack power by (%d+)%.?$")
-    if v then return "RANGED_ATTACK_POWER", tonumber(v) end
-    v = text:match("^Increases damage and healing done by magical spells and effects by up to (%d+)%.?$")
-    if v then return "SPELL_POWER", tonumber(v) end
-    v = text:match("^Increases healing done by spells and effects by up to (%d+)%.?$")
-    if v then return "SPELL_HEALING", tonumber(v) end
-    v = text:match("^Restores (%d+) mana per 5 sec%.?$")
-    if v then return "MP5", tonumber(v) end
-    v = text:match("^Restores (%d+) health per 5 sec%.?$")
-    if v then return "HP5", tonumber(v) end
-    v = text:match("^Increased Defense %+(%d+)%.?$")
-    if v then return "DEFENSE", tonumber(v) end
-    v = text:match("^Increases the block value of your shield by (%d+)%.?$")
-    if v then return "BLOCK_VALUE", tonumber(v) end
-    v = text:match("^Improves your chance to hit by (%d+)%%%.?$")
-    if v then return "HIT_CHANCE", tonumber(v) end
-    v = text:match("^Improves your chance to get a critical strike by (%d+)%%%.?$")
-    if v then return "CRIT_CHANCE", tonumber(v) end
-    v = text:match("^Increases your chance to dodge an attack by (%d+)%%%.?$")
-    if v then return "DODGE_CHANCE", tonumber(v) end
-    v = text:match("^Increases your chance to parry an attack by (%d+)%%%.?$")
-    if v then return "PARRY_CHANCE", tonumber(v) end
-    v = text:match("^Increases your chance to block attacks with a shield by (%d+)%%%.?$")
-    if v then return "BLOCK_CHANCE", tonumber(v) end
-    v = text:match("^Improves your chance to hit with spells by (%d+)%%%.?$")
-    if v then return "SPELL_HIT_CHANCE", tonumber(v) end
-    v = text:match("^Improves your chance to get a critical strike with spells by (%d+)%%%.?$")
-    if v then return "SPELL_CRIT_CHANCE", tonumber(v) end
+    local t = text:lower()
+    local v, w
+    v, w = t:match("^increases healing done by up to (%d+) and damage done by up to (%d+) for all magical spells and effects%.?$")
+    if v then return { { "SPELL_HEALING", tonumber(v) }, { "SPELL_DAMAGE", tonumber(w) } } end
+    v = t:match("^increases damage done by magical spells and effects by up to (%d+)%.?$")
+    if v then return { { "SPELL_DAMAGE", tonumber(v) } } end
+    v = t:match("^increases damage and healing done by magical spells and effects by up to (%d+)%.?$")
+    if v then return { { "SPELL_POWER", tonumber(v) } } end
+    v = t:match("^increases healing done by spells and effects by up to (%d+)%.?$")
+    if v then return { { "SPELL_HEALING", tonumber(v) } } end
+    v = t:match("^increases attack power by (%d+)%.?$") or t:match("^%+(%d+) attack power%.?$")
+    if v then return { { "ATTACK_POWER", tonumber(v) } } end
+    v, w = t:match("^%+(%d+) attack power against (%a+)%.?$")
+    if v then return { { "ATTACK_POWER_VS_" .. w:upper(), tonumber(v) } } end
+    v = t:match("^increases ranged attack power by (%d+)%.?$") or t:match("^%+(%d+) ranged attack power%.?$")
+    if v then return { { "RANGED_ATTACK_POWER", tonumber(v) } } end
+    v = t:match("^restores (%d+) mana per 5 sec%.?$")
+    if v then return { { "MP5", tonumber(v) } } end
+    v = t:match("^restores (%d+) health per 5 sec%.?$")
+    if v then return { { "HP5", tonumber(v) } } end
+    v = t:match("^increased defense %+(%d+)%.?$")
+    if v then return { { "DEFENSE", tonumber(v) } } end
+    v = t:match("^increases the block value of your shield by (%d+)%.?$")
+    if v then return { { "BLOCK_VALUE", tonumber(v) } } end
+    v = t:match("^improves your chance to hit by (%d+)%%%.?$")
+    if v then return { { "HIT_CHANCE", tonumber(v) } } end
+    v = t:match("^improves your chance to get a critical strike by (%d+)%%%.?$")
+    if v then return { { "CRIT_CHANCE", tonumber(v) } } end
+    v = t:match("^increases your chance to dodge an attack by (%d+)%%%.?$")
+    if v then return { { "DODGE_CHANCE", tonumber(v) } } end
+    v = t:match("^increases your chance to parry an attack by (%d+)%%%.?$")
+    if v then return { { "PARRY_CHANCE", tonumber(v) } } end
+    v = t:match("^increases your chance to block attacks with a shield by (%d+)%%%.?$")
+    if v then return { { "BLOCK_CHANCE", tonumber(v) } } end
+    v = t:match("^improves your chance to hit with spells by (%d+)%%%.?$")
+    if v then return { { "SPELL_HIT_CHANCE", tonumber(v) } } end
+    v = t:match("^improves your chance to get a critical strike with spells by (%d+)%%%.?$")
+    if v then return { { "SPELL_CRIT_CHANCE", tonumber(v) } } end
     for _, school in ipairs(SCHOOLS) do
-        v = text:match("^Increases damage done by " .. school .. " spells and effects by up to (%d+)%.?$")
-        if v then return SCHOOL_UPPER[school] .. "_DAMAGE", tonumber(v) end
+        v = t:match("^increases damage done by " .. school:lower() .. " spells and effects by up to (%d+)%.?$")
+        if v then return { { SCHOOL_UPPER[school] .. "_DAMAGE", tonumber(v) } } end
     end
     return nil
 end
@@ -166,6 +176,13 @@ local function ReadTooltipStats(link)
             stats[SCHOOL_UPPER[resName] .. "_RESISTANCE"] = tonumber(resN)
             return
         end
+        local allRes = text:match("^%+(%d+) All Resistances$")
+        if allRes then
+            for _, school in ipairs({ "Fire", "Frost", "Nature", "Shadow", "Arcane" }) do
+                stats[SCHOOL_UPPER[school] .. "_RESISTANCE"] = tonumber(allRes)
+            end
+            return
+        end
         local bonusArmor = text:match("^%+(%d+) Armor$")
         if bonusArmor then stats.BONUS_ARMOR = tonumber(bonusArmor) return end
         local armor = text:match("^(%d+) Armor$")
@@ -177,8 +194,8 @@ local function ReadTooltipStats(link)
         if lo then stats.WEAPON_DAMAGE = lo .. " - " .. hi .. " Damage" return end
         local lo2, hi2, school = text:match("^(%d+) %- (%d+) (%a+) Damage$")
         if lo2 then
-            stats.WEAPON_DAMAGE = lo2 .. " - " .. hi2 .. " Damage"
-            notes[#notes + 1] = "weapon damage is " .. school .. " damage (stored without the school)"
+            -- The database keeps the school ("30 - 57 Shadow Damage") for wands/scepters.
+            stats.WEAPON_DAMAGE = lo2 .. " - " .. hi2 .. " " .. school .. " Damage"
             return
         end
         local single = text:match("^(%d+) Damage$")
@@ -190,9 +207,9 @@ local function ReadTooltipStats(link)
 
         local equip = text:match("^Equip: (.+)$")
         if equip then
-            local key, value = ParseEquipText(equip)
-            if key then
-                stats[key] = value
+            local parsed = ParseEquipText(equip)
+            if parsed then
+                for _, kv in ipairs(parsed) do stats[kv[1]] = kv[2] end
             else
                 equipN = equipN + 1
                 stats["EQUIP_" .. equipN] = equip
@@ -227,6 +244,13 @@ local function ReadTooltipStats(link)
         Fragment(right and right:GetText())
     end
 
+    -- Green "+N Armor" is part of the item's armor; the database stores the total.
+    if stats.BONUS_ARMOR then
+        stats.ARMOR = (stats.ARMOR or 0) + stats.BONUS_ARMOR
+        notes[#notes + 1] = "armor total includes +" .. stats.BONUS_ARMOR .. " bonus armor"
+        stats.BONUS_ARMOR = nil
+    end
+
     return stats, notes, classes
 end
 
@@ -250,7 +274,16 @@ function EverGear:BuildLiveItemRecord(link)
     local name, _, _, ilvl, minLevel = GetFullInfo(link)
     if not name then return nil end  -- not cached yet; the next hover will have it
 
-    local record = { id = itemId, name = name, slot = slot, ilvl = ilvl, minLevel = minLevel, confirmed = true }
+    -- Quest rewards report a required level of 0 (sometimes 1): the item itself has no
+    -- minimum, the quest does. The database prefers the quest's level, which the tooltip
+    -- can't tell us -- so leave it empty here, never report it as a mismatch, and flag it
+    -- in the capture so the quest level gets filled in.
+    local itemMinLevel = (minLevel and minLevel > 1) and minLevel or nil
+    local record = { id = itemId, name = name, slot = slot, ilvl = ilvl, minLevel = itemMinLevel, confirmed = true }
+    local notes = {}
+    if not itemMinLevel then
+        notes[#notes + 1] = "game minimum level is " .. tostring(minLevel) .. " (likely a quest reward) - minLevel left empty; needs the quest's level"
+    end
 
     if classID == 4 then
         if equipLoc == "INVTYPE_SHIELD" then
@@ -268,7 +301,8 @@ function EverGear:BuildLiveItemRecord(link)
         end
     end
 
-    local stats, notes, classes = ReadTooltipStats(link)
+    local stats, tooltipNotes, classes = ReadTooltipStats(link)
+    for _, n in ipairs(tooltipNotes) do notes[#notes + 1] = n end
     record.stats = stats
     record.classes = classes
     return record, nil, notes
@@ -285,8 +319,9 @@ local function NormalizeForCompare(stats)
         if type(value) == "number" then
             out[key] = value
         elseif type(value) == "string" and key:match("^EQUIP_%d+$") then
-            local k, v = ParseEquipText(value)
-            if k and out[k] == nil then out[k] = v end
+            for _, kv in ipairs(ParseEquipText(value) or {}) do
+                if out[kv[1]] == nil then out[kv[1]] = kv[2] end
+            end
         end
     end
     if out.SPELL_POWER then
@@ -307,7 +342,8 @@ end
 function EverGear:CompareLiveToDatabase(live, db)
     local diffs = {}
     for _, field in ipairs({ "slot", "armorType", "weaponType", "isTwoHand", "minLevel" }) do
-        if live[field] ~= db[field] and not (live[field] == nil and db[field] == nil) then
+        local skip = (field == "minLevel" and live.minLevel == nil)  -- see BuildLiveItemRecord
+        if not skip and live[field] ~= db[field] and not (live[field] == nil and db[field] == nil) then
             diffs[#diffs + 1] = string.format("%s: addon %s, game %s", field, tostring(db[field]), tostring(live[field]))
         end
     end
