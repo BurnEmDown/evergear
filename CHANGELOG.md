@@ -5,6 +5,18 @@ patch digit (`0.0.X`) bumps on every shipped change, no matter how small.
 Moving to `0.1.0` or `1.0.0` is a deliberate decision, not a patch-count
 milestone -- see the "Versioning" section of `README.md`.
 
+## [0.0.25] - 2026-10-06
+
+### Added
+- Zephras Isle: 39 quest-reward items from the zone's 16 gear-reward
+  quests (levels 1-11), including Watcher's Mail Chest, Flutterfly
+  Swatter, Planting Shovel and Windshaped Shield. Horde-only rewards
+  (To Valanaar, A Firm Response, Meddlesome Mages) and the Alliance-only
+  Dowsing Rod (A Magical Affront) are only suggested to that faction.
+  Idol of Shifting Tides and Totem of Charged Flames are limited to
+  Druids and Shamans. All are sourced from wowseer.gg and foreverdb.net
+  and not yet checked in-game, so `/eg debug` captures are welcome.
+
 ## [0.0.24] - 2026-10-06
 
 ### Fixed

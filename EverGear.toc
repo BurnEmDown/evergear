@@ -52,3 +52,4 @@ Data\Items_RedridgeMountains.lua
 Data\Items_Teldrassil.lua
 Data\Items_DunMorogh.lua
 Data\Items_TirisfalGlades.lua
+Data\Items_ZephrasIsle.lua
