@@ -5,6 +5,27 @@ patch digit (`0.0.X`) bumps on every shipped change, no matter how small.
 Moving to `0.1.0` or `1.0.0` is a deliberate decision, not a patch-count
 milestone -- see the "Versioning" section of `README.md`.
 
+## [0.0.26] - 2026-10-06
+
+### Added
+- Resilient Bands, Yorgen Bracers, Holy Shroud (world drops).
+- Northshire Hammer (Rare Books) and Apprentice Wizard's Gown
+  (WANTED: "Hogger"), Elwynn Forest.
+- Silk Mantle of Gamn (Uncovering the Past) and Malignant Root (turning
+  in Rotheap Innards to Rethiel the Greenwarden), Wetlands.
+- Steadfast Cinch (Escape Through Force), Darkshore.
+- Skycaller's Leather Belt (Leatherworking) and Crimson Silk Belt
+  (Tailoring).
+
+### Fixed
+- Compact Hammer was missing its weapon damage and speed, so its damage
+  counted for nothing.
+- Wind Spirit Staff had the wrong damage (76-115 instead of 56-85) and
+  was missing its +23 spell damage and +71 healing.
+- 65 armor pieces in Darkshore, Teldrassil, Loch Modan and Silverpine
+  Forest were marked as one-handed weapons, which made debug mode flag
+  them (e.g. Ridgeback Bracers, Hammerfist Gloves).
+
 ## [0.0.25] - 2026-10-06
 
 ### Added
