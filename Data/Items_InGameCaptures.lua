@@ -221,6 +221,9 @@ EverGear.Items[15969] = {id = 15969, name = "Beaded Orb of Shadow Wrath", slot =
 EverGear.Items[2079] = {id = 2079, name = "Sergeant's Warhammer of Healing", slot = "MainHandSlot", armorType = nil, weaponType = "mace", isTwoHand = false, classes = nil, ilvl = 17, minLevel = 12, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {INTELLECT = 2, SPELL_DAMAGE = 6, SPELL_HEALING = 18, WEAPON_DAMAGE = "8 - 16 Damage", WEAPON_DPS = 5.7, WEAPON_SPEED = 2.1}}
 EverGear.Items[252520] = {id = 252520, name = "Skulker's Leather Belt", slot = "WaistSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 35, minLevel = 30, confirmed = true, bindType = "BoP", source = {type = "craft", profession = "Leatherworking"}, stats = {AGILITY = 9, ARMOR = 63, SPIRIT = 4, STAMINA = 6, STRENGTH = 6}}
 EverGear.Items[252523] = {id = 252523, name = "Mender's Leather Belt", slot = "WaistSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 35, minLevel = 30, confirmed = true, bindType = "BoP", source = {type = "craft", profession = "Leatherworking"}, stats = {ARMOR = 63, INTELLECT = 6, SPELL_DAMAGE = 6, SPELL_HEALING = 19, SPIRIT = 6, STAMINA = 4}}
+EverGear.Items[270033] = {id = 270033, name = "Demonhide Bracers", slot = "WristSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 27, minLevel = nil, confirmed = true, bindType = nil, source = {type = "quest", zone = "Redridge Mountains", quest = "Morganth", faction = "Alliance"}, stats = {AGILITY = 4, ARMOR = 39, STRENGTH = 3}}
+EverGear.Items[277218] = {id = 277218, name = "Incinerator's Boots", slot = "FeetSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 28, minLevel = nil, confirmed = true, bindType = nil, source = {type = "quest", zone = "Redridge Mountains", quest = "WANTED: Incinerator Gar'im", faction = "Alliance"}, stats = {ARMOR = 29, INTELLECT = 6, STAMINA = 3}}
+EverGear.Items[277226] = {id = 277226, name = "Disjointed Shoes", slot = "FeetSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 28, minLevel = nil, confirmed = true, bindType = nil, source = {type = "quest", zone = "Redridge Mountains", quest = "WANTED: Incinerator Gar'im", faction = "Alliance"}, stats = {ARMOR = 62, ATTACK_POWER = 12, SPELL_POWER = 5}}
 EverGear.Items[3184] = {id = 3184, name = "Hook Dagger of Strength", slot = "MainHandSlot", armorType = nil, weaponType = "dagger", isTwoHand = false, classes = nil, ilvl = 20, minLevel = 15, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {STRENGTH = 3, WEAPON_DAMAGE = "10 - 20 Damage", WEAPON_DPS = 10, WEAPON_SPEED = 1.5}}
 EverGear.Items[3192] = {id = 3192, name = "Short Bastard Sword of Agility", slot = "MainHandSlot", armorType = nil, weaponType = "sword", isTwoHand = true, classes = nil, ilvl = 12, minLevel = 7, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {AGILITY = 2, WEAPON_DAMAGE = "20 - 30 Damage", WEAPON_DPS = 8.3, WEAPON_SPEED = 3}}
 EverGear.Items[4564] = {id = 4564, name = "Spiked Club of Shadow Protection", slot = "MainHandSlot", armorType = nil, weaponType = "mace", isTwoHand = true, classes = nil, ilvl = 13, minLevel = 8, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {SHADOW_RESISTANCE = 2, STAMINA = 2, WEAPON_DAMAGE = "22 - 34 Damage", WEAPON_DPS = 9, WEAPON_SPEED = 3.1}}
@@ -327,6 +330,8 @@ EverGear.Items[9678] = {id = 9678, name = "Tok'kar's Murloc Basher", slot = "Mai
 EverGear.Items[9679] = {id = 9679, name = "Tok'kar's Murloc Chopper", slot = "MainHandSlot", armorType = nil, weaponType = "axe", isTwoHand = true, classes = nil, ilvl = 43, minLevel = 35, confirmed = false, bindType = "BoP", source = {type = "quest", zone = "Swamp of Sorrows", quest = "Threat From the Sea", faction = "Horde"}, stats = {STRENGTH = 15, STAMINA = 6, WEAPON_DAMAGE = "83 - 125 Damage", WEAPON_SPEED = 3.2, WEAPON_DPS = 32.5}}
 EverGear.Items[9680] = {id = 9680, name = "Tok'kar's Murloc Shanker", slot = "MainHandSlot", armorType = nil, weaponType = "dagger", isTwoHand = false, classes = nil, ilvl = 43, minLevel = 35, confirmed = false, bindType = "BoP", source = {type = "quest", zone = "Swamp of Sorrows", quest = "Threat From the Sea", faction = "Horde"}, stats = {AGILITY = 6, STAMINA = 3, WEAPON_DAMAGE = "28 - 52 Damage", WEAPON_SPEED = 1.6, WEAPON_DPS = 25.0}}
 EverGear.Items[9682] = {id = 9682, name = "Leather Chef's Belt", slot = "WaistSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 44, minLevel = 35, confirmed = false, bindType = "BoP", source = {type = "quest", zone = "Swamp of Sorrows", quest = "Fresh Meat", faction = "Horde"}, stats = {ARMOR = 67, STAMINA = 3, INTELLECT = 12}}
+EverGear.Items[5274] = {id = 5274, name = "Rose Mantle", slot = "ShoulderSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 27, minLevel = nil, confirmed = false, bindType = "BoP", source = {type = "quest", zone = "Redridge Mountains", quest = "Morganth", faction = "Alliance"}, stats = {INTELLECT = 5, ARMOR = 30, SPELL_POWER = 5}}
+EverGear.Items[270034] = {id = 270034, name = "Shadow Gauntlets", slot = "HandsSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 27, minLevel = nil, confirmed = false, bindType = "BoP", source = {type = "quest", zone = "Redridge Mountains", quest = "Morganth", faction = "Alliance"}, stats = {STRENGTH = 5, STAMINA = 4, ARMOR = 118}}
 
 -- Held back (no known source yet); used by debug mode only.
 EverGear.PendingItems = EverGear.PendingItems or {}
@@ -417,12 +422,9 @@ EverGear.PendingItems[263402] = "Sash of Sorrow"
 EverGear.PendingItems[263404] = "Bow of Hours"
 EverGear.PendingItems[263406] = "Empyrean Shoes"
 EverGear.PendingItems[270006] = "Boots of the People's Militia"
-EverGear.PendingItems[270033] = "Demonhide Bracers"
 EverGear.PendingItems[270060] = "Excavator Gauntlets"
 EverGear.PendingItems[2721] = "Holy Shroud"
 EverGear.PendingItems[276685] = "Militia Bow"
-EverGear.PendingItems[277218] = "Incinerator's Boots"
-EverGear.PendingItems[277226] = "Disjointed Shoes"
 EverGear.PendingItems[281314] = "Subdued Dragon's Fang"
 EverGear.PendingItems[286750] = "Wisesight Wand"
 EverGear.PendingItems[286977] = "Sword of the Fallen"
