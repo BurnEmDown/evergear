@@ -33,10 +33,13 @@ EverGear.VERSION = "0.0.26"
 --                                -- Forever's own custom items (id >= 200000) are NOT assumed
 --                                -- and stay nil until verified in-game.
 --   source = {
---     type = "dungeonDrop",     -- worldDrop | dungeonDrop | raidDrop | quest | vendor | craft
+--     type = "dungeonDrop",     -- worldDrop | dungeonDrop | raidDrop | quest | vendor | craft | special
 --     zone = "The Stockade",
 --     boss = "Hamhock",         -- present for dungeonDrop/raidDrop
 --     quest = "Quest Title",    -- present for quest
+--     npc = "Mother Fang",      -- optional, worldDrop: the one mob (often a rare) it drops from
+--     name = "Kat Sampson",     -- vendor: who sells it
+--     note = "Blade of Silverlaine + Scroll of the Saber", -- special: how to get it
 --     chance = 0.18,            -- optional, 0-1
 --   },
 --   stats = {
@@ -113,6 +116,7 @@ EverGear.SOURCE_TYPE_FILTERS = {
     { key = "craft",       label = "Craft" },
     { key = "worldDrop",   label = "World Drop" },
     { key = "dungeonDrop", label = "Dungeon Drop" },
+    { key = "special",     label = "Special" },
 }
 
 -- Every weapon/shield subtype the backend's converter can tag an item with

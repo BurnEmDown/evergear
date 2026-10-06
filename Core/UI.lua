@@ -559,9 +559,9 @@ for _, entry in ipairs(EverGear.SOURCE_TYPE_FILTERS) do
 end
 
 -- Filter layout: two fixed centered rows. Row 1 is Quest/Vendor/Craft (the
--- first 3 entries in SOURCE_TYPE_FILTERS), row 2 is World Drop/Dungeon Drop
--- (the last 2) -- each row centers independently rather than sharing one
--- grid, since row 2 only has 2 items. The window no longer resizes, so this
+-- first 3 entries in SOURCE_TYPE_FILTERS), row 2 is World Drop/Dungeon Drop/
+-- Special (the rest) -- each row centers independently rather than sharing
+-- one grid, in case the rows ever differ in length. The window no longer resizes, so this
 -- doesn't need to be recalculated dynamically, but it's still driven off
 -- mainFrame's actual width rather than a hardcoded number.
 local FILTER_SLOT_WIDTH = 92
