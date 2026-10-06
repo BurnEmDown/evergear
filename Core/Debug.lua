@@ -415,6 +415,7 @@ end
 
 -- ===== The window =====
 
+local debugPendingCheck
 local debugFrame, nameText, statusText, diffText, sourceBox, captureButton, countText
 local exportPopup, exportEditBox
 local current  -- { record, status, diffs, notes, addonStats }
@@ -547,6 +548,26 @@ local function BuildWindow()
         RefreshCaptureUI()
     end)
 
+    -- Items that are in the backend DB but held back from the addon (no source yet).
+    local pendingCheck = CreateFrame("CheckButton", nil, debugFrame, "UICheckButtonTemplate")
+    pendingCheck:SetSize(22, 22)
+    pendingCheck:SetPoint("TOPLEFT", 112, -12)
+    pendingCheck:SetChecked(EverGearDB.debugShowPending ~= false)
+    pendingCheck:SetScript("OnClick", function(self)
+        EverGearDB.debugShowPending = self:GetChecked() and true or false
+    end)
+    pendingCheck.text = pendingCheck:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    pendingCheck.text:SetPoint("LEFT", pendingCheck, "RIGHT", 0, 1)
+    pendingCheck.text:SetText("Show pending")
+    pendingCheck.text:SetTextColor(unpack(PARCHMENT))
+    pendingCheck:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText("Show items that are in the database but not shipped in the addon yet (no known source)", 1, 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    pendingCheck:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    debugPendingCheck = pendingCheck
+
     countText = debugFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     countText:SetPoint("TOPRIGHT", close, "TOPLEFT", -4, -8)
     countText:SetTextColor(unpack(GOLD))
@@ -623,9 +644,14 @@ local function ShowFlaggedItem(record, status, diffs, notes, addonStats)
     nameText:SetText(record.name .. "  |cff888888(id " .. record.id .. ")|r")
     nameText:SetTextColor(r, g, b)
 
-    if status == "missing" then
-        statusText:SetText("NOT IN ADDON")
-        statusText:SetTextColor(unpack(RED))
+    if status == "missing" or status == "pending" then
+        if status == "pending" then
+            statusText:SetText("IN DB, MISSING SOME STATS (no source yet - not in addon)")
+            statusText:SetTextColor(unpack(ORANGE))
+        else
+            statusText:SetText("NOT IN ADDON")
+            statusText:SetTextColor(unpack(RED))
+        end
         local keys = {}
         for k, v in pairs(record.stats) do
             keys[#keys + 1] = k .. " = " .. tostring(v)
@@ -660,6 +686,13 @@ local function OnItemTooltip(tooltip)
     if not record then return end
 
     local dbItem = EverGear:GetItem(record.id)
+    if not dbItem and EverGear.PendingItems and EverGear.PendingItems[record.id] then
+        -- In the backend DB, deliberately not shipped yet. Popup is optional.
+        if EverGearDB.debugShowPending ~= false then
+            ShowFlaggedItem(record, "pending", nil, notes, nil)
+        end
+        return
+    end
     if not dbItem then
         ShowFlaggedItem(record, "missing", nil, notes, nil)
         return
@@ -695,6 +728,11 @@ function EverGear:HandleDebugCommand(arg)
     if arg == "export" then
         if not debugFrame then BuildWindow() end
         ShowExport()
+        return
+    elseif arg == "pending" then
+        EverGearDB.debugShowPending = (EverGearDB.debugShowPending == false)
+        if debugPendingCheck then debugPendingCheck:SetChecked(EverGearDB.debugShowPending) end
+        print("|cff33ff99EverGear|r debug: pending-source items popups " .. (EverGearDB.debugShowPending and "|cff00ff00ON|r" or "|cffff4040OFF|r"))
         return
     elseif arg == "clear" then
         EverGearDB.debugCaptures = {}
