@@ -242,6 +242,10 @@ EverGear.Items[9803] = {id = 9803, name = "Superior Bracers of the Gorilla", slo
 EverGear.Items[9814] = {id = 9814, name = "Fortified Belt of the Bear", slot = "WaistSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 24, minLevel = 19, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 101, STAMINA = 4, STRENGTH = 4}}
 EverGear.Items[9836] = {id = 9836, name = "Banded Armor of the Tiger", slot = "ChestSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 28, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {AGILITY = 9, ARMOR = 207, STRENGTH = 9}}
 EverGear.Items[9860] = {id = 9860, name = "Archer's Cloak of the Tiger", slot = "BackSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 34, minLevel = 29, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {AGILITY = 5, ARMOR = 23, STRENGTH = 5}}
+EverGear.Items[14123] = {id = 14123, name = "Ritual Cape of Healing", slot = "BackSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 17, minLevel = 12, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 15, SPELL_DAMAGE = 2, SPELL_HEALING = 7}}
+EverGear.Items[14168] = {id = 14168, name = "Buccaneer's Gloves of the Owl", slot = "HandsSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 20, minLevel = 15, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 21, INTELLECT = 3, SPIRIT = 3}}
+EverGear.Items[15211] = {id = 15211, name = "Militant Shortsword of Power", slot = "MainHandSlot", armorType = nil, weaponType = "sword", isTwoHand = false, classes = nil, ilvl = 22, minLevel = 17, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ATTACK_POWER = 6, WEAPON_DAMAGE = "19 - 36 Damage", WEAPON_DPS = 11, WEAPON_SPEED = 2.5}}
+EverGear.Items[6580] = {id = 6580, name = "Defender Tunic of Strength", slot = "ChestSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 23, minLevel = 18, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 177, STRENGTH = 8}}
 
 -- Held back (no known source yet); used by debug mode only.
 EverGear.PendingItems = EverGear.PendingItems or {}
@@ -411,3 +415,4 @@ EverGear.PendingItems[13108] = "Tigerstrike Mantle"
 EverGear.PendingItems[2059] = "Sentry Cloak"
 EverGear.PendingItems[2565] = "Rod of Molten Fire"
 EverGear.PendingItems[2879] = "Antipodean Rod"
+EverGear.PendingItems[12054] = "Demon Band"
