@@ -1,0 +1,13 @@
+-- GENERATED FILE. Do not hand-edit.
+-- Produced by evergear-backend/scripts/json_to_lua.py from imported/processed/class-quests.json (+ manual/class-quests.json overrides).
+-- Regenerate instead of editing this file directly.
+
+EverGear = EverGear or {}
+EverGear.Items = EverGear.Items or {}
+
+EverGear.Items[277210] = {id = 277210, name = "Pyrewood Signet Ring", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = {"ROGUE"}, ilvl = 25, minLevel = 23, confirmed = true, bindType = "BoP", source = {type = "quest", quest = "The Horn of Xelthos"}, stats = {AGILITY = 4, HIT_CHANCE = 0.4, STAMINA = 4}}
+EverGear.Items[6975] = {id = 6975, name = "Whirlwind Axe", slot = "MainHandSlot", armorType = nil, weaponType = "axe", isTwoHand = true, classes = {"WARRIOR"}, ilvl = 40, minLevel = 30, confirmed = true, bindType = "BoP", source = {type = "quest", quest = "Whirlwind Weapon"}, stats = {STAMINA = 14, STRENGTH = 15, WEAPON_DAMAGE = "102 - 154 Damage", WEAPON_DPS = 35.6, WEAPON_SPEED = 3.6}}
+EverGear.Items[7298] = {id = 7298, name = "Blade of Cunning", slot = "MainHandSlot", armorType = nil, weaponType = "dagger", isTwoHand = false, classes = {"ROGUE"}, ilvl = 13, minLevel = 10, confirmed = true, bindType = "BoP", source = {type = "quest", quest = "Snatch and Grab", questByFaction = {Alliance = "Snatch and Grab", Horde = "The Shattered Hand"}}, stats = {AGILITY = 2, WEAPON_DAMAGE = "9 - 18 Damage", WEAPON_DPS = 6.7, WEAPON_SPEED = 2}}
+EverGear.Items[7511] = {id = 7511, name = "Astral Knot Robe", slot = "ChestSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = {"MAGE"}, ilvl = 31, minLevel = 26, confirmed = true, bindType = "BoP", source = {type = "quest", quest = "Astral Knot Garment", faction = "Alliance"}, stats = {ARMOR = 44, INTELLECT = 6, SPIRIT = 6, STAMINA = 6}}
+EverGear.Items[9607] = {id = 9607, name = "Bastion of Stormwind", slot = "SecondaryHandSlot", armorType = nil, weaponType = "shield", isTwoHand = nil, classes = {"PALADIN"}, ilvl = 25, minLevel = 20, confirmed = true, bindType = "BoP", source = {type = "quest", quest = "The Tome of Valor", faction = "Alliance"}, stats = {ARMOR = 495, BLOCK_VALUE = 9, DEFENSE = 3}}
+EverGear.Items[277205] = {id = 277205, name = "Cloak of the Divine Storm", slot = "BackSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = {"PALADIN"}, ilvl = 35, minLevel = 30, confirmed = true, bindType = "BoP", source = {type = "quest", quest = "Return to Delgren", faction = "Alliance"}, stats = {ARMOR = 26, HOLY_DAMAGE = 8, STAMINA = 5, STRENGTH = 5}}

@@ -1390,7 +1390,16 @@ function EverGear:GetSourceSummary(item)
     elseif source.type == "vendor" then
         return "Vendor" .. (source.name and (": " .. source.name) or "")
     elseif source.type == "worldDrop" then
-        return "World Drop" .. (source.zone and (" - " .. source.zone) or "")
+        -- A drop from one named mob (often a rare) names it after the zone:
+        -- "World Drop - Teldrassil (Nightscreech)".
+        local where = source.zone and (" - " .. source.zone) or ""
+        if source.npc then where = where .. " (" .. source.npc .. ")" end
+        return "World Drop" .. where
+    elseif source.type == "special" then
+        -- Not a plain drop/quest/vendor/craft (e.g. made by combining other
+        -- items) -- the note says how, in the same "Zone (...)" shape.
+        local what = "Special" .. (source.note and (": " .. source.note) or "")
+        return source.zone and (source.zone .. " (" .. what .. ")") or what
     elseif source.type == "craft" then
         return "Crafted" .. (source.profession and (" (" .. source.profession .. ")") or "")
     end
