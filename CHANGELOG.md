@@ -17,6 +17,14 @@ milestone -- see the "Versioning" section of `README.md`.
   Druids and Shamans. All are sourced from wowseer.gg and foreverdb.net
   and not yet checked in-game, so `/eg debug` captures are welcome.
 
+### Removed
+- 63 random-suffix items ("of the Eagle", "of the Tiger", "of Spirit",
+  ...), e.g. Ivycloth Bracelets of the Eagle and Splitting Hatchet of
+  the Owl. Every suffix of an item shares one item id but gives
+  different stats, so EverGear can't tell which one a player has and
+  was suggesting the wrong stats. They're kept aside to be added back
+  once suffixes are supported.
+
 ## [0.0.24] - 2026-10-06
 
 ### Fixed
