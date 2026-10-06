@@ -113,6 +113,7 @@ local function ParseEquipText(text)
     v = t:match("^increases damage and healing done by magical spells and effects by up to (%d+)%.?$")
     if v then return { { "SPELL_POWER", tonumber(v) } } end
     v = t:match("^increases healing done by spells and effects by up to (%d+)%.?$")
+        or t:match("^increases healing done by magical spells and effects by up to (%d+)%.?$")
     if v then return { { "SPELL_HEALING", tonumber(v) } } end
     v = t:match("^increases attack power by (%d+)%.?$") or t:match("^%+(%d+) attack power%.?$")
     if v then return { { "ATTACK_POWER", tonumber(v) } } end
