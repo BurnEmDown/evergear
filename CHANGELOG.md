@@ -25,6 +25,12 @@ milestone -- see the "Versioning" section of `README.md`.
   was suggesting the wrong stats. They're kept aside to be added back
   once suffixes are supported.
 
+### Fixed
+- Debug mode now ignores random-suffix items. It was still flagging them
+  as missing, because WoW Forever's item links don't always carry the
+  suffix. An item whose own name contains "of ..." (a quest item like
+  "... of Ganm") is still checked as usual.
+
 ## [0.0.24] - 2026-10-06
 
 ### Fixed

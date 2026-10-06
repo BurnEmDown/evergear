@@ -17,7 +17,9 @@
 --           /eg debug clear      forget all captures
 --
 -- Items with a random suffix ("of the Monkey", ...) are skipped: their tooltip stats
--- belong to that one roll, not to the base item the database describes.
+-- belong to that one roll, not to the base item the database describes. They're spotted
+-- by the link's suffixId, by Data\RandomSuffixItems.lua, or by the link's name being the
+-- base item's name plus " of ..." (see BuildLiveItemRecord).
 
 EverGear = EverGear or {}
 
@@ -275,9 +277,18 @@ function EverGear:BuildLiveItemRecord(link)
         local suffix = tonumber(fields[7] or "0") or 0
         if suffix ~= 0 then return nil, "suffix" end
     end
+    -- WoW Forever's links don't always carry that suffixId, so also skip the random-suffix
+    -- items the database deliberately leaves out (Data\RandomSuffixItems.lua)...
+    if EverGear.RandomSuffixItems and EverGear.RandomSuffixItems[itemId] then return nil, "suffix" end
 
     local name, _, quality, ilvl, minLevel = GetFullInfo(link)
-    if not name then return nil end  -- not cached yet; the next hover will have it
+    if not name then return nil, "uncached" end  -- the next hover will have it
+    -- ...and any other one: asked by id alone, the game names the base item ("Brute Sword"),
+    -- while the link names the roll ("Brute Sword of the Eagle"). A quest item whose own
+    -- name has an "of ..." in it ("... of Ganm") is named the same both ways, so it stays.
+    local baseName = GetFullInfo(itemId)
+    if not baseName then return nil, "uncached" end
+    if name ~= baseName and name:sub(1, #baseName + 4) == baseName .. " of " then return nil, "suffix" end
     -- Gray (0) and white (1) items never matter for upgrades; only flag green and better.
     if quality and quality < 2 then return nil, "lowQuality" end
 
@@ -683,7 +694,10 @@ local function OnItemTooltip(tooltip)
     lastLink = link
 
     local record, skipReason, notes = EverGear:BuildLiveItemRecord(link)
-    if not record then return end
+    if not record then
+        if skipReason == "uncached" then lastLink = nil end  -- look again on the next hover
+        return
+    end
 
     local dbItem = EverGear:GetItem(record.id)
     if not dbItem and EverGear.PendingItems and EverGear.PendingItems[record.id] then
