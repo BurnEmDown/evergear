@@ -146,6 +146,14 @@ EverGear.Items[16975] = {id = 16975, name = "Warsong Sash", slot = "WaistSlot", 
 EverGear.Items[16977] = {id = 16977, name = "Warsong Boots", slot = "FeetSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 27, minLevel = nil, confirmed = false, bindType = "BoP", source = {type = "quest", zone = "Ashenvale", quest = "Warsong Supplies", faction = "Horde"}, stats = {ARMOR = 67, AGILITY = 8, STAMINA = 6}}
 EverGear.Items[16978] = {id = 16978, name = "Warsong Gauntlets", slot = "HandsSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 27, minLevel = nil, confirmed = false, bindType = "BoP", source = {type = "quest", zone = "Ashenvale", quest = "Warsong Supplies", faction = "Horde"}, stats = {ARMOR = 130, STRENGTH = 10, STAMINA = 3}}
 EverGear.Items[16740] = {id = 16740, name = "Shredder Operating Gloves", slot = "HandsSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = 23, confirmed = false, bindType = "BoP", source = {type = "quest", zone = "Ashenvale", quest = "The Lost Pages", faction = "Horde"}, stats = {ARMOR = 52, INTELLECT = 2, STAMINA = 11}}
+EverGear.Items[14166] = {id = 14166, name = "Buccaneer's Bracers of the Eagle", slot = "WristSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 19, minLevel = 14, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 14, INTELLECT = 2, STAMINA = 2}}
+EverGear.Items[14191] = {id = 14191, name = "Raincaller Mitts of Spirit", slot = "HandsSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 30, minLevel = 25, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 27, SPIRIT = 8}}
+EverGear.Items[14195] = {id = 14195, name = "Raincaller Boots of the Channeler", slot = "FeetSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 29, minLevel = 24, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 29, SPELL_POWER = 3, SPIRIT = 3, STAMINA = 6}}
+EverGear.Items[15118] = {id = 15118, name = "Rigid Tunic of the Falcon", slot = "ChestSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 26, minLevel = 21, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {AGILITY = 6, ARMOR = 87, INTELLECT = 6}}
+EverGear.Items[15123] = {id = 15123, name = "Robust Buckler of the Champion", slot = "SecondaryHandSlot", armorType = nil, weaponType = "shield", isTwoHand = nil, classes = nil, ilvl = 28, minLevel = 23, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 545, BLOCK_VALUE = 10, DEFENSE = 1, STAMINA = 4, STRENGTH = 2}}
+EverGear.Items[15136] = {id = 15136, name = "Cutthroat's Belt of Power", slot = "WaistSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = 26, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 54, ATTACK_POWER = 18}}
+EverGear.Items[6590] = {id = 6590, name = "Battleforge Boots of the Defender", slot = "FeetSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 29, minLevel = 24, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 134, DEFENSE = 2, SPELL_POWER = 3, STAMINA = 6}}
+EverGear.Items[7416] = {id = 7416, name = "Phalanx Bracers of the Defender", slot = "WristSlot", armorType = "Mail", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = 26, confirmed = true, bindType = nil, source = {type = "worldDrop"}, stats = {ARMOR = 88, DEFENSE = 2, SPELL_POWER = 2, STAMINA = 4}}
 
 -- Held back (no known source yet); used by debug mode only.
 EverGear.PendingItems = EverGear.PendingItems or {}
@@ -154,3 +162,14 @@ EverGear.PendingItems[277210] = "Pyrewood Signet Ring"
 EverGear.PendingItems[19167] = "Blackfury"
 EverGear.PendingItems[276631] = "Coldflame Saber"
 EverGear.PendingItems[270059] = "Restorer's Fine Gloves"
+EverGear.PendingItems[13011] = "Silver-lined Belt"
+EverGear.PendingItems[14752] = "Slayer's Cape"
+EverGear.PendingItems[270039] = "Raptorclaw Shoulders"
+EverGear.PendingItems[274084] = "Quilboar Blaster"
+EverGear.PendingItems[281321] = "Giantstone Medallion"
+EverGear.PendingItems[281635] = "Philanthropist's Ring"
+EverGear.PendingItems[4835] = "Elite Shoulders"
+EverGear.PendingItems[5214] = "Wand of Eventide"
+EverGear.PendingItems[6189] = "Durable Chain Shoulders"
+EverGear.PendingItems[6400] = "Glimmering Shield"
+EverGear.PendingItems[6608] = "Bright Armor"
