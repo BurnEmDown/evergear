@@ -383,6 +383,42 @@ end
 
 setsFrame:SetScript("OnShow", RefreshSetsWindow)
 
+-- ===== Refreshing =====
+-- Kept right after the windows (before the menu, Alt-click and tooltip code
+-- below), so a client that lacks one of those can't stop open windows from
+-- updating.
+
+
+-- Changes mostly come from a dropdown click (star / Alt-click menu, set
+-- picker, slot menu), so the redraw waits one frame for that menu to finish
+-- closing; several changes in the same frame redraw once.
+local refreshQueued = false
+
+local function RefreshOpenWindows()
+    refreshQueued = false
+    if wantedFrame:IsShown() then RefreshWantedWindow() end
+    if setsFrame:IsShown() then RefreshSetsWindow() end
+    if EverGear.RefreshDetailStars then EverGear:RefreshDetailStars() end
+end
+
+function EverGear:OnWishlistChanged()
+    if refreshQueued then return end
+    refreshQueued = true
+    if C_Timer and C_Timer.After then
+        C_Timer.After(0, RefreshOpenWindows)
+    else
+        RefreshOpenWindows()
+    end
+end
+
+-- Icons and quality colors for items the client hadn't cached yet arrive later.
+local cacheWatcher = CreateFrame("Frame")
+cacheWatcher:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+cacheWatcher:SetScript("OnEvent", function()
+    if wantedFrame:IsShown() then RefreshWantedWindow() end
+    if setsFrame:IsShown() then RefreshSetsWindow() end
+end)
+
 -- ===== Popups for naming / deleting sets =====
 
 local function PopupEditBox(popup)
@@ -615,39 +651,18 @@ local function OnItemTooltip(tooltip)
     end
 end
 
-for _, tip in ipairs({ GameTooltip, ItemRefTooltip }) do
-    if tip and tip.HookScript then tip:HookScript("OnTooltipSetItem", OnItemTooltip) end
-end
-
--- ===== Opening / refreshing =====
-
-
--- Changes mostly come from a dropdown click (star / Alt-click menu, set
--- picker, slot menu), so the redraw waits one frame for that menu to finish
--- closing; several changes in the same frame redraw once.
-local refreshQueued = false
-
-local function RefreshOpenWindows()
-    refreshQueued = false
-    if wantedFrame:IsShown() then RefreshWantedWindow() end
-    if setsFrame:IsShown() then RefreshSetsWindow() end
-    if EverGear.RefreshDetailStars then EverGear:RefreshDetailStars() end
-end
-
-function EverGear:OnWishlistChanged()
-    if refreshQueued then return end
-    refreshQueued = true
-    if C_Timer and C_Timer.After then
-        C_Timer.After(0, RefreshOpenWindows)
-    else
-        RefreshOpenWindows()
+-- Same approach as Debug.lua: this client has dropped OnTooltipSetItem in
+-- favour of TooltipDataProcessor, and HookScript errors on an unknown script
+-- type (which used to stop the rest of this file from loading), so try the old
+-- hook under pcall and fall back to the new API.
+local function HookTooltipsOldStyle()
+    for _, tip in ipairs({ GameTooltip, ItemRefTooltip }) do
+        if tip and tip.HookScript then tip:HookScript("OnTooltipSetItem", OnItemTooltip) end
     end
 end
 
--- Icons and quality colors for items the client hadn't cached yet arrive later.
-local cacheWatcher = CreateFrame("Frame")
-cacheWatcher:RegisterEvent("GET_ITEM_INFO_RECEIVED")
-cacheWatcher:SetScript("OnEvent", function()
-    if wantedFrame:IsShown() then RefreshWantedWindow() end
-    if setsFrame:IsShown() then RefreshSetsWindow() end
-end)
+if not pcall(HookTooltipsOldStyle) and TooltipDataProcessor and Enum and Enum.TooltipDataType then
+    TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(tooltip)
+        if tooltip == GameTooltip or tooltip == ItemRefTooltip then OnItemTooltip(tooltip) end
+    end)
+end
