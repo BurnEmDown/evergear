@@ -1459,11 +1459,22 @@ local function CreateCornerButton(name, y, texture, title, line, onClick)
 end
 
 CreateCornerButton("EverGearWantedButton", -92, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_1",
-    "Wanted list", "Items this character wants. Add them with the star in Suggested Upgrades.",
-    function() EverGear:ToggleWantedWindow() end)
+    "Wanted list", "Items this character wants. Alt-click any item, or use the star in Suggested Upgrades, to add one.",
+    function() EverGear:OpenWishlistWindow("ToggleWantedWindow") end)
 CreateCornerButton("EverGearSetsButton", -116, "Interface\\Icons\\INV_Chest_Chain_05",
     "Gear sets", "Build gear sets for this character and see which pieces you have.",
-    function() EverGear:ToggleSetsWindow() end)
+    function() EverGear:OpenWishlistWindow("ToggleSetsWindow") end)
+
+-- WishlistUI.lua defines the toggles; if it didn't load (a client that lacks
+-- something it needs, or new files that need a full game restart to be seen),
+-- say so in chat instead of throwing a Lua error on every click.
+function EverGear:OpenWishlistWindow(toggleName)
+    if self[toggleName] then
+        self[toggleName](self)
+    else
+        print("|cff33ff99EverGear|r: the wanted list / gear sets didn't load. If you just updated EverGear, exit and restart the game (a /reload doesn't pick up new addon files).")
+    end
+end
 
 -- ===== Refresh / toggle =====
 
@@ -1596,7 +1607,7 @@ SlashCmdList["EVERGEAR"] = function(msg)
     local command = strlower(strtrim(msg or ""))
     if command == "wanted" or command == "sets" then
         if not mainFrame:IsShown() then EverGear:ToggleUI() end
-        if command == "wanted" then EverGear:ToggleWantedWindow() else EverGear:ToggleSetsWindow() end
+        EverGear:OpenWishlistWindow(command == "wanted" and "ToggleWantedWindow" or "ToggleSetsWindow")
         return
     end
     EverGear:ToggleUI()

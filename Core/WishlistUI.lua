@@ -67,6 +67,17 @@ local function ShowSideWindow(frame)
     frame:Show()
 end
 
+-- Defined this early (not with the rest of the window code below) so the
+-- main window's Wanted / Sets buttons keep working even if something further
+-- down this file fails to load in some client build.
+function EverGear:ToggleWantedWindow()
+    if wantedFrame:IsShown() then wantedFrame:Hide() else ShowSideWindow(wantedFrame) end
+end
+
+function EverGear:ToggleSetsWindow()
+    if setsFrame:IsShown() then setsFrame:Hide() else ShowSideWindow(setsFrame) end
+end
+
 -- The profile editor opens in the same spot, so it closes these two.
 if EverGearProfileEditor then
     EverGearProfileEditor:HookScript("OnShow", function()
@@ -85,11 +96,20 @@ wantedEmpty:SetWordWrap(true)
 wantedEmpty:SetTextColor(unpack(THEME.parchment))
 wantedEmpty:SetText("Nothing here yet.\n\nAlt-click any item (bags, character sheet, chat links, loot, quest rewards...) or click the star next to an item in Suggested Upgrades to add it to this character's wanted list.")
 
-local wantedScroll = CreateFrame("ScrollFrame", "EverGearWantedScroll", wantedFrame, "UIPanelScrollFrameTemplate")
+-- Plain ScrollFrame scrolled with the mouse wheel -- no Blizzard scroll-bar
+-- template, since templates can be missing from this client (see
+-- CreateItemIconFrame in UI.lua for the same reason).
+local wantedScroll = CreateFrame("ScrollFrame", "EverGearWantedScroll", wantedFrame)
 wantedScroll:SetPoint("TOPLEFT", 18, -44)
-wantedScroll:SetPoint("BOTTOMRIGHT", -36, 18)
+wantedScroll:SetPoint("BOTTOMRIGHT", -18, 18)
+wantedScroll:EnableMouseWheel(true)
+wantedScroll:SetScript("OnMouseWheel", function(self, delta)
+    local maxScroll = math.max(0, self:GetScrollChild():GetHeight() - self:GetHeight())
+    local target = self:GetVerticalScroll() - delta * WANTED_ROW_HEIGHT
+    self:SetVerticalScroll(math.min(maxScroll, math.max(0, target)))
+end)
 local wantedList = CreateFrame("Frame", nil, wantedScroll)
-wantedList:SetSize(WANTED_WIDTH - 54, 10)
+wantedList:SetSize(WANTED_WIDTH - 36, 10)
 wantedScroll:SetScrollChild(wantedList)
 
 local wantedRows = {}
@@ -108,7 +128,7 @@ end
 local function GetOrCreateWantedRow(index)
     if wantedRows[index] then return wantedRows[index] end
     local row = CreateFrame("Frame", nil, wantedList)
-    row:SetSize(WANTED_WIDTH - 54, WANTED_ROW_HEIGHT)
+    row:SetSize(WANTED_WIDTH - 36, WANTED_ROW_HEIGHT)
 
     local icon = H.CreateItemIconFrame(nil, row, 32)
     icon:SetPoint("TOPLEFT", 0, -2)
@@ -528,11 +548,29 @@ end
 -- Alt-click on any item button or link: bags, character sheet, chat, loot,
 -- quest rewards, vendors... all of them go through HandleModifiedItemClick.
 -- Shift (link to chat) and Ctrl (dressing room) keep their usual jobs.
-hooksecurefunc("HandleModifiedItemClick", function(itemLink)
+local function OnModifiedItemClick(itemLink)
     if IsAltKeyDown() and not IsShiftKeyDown() and not IsControlKeyDown() then
         EverGear:ShowItemMenu(itemLink)
     end
-end)
+end
+
+if type(HandleModifiedItemClick) == "function" then
+    hooksecurefunc("HandleModifiedItemClick", OnModifiedItemClick)
+else
+    -- Older-style clients without the shared handler: at least bags and the
+    -- character sheet (the hover key binding still covers everything else).
+    if type(ContainerFrameItemButton_OnModifiedClick) == "function" then
+        hooksecurefunc("ContainerFrameItemButton_OnModifiedClick", function(self)
+            local getLink = (C_Container and C_Container.GetContainerItemLink) or GetContainerItemLink
+            OnModifiedItemClick(getLink and getLink(self:GetParent():GetID(), self:GetID()))
+        end)
+    end
+    if type(PaperDollItemSlotButton_OnModifiedClick) == "function" then
+        hooksecurefunc("PaperDollItemSlotButton_OnModifiedClick", function(self)
+            OnModifiedItemClick(GetInventoryItemLink("player", self:GetID()))
+        end)
+    end
+end
 
 -- Key binding (Key Bindings > AddOns > EverGear, see Bindings.xml): opens the
 -- menu for whatever item the mouse is over, no click needed.
@@ -577,13 +615,6 @@ end
 
 -- ===== Opening / refreshing =====
 
-function EverGear:ToggleWantedWindow()
-    if wantedFrame:IsShown() then wantedFrame:Hide() else ShowSideWindow(wantedFrame) end
-end
-
-function EverGear:ToggleSetsWindow()
-    if setsFrame:IsShown() then setsFrame:Hide() else ShowSideWindow(setsFrame) end
-end
 
 function EverGear:OnWishlistChanged()
     if wantedFrame:IsShown() then RefreshWantedWindow() end
