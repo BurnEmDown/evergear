@@ -565,6 +565,9 @@ end
 -- doesn't need to be recalculated dynamically, but it's still driven off
 -- mainFrame's actual width rather than a hardcoded number.
 local FILTER_SLOT_WIDTH = 92
+-- The right-hand column (Craft / Special) sits a little further right so the
+-- middle column's longer label ("Dungeon Drop") doesn't run into its checkbox.
+local FILTER_LAST_COLUMN_NUDGE = 6
 local FILTER_ROW_GAP = 26
 -- -150: -104 originally, +26 to clear the new Profile dropdown row (M3),
 -- then +20 more per user feedback on that layout.
@@ -578,8 +581,9 @@ local function RepositionFilters()
         local totalWidth = #checkboxes * FILTER_SLOT_WIDTH
         local startX = (width - totalWidth) / 2
         for i, cb in ipairs(checkboxes) do
+            local nudge = (i == 3) and FILTER_LAST_COLUMN_NUDGE or 0
             cb:ClearAllPoints()
-            cb:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", startX + (i - 1) * FILTER_SLOT_WIDTH, y)
+            cb:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", startX + (i - 1) * FILTER_SLOT_WIDTH + nudge, y)
         end
     end
 
