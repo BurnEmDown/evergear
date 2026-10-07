@@ -5,6 +5,34 @@ patch digit (`0.0.X`) bumps on every shipped change, no matter how small.
 Moving to `0.1.0` or `1.0.0` is a deliberate decision, not a patch-count
 milestone -- see the "Versioning" section of `README.md`.
 
+## [0.0.27] - 2026-10-07
+
+### Added
+- 163 items that were held back for lack of a known source are now
+  suggested: 118 world drops, 34 quest rewards, 5 dungeon drops, 5 vendor
+  items and Blackfury (Blacksmithing). Class-quest rewards (e.g. Blade of
+  Cunning, Bastion of Stormwind, Whirlwind Axe) are only suggested to that
+  class.
+- 19 more items, among them the Scarlet Monastery: Library drops from
+  Arcanist Doan and Houndmaster Loksey, Golem War Cloak, Energized Stone
+  Circle, Moonlit Amice, Alterac Assassin's Gloves, Heavehammer and Fire
+  Hardened Hauberk.
+- A "Special" source type for items that aren't a plain drop, quest,
+  vendor or craft, with its own filter checkbox. First one: Coldflame Saber
+  (Blade of Silverlaine + Scroll of the Saber).
+- World drops that come from one named mob or rare now name it, e.g.
+  "World Drop - Teldrassil (Nightscreech)".
+
+### Fixed
+- Wrong or missing stats on Swampchill Fetish, Windweaver Staff, Snake Eye
+  Kaleidoscope, Yeti Fur Cloak, Consecrated Wand, Sizzle Stick, Geomancer
+  Headdress and Dwarven Defender. Swampchill Fetish and Windweaver Staff
+  are now listed as Scarlet Monastery trash outside the Graveyard.
+- Debug mode flagged items whose healing bonus is worded "Increases healing
+  done by magical spells and effects" (e.g. Death Speaker Scepter) as
+  missing that bonus in-game.
+- The "Dungeon Drop" filter label ran into the checkbox next to it.
+
 ## [0.0.26] - 2026-10-06
 
 ### Added
