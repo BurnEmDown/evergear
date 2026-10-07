@@ -54,8 +54,12 @@ update, re-run that command and update this value if it changes.
 
 ## Wanted list and gear sets
 
-Per character. Click the star next to any item in **Suggested Upgrades** to put it on
-your **wanted list** or into the matching slot of a **gear set** (or start a new set).
+Per character. **Alt-click any item** in the game (bags, character sheet, chat links,
+loot, quest rewards, vendors...), or click the star next to an item in **Suggested
+Upgrades**, to put it on your **wanted list** or into a slot of a **gear set** (or start a
+new set). There's also a key binding (Key Bindings > AddOns > EverGear) that does the same
+for whatever item you're hovering, no click needed. Gear tooltips get a line saying
+whether the item is already on your list or in a set.
 
 - **Wanted** (star button on the right edge of the main window, or `/eg wanted`): one row
   per item with its source. The check mark means "acquired", the X "no longer

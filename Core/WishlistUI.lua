@@ -1,5 +1,6 @@
 -- Windows for the per-character wanted list and gear sets (data in
--- Wishlist.lua), plus the menu behind the star on each Suggested Upgrades row.
+-- Wishlist.lua), plus the "add to..." menu behind the star on each Suggested
+-- Upgrades row, Alt-click on any item, and the hovered-item key binding.
 --
 -- Both windows open to the LEFT of the main window, the same spot as the EP
 -- profile editor, and only one of the three is shown at a time. Shared visual
@@ -82,7 +83,7 @@ wantedEmpty:SetPoint("RIGHT", -24, 0)
 wantedEmpty:SetJustifyH("LEFT")
 wantedEmpty:SetWordWrap(true)
 wantedEmpty:SetTextColor(unpack(THEME.parchment))
-wantedEmpty:SetText("Nothing here yet.\n\nClick the star next to an item in Suggested Upgrades to add it to this character's wanted list.")
+wantedEmpty:SetText("Nothing here yet.\n\nAlt-click any item (bags, character sheet, chat links, loot, quest rewards...) or click the star next to an item in Suggested Upgrades to add it to this character's wanted list.")
 
 local wantedScroll = CreateFrame("ScrollFrame", "EverGearWantedScroll", wantedFrame, "UIPanelScrollFrameTemplate")
 wantedScroll:SetPoint("TOPLEFT", 18, -44)
@@ -167,7 +168,7 @@ local function RefreshWantedWindow()
         row.nameText:SetTextColor(r, g, b)
 
         local slotName = EverGear.FRIENDLY_SLOT_NAMES[entry.slot or ""]
-        local source = item and EverGear:GetSourceSummary(item) or "Unknown source"
+        local source = item and EverGear:GetSourceSummary(item) or "Source not in EverGear's data"
         row.sourceText:SetText((slotName and (slotName .. " - ") or "") .. source)
     end
     for i = #list + 1, #wantedRows do wantedRows[i]:Hide() end
@@ -214,7 +215,7 @@ setsEmpty:SetPoint("RIGHT", -24, 0)
 setsEmpty:SetJustifyH("LEFT")
 setsEmpty:SetWordWrap(true)
 setsEmpty:SetTextColor(unpack(THEME.parchment))
-setsEmpty:SetText("No gear sets yet.\n\nClick New to create one, then use the star next to an item in Suggested Upgrades to put it in that slot of the set.")
+setsEmpty:SetText("No gear sets yet.\n\nClick New to create one, then Alt-click any item (or use the star next to an item in Suggested Upgrades) to put it in the set.")
 
 -- Paper-doll layout, same columns as the main window.
 local SET_LEFT = { "HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", "WristSlot" }
@@ -277,7 +278,7 @@ local function CreateSetSlotButton(slotToken)
             GameTooltip:AddLine("Click for options.", 0.8, 0.8, 0.8)
         else
             GameTooltip:SetText((EverGear.FRIENDLY_SLOT_NAMES[self.slotToken] or self.slotToken) .. " (empty)")
-            GameTooltip:AddLine("Use the star next to an item in Suggested Upgrades for this slot to add one.", 0.8, 0.8, 0.8, true)
+            GameTooltip:AddLine("Alt-click any item that fits this slot to add one.", 0.8, 0.8, 0.8, true)
         end
         GameTooltip:Show()
     end)
@@ -421,54 +422,157 @@ StaticPopupDialogs["EVERGEAR_DELETE_SET"] = {
     timeout = 0, whileDead = true, hideOnEscape = true,
 }
 
--- ===== Star menu on Suggested Upgrades rows =====
--- Wanted list on top, then one entry per set (ticked when this item is already
--- in that slot of the set), then "New set...".
+-- ===== "Add to..." menu =====
+-- Opened from the star on a Suggested Upgrades row, from Alt-clicking any item
+-- in the game, or from the key binding (hovered item). Wanted list on top, then
+-- the gear sets, then "New set...". An item that fits two slots (rings,
+-- trinkets, one-handed weapons) gets one entry per slot under each set.
+
+-- Real slots an item can go in, from the game's own equip location.
+local SLOTS_FOR_EQUIP_LOC = {
+    INVTYPE_HEAD = { "HeadSlot" }, INVTYPE_NECK = { "NeckSlot" }, INVTYPE_SHOULDER = { "ShoulderSlot" },
+    INVTYPE_CLOAK = { "BackSlot" }, INVTYPE_CHEST = { "ChestSlot" }, INVTYPE_ROBE = { "ChestSlot" },
+    INVTYPE_WRIST = { "WristSlot" }, INVTYPE_HAND = { "HandsSlot" }, INVTYPE_WAIST = { "WaistSlot" },
+    INVTYPE_LEGS = { "LegsSlot" }, INVTYPE_FEET = { "FeetSlot" },
+    INVTYPE_FINGER = { "Finger0Slot", "Finger1Slot" },
+    INVTYPE_TRINKET = { "Trinket0Slot", "Trinket1Slot" },
+    INVTYPE_WEAPON = { "MainHandSlot", "SecondaryHandSlot" },
+    INVTYPE_WEAPONMAINHAND = { "MainHandSlot" }, INVTYPE_2HWEAPON = { "MainHandSlot" },
+    INVTYPE_WEAPONOFFHAND = { "SecondaryHandSlot" }, INVTYPE_SHIELD = { "SecondaryHandSlot" },
+    INVTYPE_HOLDABLE = { "SecondaryHandSlot" },
+    INVTYPE_RANGED = { "RangedSlot" }, INVTYPE_RANGEDRIGHT = { "RangedSlot" },
+    INVTYPE_THROWN = { "RangedSlot" }, INVTYPE_RELIC = { "RangedSlot" },
+}
+
+local GetItemInfoInstant = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
+
+-- Item id and the slots it fits, for an item link or id; nil if it isn't gear.
+function EverGear:GetItemSlots(itemLinkOrId)
+    if not (itemLinkOrId and GetItemInfoInstant) then return nil end
+    local itemId, _, _, equipLoc = GetItemInfoInstant(itemLinkOrId)
+    local slots = equipLoc and SLOTS_FOR_EQUIP_LOC[equipLoc]
+    if not (itemId and slots) then return nil end
+    return itemId, slots
+end
 
 local starMenu = CreateFrame("Frame", "EverGearStarMenu", UIParent, "UIDropDownMenuTemplate")
 
-function EverGear:ShowStarMenu(anchor, itemId, slotToken)
+-- slotTokens: one real slot (a Suggested Upgrades row) or a list of them.
+function EverGear:ShowStarMenu(anchor, itemId, slotTokens)
+    if type(slotTokens) ~= "table" then slotTokens = { slotTokens } end
+    local multiSlot = #slotTokens > 1
+
     UIDropDownMenu_Initialize(starMenu, function()
         local info = UIDropDownMenu_CreateInfo()
+        info.text = EverGear:GetWishlistItemName(itemId)
+        info.isTitle = true
+        info.notCheckable = true
+        UIDropDownMenu_AddButton(info)
+
+        info = UIDropDownMenu_CreateInfo()
         info.text = "Wanted list"
         info.isNotRadio = true
         info.checked = EverGear:IsWanted(itemId)
         info.func = function()
-            if EverGear:IsWanted(itemId) then EverGear:RemoveWanted(itemId) else EverGear:AddWanted(itemId, slotToken) end
+            if EverGear:IsWanted(itemId) then EverGear:RemoveWanted(itemId) else EverGear:AddWanted(itemId, slotTokens[1]) end
         end
         UIDropDownMenu_AddButton(info)
 
-        local slotName = EverGear.FRIENDLY_SLOT_NAMES[slotToken] or slotToken
         info = UIDropDownMenu_CreateInfo()
-        info.text = "Gear set (" .. slotName .. " slot)"
+        if multiSlot then
+            info.text = "Gear set"
+        else
+            info.text = "Gear set (" .. (EverGear.FRIENDLY_SLOT_NAMES[slotTokens[1]] or slotTokens[1]) .. " slot)"
+        end
         info.isTitle = true
         info.notCheckable = true
         UIDropDownMenu_AddButton(info)
 
         for index, set in ipairs(EverGear:GetSets()) do
-            info = UIDropDownMenu_CreateInfo()
-            info.text = set.name
-            info.isNotRadio = true
-            info.checked = (set.slots[slotToken] == itemId)
-            info.func = function()
-                if set.slots[slotToken] == itemId then
-                    EverGear:SetSetSlot(index, slotToken, nil)
-                else
-                    EverGear:SetSetSlot(index, slotToken, itemId)
+            for _, slotToken in ipairs(slotTokens) do
+                info = UIDropDownMenu_CreateInfo()
+                info.text = multiSlot and (set.name .. " - " .. (EverGear.FRIENDLY_SLOT_NAMES[slotToken] or slotToken)) or set.name
+                info.isNotRadio = true
+                info.checked = (set.slots[slotToken] == itemId)
+                info.func = function()
+                    if set.slots[slotToken] == itemId then
+                        EverGear:SetSetSlot(index, slotToken, nil)
+                    else
+                        EverGear:SetSetSlot(index, slotToken, itemId)
+                    end
                 end
+                UIDropDownMenu_AddButton(info)
             end
-            UIDropDownMenu_AddButton(info)
         end
 
         info = UIDropDownMenu_CreateInfo()
         info.text = "New set..."
         info.notCheckable = true
         info.func = function()
-            StaticPopup_Show("EVERGEAR_NEW_SET", nil, nil, { itemId = itemId, slotToken = slotToken })
+            StaticPopup_Show("EVERGEAR_NEW_SET", nil, nil, { itemId = itemId, slotToken = slotTokens[1] })
         end
         UIDropDownMenu_AddButton(info)
     end, "MENU")
     ToggleDropDownMenu(1, nil, starMenu, anchor, 0, 0)
+end
+
+-- Menu for any item link (Alt-click, key binding), opened at the cursor.
+-- Returns false for things that can't go in a slot (potions, quest items, ...).
+function EverGear:ShowItemMenu(itemLink)
+    local itemId, slots = self:GetItemSlots(itemLink)
+    if not itemId then return false end
+    self:ShowStarMenu("cursor", itemId, slots)
+    return true
+end
+
+-- Alt-click on any item button or link: bags, character sheet, chat, loot,
+-- quest rewards, vendors... all of them go through HandleModifiedItemClick.
+-- Shift (link to chat) and Ctrl (dressing room) keep their usual jobs.
+hooksecurefunc("HandleModifiedItemClick", function(itemLink)
+    if IsAltKeyDown() and not IsShiftKeyDown() and not IsControlKeyDown() then
+        EverGear:ShowItemMenu(itemLink)
+    end
+end)
+
+-- Key binding (Key Bindings > AddOns > EverGear, see Bindings.xml): opens the
+-- menu for whatever item the mouse is over, no click needed.
+BINDING_HEADER_EVERGEAR = "EverGear"
+BINDING_NAME_EVERGEAR_HOVERED_ITEM = "Add hovered item to wanted list / set"
+
+function EverGear:ShowHoveredItemMenu()
+    for _, tip in ipairs({ GameTooltip, ItemRefTooltip }) do
+        if tip and tip:IsShown() and tip.GetItem then
+            local _, itemLink = tip:GetItem()
+            if itemLink and self:ShowItemMenu(itemLink) then return end
+        end
+    end
+end
+
+-- One line at the bottom of gear tooltips: where the item already is, or how
+-- to add it.
+local function OnItemTooltip(tooltip)
+    if not tooltip.GetItem then return end
+    local _, itemLink = tooltip:GetItem()
+    local itemId = EverGear:GetItemSlots(itemLink)
+    if not itemId then return end
+
+    local where = {}
+    if EverGear:IsWanted(itemId) then table.insert(where, "wanted") end
+    for _, set in ipairs(EverGear:GetSets()) do
+        for _, setItemId in pairs(set.slots) do
+            if setItemId == itemId then table.insert(where, set.name) break end
+        end
+    end
+    if #where > 0 then
+        local status = EverGear:IsAcquired(itemId) and " (acquired)" or ""
+        tooltip:AddLine("EverGear: " .. table.concat(where, ", ") .. status, 1.00, 0.82, 0.20)
+    else
+        tooltip:AddLine("EverGear: Alt-click to add to wanted list / set", 0.55, 0.55, 0.55)
+    end
+end
+
+for _, tip in ipairs({ GameTooltip, ItemRefTooltip }) do
+    if tip and tip.HookScript then tip:HookScript("OnTooltipSetItem", OnItemTooltip) end
 end
 
 -- ===== Opening / refreshing =====
