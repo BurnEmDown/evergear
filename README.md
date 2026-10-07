@@ -61,11 +61,11 @@ new set). There's also a key binding (Key Bindings > AddOns > EverGear) that doe
 for whatever item you're hovering, no click needed. Gear tooltips get a line saying
 whether the item is already on your list or in a set.
 
-- **Wanted** (star button on the right edge of the main window, or `/eg wanted`): one row
+- **Wanted** (star button in the top-left corner of the main window, or `/eg wanted`): one row
   per item with its source. The check mark means "acquired", the X "no longer
   interested"; both take it off the list. When a wanted item shows up in your bags or is
   equipped, EverGear removes it by itself and says so in chat.
-- **Gear sets** (`/eg sets`): pick a set at the top, create, rename or delete sets. The set
+- **Gear sets** (chest button below it, or `/eg sets`): pick a set at the top, create, rename or delete sets. The set
   is shown as a paper doll; owned pieces get a tick, missing ones are greyed out, and the
   header counts them ("5/9 acquired"). Click a piece to tick or untick it by hand, or to
   take it out of the set.

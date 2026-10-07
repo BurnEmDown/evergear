@@ -1439,16 +1439,17 @@ professionFilterButton:SetScript("OnClick", function()
 end)
 
 -- ===== Wanted list / gear sets buttons =====
--- Same corner-icon column as the two filter buttons above; the windows
--- themselves are in WishlistUI.lua.
+-- Top-LEFT corner, at the same heights as the weapon / profession filter
+-- buttons on the right: the windows they open sit on the left of the main
+-- window too (WishlistUI.lua), so each button is on the side its window opens.
 local function CreateCornerButton(name, y, texture, title, line, onClick)
     local b = CreateFrame("Button", name, mainFrame)
     b:SetSize(20, 20)
-    b:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, y)
+    b:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 16, y)
     b:SetNormalTexture(texture)
     b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
     b:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(title)
         GameTooltip:AddLine(line, 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
@@ -1458,10 +1459,10 @@ local function CreateCornerButton(name, y, texture, title, line, onClick)
     return b
 end
 
-CreateCornerButton("EverGearWantedButton", -92, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_1",
+CreateCornerButton("EverGearWantedButton", -44, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_1",
     "Wanted list", "Items this character wants. Alt-click any item, or use the star in Suggested Upgrades, to add one.",
     function() EverGear:OpenWishlistWindow("ToggleWantedWindow") end)
-CreateCornerButton("EverGearSetsButton", -116, "Interface\\Icons\\INV_Chest_Chain_05",
+CreateCornerButton("EverGearSetsButton", -68, "Interface\\Icons\\INV_Chest_Chain_05",
     "Gear sets", "Build gear sets for this character and see which pieces you have.",
     function() EverGear:OpenWishlistWindow("ToggleSetsWindow") end)
 
