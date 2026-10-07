@@ -180,6 +180,8 @@ end)
 -- in case that ever isn't true.
 mainFrame:SetScript("OnHide", function()
     if EverGearProfileEditor then EverGearProfileEditor:Hide() end
+    if EverGearWantedFrame then EverGearWantedFrame:Hide() end
+    if EverGearSetsFrame then EverGearSetsFrame:Hide() end
 end)
 mainFrame:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
@@ -901,9 +903,28 @@ local function GetOrCreateDetailRow(index)
     icon:SetScript("OnLeave", function() GameTooltip:Hide() end)
     row.icon = icon
 
+    -- Star: add this item to the wanted list or a gear set (menu in
+    -- WishlistUI.lua). Bright when the item is already on either, dim when not.
+    local star = CreateFrame("Button", nil, row)
+    star:SetSize(16, 16)
+    star:SetPoint("TOPRIGHT", 0, 0)
+    star:SetNormalTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_1")
+    star:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+    star:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText("Want this")
+        GameTooltip:AddLine("Add it to your wanted list or a gear set.", 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    star:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    star:SetScript("OnClick", function(self)
+        if row.itemId then EverGear:ShowStarMenu(self, row.itemId, row.slotToken) end
+    end)
+    row.star = star
+
     local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     nameText:SetPoint("TOPLEFT", icon, "TOPRIGHT", 8, -2)
-    nameText:SetPoint("RIGHT", 0, 0)
+    nameText:SetPoint("RIGHT", star, "LEFT", -4, 0)
     nameText:SetJustifyH("LEFT")
     nameText:SetWordWrap(true)
     row.nameText = nameText
@@ -949,6 +970,31 @@ local function SafeGetItemIcon(itemId)
         return GetItemIcon(itemId)
     end
     return nil
+end
+
+-- Shared with WishlistUI.lua so its windows look the same as this one.
+EverGear.UIHelpers = {
+    THEME = THEME,
+    CreateItemIconFrame = CreateItemIconFrame,
+    SetIconTexture = SetIconTexture,
+    GetQualityColor = GetQualityColor,
+    SafeGetItemInfo = SafeGetItemInfo,
+    SafeGetItemIcon = SafeGetItemIcon,
+    BuildItemLink = BuildItemLink,
+}
+
+local function UpdateStar(row)
+    local tracked = row.itemId and EverGear:IsTracked(row.itemId)
+    local texture = row.star:GetNormalTexture()
+    texture:SetDesaturated(not tracked)
+    texture:SetAlpha(tracked and 1 or 0.45)
+end
+
+-- Called by WishlistUI.lua whenever the wanted list or a set changes.
+function EverGear:RefreshDetailStars()
+    for _, row in ipairs(detailRows) do
+        if row:IsShown() then UpdateStar(row) end
+    end
 end
 
 -- Exposed so Core/ProfileEditor.lua can hide a stale detail panel when IT
@@ -997,6 +1043,9 @@ function EverGear:ShowUpgradeDetail(slotToken)
             row:Show()
 
             local itemLink = BuildItemLink(candidate.item.id)
+            row.itemId = candidate.item.id
+            row.slotToken = slotToken
+            UpdateStar(row)
             SetIconTexture(row.icon, SafeGetItemIcon(candidate.item.id) or "Interface\\Icons\\INV_Misc_QuestionMark")
             row.icon.itemLink = itemLink
 
@@ -1040,8 +1089,13 @@ function EverGear:ShowUpgradeDetail(slotToken)
         -- windows stack vertically instead of landing on top of each other.
         -- EverGearProfileEditor is that frame's own global name (ProfileEditor.lua
         -- loads before this file in the .toc, so it already exists here).
-        local editor = EverGearProfileEditor
-        if editor and editor:IsShown() then
+        -- The wanted list and gear sets windows (WishlistUI.lua) open in that
+        -- same spot, so the same stacking applies to them.
+        local editor
+        for _, frame in ipairs({ EverGearProfileEditor, EverGearWantedFrame, EverGearSetsFrame }) do
+            if frame and frame:IsShown() then editor = frame end
+        end
+        if editor then
             detailPanel:SetPoint("TOPRIGHT", editor, "BOTTOMRIGHT", 0, -8)
         else
             detailPanel:SetPoint("TOPRIGHT", mainFrame, "TOPLEFT", -8, 0)
@@ -1384,6 +1438,33 @@ professionFilterButton:SetScript("OnClick", function()
     professionFilterPanel:Show()
 end)
 
+-- ===== Wanted list / gear sets buttons =====
+-- Same corner-icon column as the two filter buttons above; the windows
+-- themselves are in WishlistUI.lua.
+local function CreateCornerButton(name, y, texture, title, line, onClick)
+    local b = CreateFrame("Button", name, mainFrame)
+    b:SetSize(20, 20)
+    b:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, y)
+    b:SetNormalTexture(texture)
+    b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+    b:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+        GameTooltip:SetText(title)
+        GameTooltip:AddLine(line, 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    b:SetScript("OnClick", onClick)
+    return b
+end
+
+CreateCornerButton("EverGearWantedButton", -92, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_1",
+    "Wanted list", "Items this character wants. Add them with the star in Suggested Upgrades.",
+    function() EverGear:ToggleWantedWindow() end)
+CreateCornerButton("EverGearSetsButton", -116, "Interface\\Icons\\INV_Chest_Chain_05",
+    "Gear sets", "Build gear sets for this character and see which pieces you have.",
+    function() EverGear:ToggleSetsWindow() end)
+
 -- ===== Refresh / toggle =====
 
 function EverGear:RefreshUI()
@@ -1510,6 +1591,12 @@ SlashCmdList["EVERGEAR"] = function(msg)
     local debugArg = (msg or ""):match("^%s*[Dd][Ee][Bb][Uu][Gg]%s*(.-)%s*$")
     if debugArg then
         EverGear:HandleDebugCommand(debugArg)
+        return
+    end
+    local command = strlower(strtrim(msg or ""))
+    if command == "wanted" or command == "sets" then
+        if not mainFrame:IsShown() then EverGear:ToggleUI() end
+        if command == "wanted" then EverGear:ToggleWantedWindow() else EverGear:ToggleSetsWindow() end
         return
     end
     EverGear:ToggleUI()

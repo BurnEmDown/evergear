@@ -12,11 +12,13 @@ Core\Constants.lua
 Core\Database.lua
 Core\Character.lua
 Core\Equipment.lua
+Core\Wishlist.lua
 Core\Upgrades.lua
 Core\JSON.lua
 Core\EPProfiles.lua
 Core\ProfileEditor.lua
 Core\UI.lua
+Core\WishlistUI.lua
 Core\Debug.lua
 Core\MinimapButton.lua
 Core\Main.lua

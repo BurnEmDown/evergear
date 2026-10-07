@@ -52,6 +52,22 @@ addon's main window. Policy, effective 2026-09-29:
 on 2026-09-30, matching client version 1.30.1.10124. If WoW Forever ships a client
 update, re-run that command and update this value if it changes.
 
+## Wanted list and gear sets
+
+Per character. Click the star next to any item in **Suggested Upgrades** to put it on
+your **wanted list** or into the matching slot of a **gear set** (or start a new set).
+
+- **Wanted** (star button on the right edge of the main window, or `/eg wanted`): one row
+  per item with its source. The check mark means "acquired", the X "no longer
+  interested"; both take it off the list. When a wanted item shows up in your bags or is
+  equipped, EverGear removes it by itself and says so in chat.
+- **Gear sets** (`/eg sets`): pick a set at the top, create, rename or delete sets. The set
+  is shown as a paper doll; owned pieces get a tick, missing ones are greyed out, and the
+  header counts them ("5/9 acquired"). Click a piece to tick or untick it by hand, or to
+  take it out of the set.
+
+Once a piece counts as acquired it stays ticked, even if you later sell or replace it.
+
 ## Debug mode
 
 `/eg debug` toggles a developer mode for keeping the item database honest. While it is on,
