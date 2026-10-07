@@ -519,10 +519,22 @@ end
 
 local starMenu = CreateFrame("Frame", "EverGearStarMenu", UIParent, "UIDropDownMenuTemplate")
 
+-- Only these classes can dual wield, so only they get an off-hand entry for
+-- one-handed weapons that fit either hand.
+local CLASS_CAN_DUAL_WIELD = { WARRIOR = true, ROGUE = true, HUNTER = true }
+
+local function DropOffHandIfNoDualWield(slotTokens)
+    if #slotTokens < 2 or slotTokens[2] ~= "SecondaryHandSlot" then return slotTokens end
+    if CLASS_CAN_DUAL_WIELD[EverGear:GetPlayerInfo().classToken] then return slotTokens end
+    return { slotTokens[1] }
+end
+
 -- slotTokens: one real slot (a Suggested Upgrades row) or a list of them.
 function EverGear:ShowStarMenu(anchor, itemId, slotTokens)
     if type(slotTokens) ~= "table" then slotTokens = { slotTokens } end
+    slotTokens = DropOffHandIfNoDualWield(slotTokens)
     local multiSlot = #slotTokens > 1
+    local usable, subType = EverGear:CanPlayerUseItem(itemId)
 
     UIDropDownMenu_Initialize(starMenu, function()
         local info = UIDropDownMenu_CreateInfo()
@@ -530,6 +542,35 @@ function EverGear:ShowStarMenu(anchor, itemId, slotTokens)
         info.isTitle = true
         info.notCheckable = true
         UIDropDownMenu_AddButton(info)
+
+        if not usable then
+            -- Already tracked from before this check existed: still let it be
+            -- taken off the wanted list / out of a set.
+            info = UIDropDownMenu_CreateInfo()
+            info.text = "Your class can't use " .. (subType and subType ~= "" and subType or "this item")
+            info.disabled = true
+            info.notCheckable = true
+            UIDropDownMenu_AddButton(info)
+            if EverGear:IsWanted(itemId) then
+                info = UIDropDownMenu_CreateInfo()
+                info.text = "Remove from wanted list"
+                info.notCheckable = true
+                info.func = function() EverGear:RemoveWanted(itemId) end
+                UIDropDownMenu_AddButton(info)
+            end
+            for index, set in ipairs(EverGear:GetSets()) do
+                for slotToken, setItemId in pairs(set.slots) do
+                    if setItemId == itemId then
+                        info = UIDropDownMenu_CreateInfo()
+                        info.text = "Remove from " .. set.name
+                        info.notCheckable = true
+                        info.func = function() EverGear:SetSetSlot(index, slotToken, nil) end
+                        UIDropDownMenu_AddButton(info)
+                    end
+                end
+            end
+            return
+        end
 
         info = UIDropDownMenu_CreateInfo()
         info.text = "Wanted list"
@@ -556,6 +597,10 @@ function EverGear:ShowStarMenu(anchor, itemId, slotTokens)
                 info.text = multiSlot and (set.name .. " - " .. (EverGear.FRIENDLY_SLOT_NAMES[slotToken] or slotToken)) or set.name
                 info.isNotRadio = true
                 info.checked = (set.slots[slotToken] == itemId)
+                if slotToken == "SecondaryHandSlot" and not info.checked and EverGear:IsSetOffHandBlocked(index) then
+                    info.text = info.text .. " (two-hander in main hand)"
+                    info.disabled = true
+                end
                 info.func = function()
                     if set.slots[slotToken] == itemId then
                         EverGear:SetSetSlot(index, slotToken, nil)
@@ -614,10 +659,9 @@ else
     end
 end
 
--- Key binding (Key Bindings > AddOns > EverGear, see Bindings.xml): opens the
--- menu for whatever item the mouse is over, no click needed.
-BINDING_HEADER_EVERGEAR = "EverGear"
-BINDING_NAME_EVERGEAR_HOVERED_ITEM = "Add hovered item to wanted list / set"
+-- Key binding (Key Bindings > AddOns > EverGear, see Bindings.xml; its labels
+-- are set in Wishlist.lua): opens the menu for whatever item the mouse is
+-- over, no click needed.
 
 function EverGear:ShowHoveredItemMenu()
     for _, tip in ipairs({ GameTooltip, ItemRefTooltip }) do

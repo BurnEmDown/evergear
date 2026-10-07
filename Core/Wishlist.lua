@@ -16,6 +16,11 @@
 
 EverGear = EverGear or {}
 
+-- Labels for the key binding in Bindings.xml (Key Bindings > AddOns > EverGear).
+-- Set here, in a plain data file, so they exist even if a UI file fails to load.
+BINDING_HEADER_EVERGEAR = "EverGear"
+BINDING_NAME_EVERGEAR_HOVERED_ITEM = "Add hovered item to wanted list / set"
+
 local function CharDB()
     local charDB = EverGear:GetCharDB()
     charDB.wanted = charDB.wanted or {}
@@ -136,11 +141,38 @@ function EverGear:DeleteSet(index)
     self:NotifyWishlistChanged()
 end
 
+function EverGear:IsTwoHandItem(itemId)
+    local getInfo = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
+    local equipLoc = getInfo and select(4, getInfo(itemId))
+    if equipLoc and equipLoc ~= "" then return equipLoc == "INVTYPE_2HWEAPON" end
+    local item = self:GetItem(itemId)
+    return item ~= nil and item.isTwoHand == true
+end
+
+-- True if this set's main hand holds a two-hander, so its off hand must stay empty.
+function EverGear:IsSetOffHandBlocked(index)
+    local set = CharDB().sets[index]
+    local mainHand = set and set.slots.MainHandSlot
+    return mainHand ~= nil and self:IsTwoHandItem(mainHand)
+end
+
 -- One item per real slot: setting a slot that already has an item replaces it.
+-- A two-handed main hand and an off-hand item can't be in the same set: adding
+-- an off-hand item next to a two-hander is refused, and adding a two-hander
+-- takes the off-hand item out.
 function EverGear:SetSetSlot(index, slotToken, itemId)
     local set = CharDB().sets[index]
     if not set then return end
+    if itemId and slotToken == "SecondaryHandSlot" and self:IsSetOffHandBlocked(index) then
+        Print(set.name .. " has a two-handed weapon in the main hand -- remove it before adding an off-hand item.")
+        return
+    end
     set.slots[slotToken] = itemId
+    local offHand = set.slots.SecondaryHandSlot
+    if itemId and slotToken == "MainHandSlot" and offHand and self:IsTwoHandItem(itemId) then
+        set.slots.SecondaryHandSlot = nil
+        Print("Removed " .. self:GetWishlistItemName(offHand) .. " from " .. set.name .. "'s off hand -- a two-handed weapon needs both hands.")
+    end
     self:NotifyWishlistChanged()
     if itemId then self:ScanForAcquiredItems() end
 end

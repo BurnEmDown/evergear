@@ -1,5 +1,5 @@
 <Bindings>
-	<Binding name="EVERGEAR_HOVERED_ITEM" header="EVERGEAR">
+	<Binding name="EVERGEAR_HOVERED_ITEM" header="EVERGEAR" category="ADDONS">
 		EverGear:ShowHoveredItemMenu()
 	</Binding>
 </Bindings>
