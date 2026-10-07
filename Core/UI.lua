@@ -567,7 +567,7 @@ end
 local FILTER_SLOT_WIDTH = 92
 -- The right-hand column (Craft / Special) sits a little further right so the
 -- middle column's longer label ("Dungeon Drop") doesn't run into its checkbox.
-local FILTER_LAST_COLUMN_NUDGE = 6
+local FILTER_LAST_COLUMN_NUDGE = 16
 local FILTER_ROW_GAP = 26
 -- -150: -104 originally, +26 to clear the new Profile dropdown row (M3),
 -- then +20 more per user feedback on that layout.
