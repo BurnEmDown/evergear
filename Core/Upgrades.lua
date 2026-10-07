@@ -1120,9 +1120,9 @@ local CLASS_ARMOR_UNLOCK_LEVEL = {
 -- see 2H axes suggested). Flag any class+weapon combo that looks wrong in
 -- practice and we'll correct that specific entry.
 local CLASS_USABLE_WEAPON_TYPES = {
-    WARRIOR = { axe = true, bow = true, gun = true, mace = true, polearm = true, sword = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
+    WARRIOR = { axe = true, bow = true, gun = true, mace = true, polearm = true, sword = true, staff = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
     PALADIN = { axe = true, mace = true, polearm = true, sword = true, dagger = true },
-    HUNTER  = { axe = true, bow = true, gun = true, polearm = true, sword = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
+    HUNTER  = { axe = true, bow = true, gun = true, polearm = true, sword = true, staff = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
     ROGUE   = { bow = true, gun = true, sword = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
     PRIEST  = { mace = true, staff = true, dagger = true, wand = true },
     SHAMAN  = { axe = true, mace = true, staff = true, ["fist weapon"] = true, dagger = true },
