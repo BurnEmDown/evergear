@@ -334,12 +334,18 @@ local function SetPicker_Initialize()
     end
 end
 
+-- Set up once: opening the picker re-runs SetPicker_Initialize by itself, so
+-- the list is always current. Re-initializing it on every refresh broke the
+-- refresh whenever it ran from inside a dropdown click (picking a set, or
+-- adding an item through the star / Alt-click menu) -- the window then stayed
+-- stale until it was closed and reopened.
+UIDropDownMenu_Initialize(setPicker, SetPicker_Initialize)
+
 local function RefreshSetsWindow()
     local sets = EverGear:GetSets()
     local index = EverGear:GetActiveSetIndex()
     local set = index and sets[index]
 
-    UIDropDownMenu_Initialize(setPicker, SetPicker_Initialize)
     UIDropDownMenu_SetText(setPicker, set and set.name or "No sets")
     renameSetButton:SetEnabled(set ~= nil)
     deleteSetButton:SetEnabled(set ~= nil)
@@ -616,10 +622,26 @@ end
 -- ===== Opening / refreshing =====
 
 
-function EverGear:OnWishlistChanged()
+-- Changes mostly come from a dropdown click (star / Alt-click menu, set
+-- picker, slot menu), so the redraw waits one frame for that menu to finish
+-- closing; several changes in the same frame redraw once.
+local refreshQueued = false
+
+local function RefreshOpenWindows()
+    refreshQueued = false
     if wantedFrame:IsShown() then RefreshWantedWindow() end
     if setsFrame:IsShown() then RefreshSetsWindow() end
-    if self.RefreshDetailStars then self:RefreshDetailStars() end
+    if EverGear.RefreshDetailStars then EverGear:RefreshDetailStars() end
+end
+
+function EverGear:OnWishlistChanged()
+    if refreshQueued then return end
+    refreshQueued = true
+    if C_Timer and C_Timer.After then
+        C_Timer.After(0, RefreshOpenWindows)
+    else
+        RefreshOpenWindows()
+    end
 end
 
 -- Icons and quality colors for items the client hadn't cached yet arrive later.
