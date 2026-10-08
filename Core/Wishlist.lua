@@ -113,6 +113,16 @@ function EverGear:SetActiveSetIndex(index)
 end
 
 EverGear.MAX_GEAR_SETS = 20
+EverGear.MAX_SET_NAME_LENGTH = 30
+
+-- Character count, not bytes, so accented names aren't cut short.
+local function NameLength(name)
+    return strlenutf8 and strlenutf8(name) or #name
+end
+
+local function NameTooLongMessage()
+    return "Gear set names can be at most " .. EverGear.MAX_SET_NAME_LENGTH .. " characters."
+end
 
 local function NormalizeName(name)
     return strlower(strtrim(name or ""))
@@ -135,6 +145,9 @@ function EverGear:CreateSet(name)
     if #sets >= self.MAX_GEAR_SETS then
         return nil, "You already have " .. self.MAX_GEAR_SETS .. " gear sets, the most a character can have. Delete one first."
     end
+    if NameLength(strtrim(name)) > self.MAX_SET_NAME_LENGTH then
+        return nil, NameTooLongMessage()
+    end
     if self:IsSetNameTaken(name) then
         return nil, "You already have a gear set called \"" .. strtrim(name) .. "\"."
     end
@@ -148,6 +161,9 @@ end
 function EverGear:RenameSet(index, name)
     local set = CharDB().sets[index]
     if not set then return false end
+    if NameLength(strtrim(name)) > self.MAX_SET_NAME_LENGTH then
+        return false, NameTooLongMessage()
+    end
     if self:IsSetNameTaken(name, index) then
         return false, "You already have a gear set called \"" .. strtrim(name) .. "\"."
     end

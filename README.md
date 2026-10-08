@@ -69,7 +69,7 @@ a line when the item is already on your wanted list or in a set.
 - **Gear sets** (chest button below it, or `/eg sets`): pick a set at the top, create, rename or delete sets. The set
   is shown as a paper doll; owned pieces get a tick, missing ones are greyed out, and the
   header counts them ("5/9 acquired"). Click a piece to tick or untick it by hand, or to
-  take it out of the set. A character can have up to 20 sets, and each needs its own name.
+  take it out of the set. A character can have up to 20 sets, each with its own name of up to 30 characters.
 
 Once a piece counts as acquired it stays ticked, even if you later sell or replace it.
 
