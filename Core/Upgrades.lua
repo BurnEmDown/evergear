@@ -1332,8 +1332,13 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
         local professionAllowed = (not itemProfession) or (professionFilter[itemProfession] ~= false)
         local boeAllowed = (not itemProfession) or (not professionBoEOnly[itemProfession]) or item.bindType == "BoE"
 
+        -- A quest reward can't be had before the quest can be picked up, even
+        -- when the item itself has no level requirement (most rewards don't):
+        -- source.minLevel is the quest's required level.
+        local requiredLevel = math.max(item.minLevel or 0, (item.source and item.source.minLevel) or 0)
+
         if item.id ~= equippedItemId
-            and (not item.minLevel or item.minLevel <= effectiveLevel)
+            and requiredLevel <= effectiveLevel
             and IsArmorTypeAllowed(item, playerInfo.classToken, effectiveLevel)
             and IsWeaponTypeAllowed(item, playerInfo.classToken)
             and IsClassAllowed(item, playerInfo.classToken)
