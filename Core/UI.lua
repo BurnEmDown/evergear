@@ -394,7 +394,7 @@ end
 -- those two).
 local profileEditorButton = CreateFrame("Button", "EverGearProfileEditorButton", mainFrame)
 profileEditorButton:SetSize(20, 20)
-profileEditorButton:SetPoint("RIGHT", profileDropdown, "LEFT", -4, 2)
+profileEditorButton:SetPoint("RIGHT", profileDropdown, "LEFT", 2, 2)  -- 6px right of its old spot so it clears the Sets button
 profileEditorButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Note_01")
 profileEditorButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 profileEditorButton:SetScript("OnEnter", function(self)
