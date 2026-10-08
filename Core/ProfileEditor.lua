@@ -490,7 +490,12 @@ StaticPopupDialogs["EVERGEAR_NEW_PROFILE"] = {
         local name = editBox:GetText()
         if name == "" then return end
         local defaults = EverGear:GetBuiltinProfile(editorClassToken, editorSpecName)
-        local id = EverGear:CreateCustomProfile(editorClassToken, editorSpecName, name, defaults)
+        local id, err = EverGear:CreateCustomProfile(editorClassToken, editorSpecName, name, defaults)
+        if not id then
+            -- Name taken: say so and keep the popup open for another name.
+            UIErrorsFrame:AddMessage(err, 1, 0.2, 0.2)
+            return true
+        end
         SelectProfileForEditing(id)
         if EverGear.RefreshProfileDropdown then EverGear.RefreshProfileDropdown() end
     end,
@@ -521,7 +526,11 @@ StaticPopupDialogs["EVERGEAR_DUPLICATE_PROFILE"] = {
         if name == "" then return end
         -- Duplicates whatever's currently in the grid, including any
         -- not-yet-saved edits -- "duplicate this" means what's on screen.
-        local id = EverGear:CreateCustomProfile(editorClassToken, editorSpecName, name, workingWeights)
+        local id, err = EverGear:CreateCustomProfile(editorClassToken, editorSpecName, name, workingWeights)
+        if not id then
+            UIErrorsFrame:AddMessage(err, 1, 0.2, 0.2)
+            return true
+        end
         SelectProfileForEditing(id)
         if EverGear.RefreshProfileDropdown then EverGear.RefreshProfileDropdown() end
     end,
@@ -548,7 +557,11 @@ StaticPopupDialogs["EVERGEAR_RENAME_PROFILE"] = {
         local editBox = self.EditBox or self.editBox
         local name = editBox:GetText()
         if name == "" then return end
-        EverGear:RenameCustomProfile(editorClassToken, editorSpecName, editingProfileId, name)
+        local ok, err = EverGear:RenameCustomProfile(editorClassToken, editorSpecName, editingProfileId, name)
+        if not ok then
+            UIErrorsFrame:AddMessage(err, 1, 0.2, 0.2)
+            return true
+        end
         RefreshProfileList()
         if EverGear.RefreshProfileDropdown then EverGear.RefreshProfileDropdown() end
     end,
@@ -882,18 +895,21 @@ importImportButton:SetText("Import")
 local pendingImportWeights
 
 local function ImportNameCollides(classToken, specName, name)
-    local profiles = EverGear:GetProfileList(classToken, specName)
-    for _, p in ipairs(profiles) do
-        if p.name == name then return true end
-    end
-    return false
+    return EverGear:IsProfileNameTaken(classToken, specName, name)
 end
 
+-- Returns false (and shows why) if the name is taken, so the naming popup
+-- can stay open.
 local function FinishImport(name, weights)
-    local id = EverGear:ImportProfileWeights(editorClassToken, editorSpecName, name, weights)
+    local id, err = EverGear:ImportProfileWeights(editorClassToken, editorSpecName, name, weights)
+    if not id then
+        UIErrorsFrame:AddMessage(err, 1, 0.2, 0.2)
+        return false
+    end
     importPopup:Hide()
     SelectProfileForEditing(id)
     if EverGear.RefreshProfileDropdown then EverGear.RefreshProfileDropdown() end
+    return true
 end
 
 StaticPopupDialogs["EVERGEAR_IMPORT_NAME_COLLISION"] = {
@@ -912,7 +928,7 @@ StaticPopupDialogs["EVERGEAR_IMPORT_NAME_COLLISION"] = {
         local editBox = self.EditBox or self.editBox
         local name = editBox:GetText()
         if name == "" or not pendingImportWeights then return end
-        FinishImport(name, pendingImportWeights)
+        if not FinishImport(name, pendingImportWeights) then return true end
         pendingImportWeights = nil
     end,
     OnCancel = function() pendingImportWeights = nil end,

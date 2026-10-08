@@ -334,10 +334,30 @@ end
 -- GetBuiltinProfile(classToken, specName) themselves first -- this function
 -- clones/clamps whatever it's given but doesn't fill in missing keys.
 -- Returns the new profile's id.
+-- Profile names are unique within a class+spec (built-in ones included),
+-- ignoring case and outer spaces, so the Profile dropdown never shows two
+-- entries that look the same. exceptId lets a profile be "renamed" to its
+-- own name.
+function EverGear:IsProfileNameTaken(classToken, specName, name, exceptId)
+    local wanted = strlower(strtrim(name or ""))
+    for _, p in ipairs(self:GetProfileList(classToken, specName)) do
+        if p.id ~= exceptId and strlower(strtrim(p.name or "")) == wanted then return true end
+    end
+    return false
+end
+
+local function NameTakenMessage(name)
+    return "There's already a profile called \"" .. strtrim(name) .. "\" for this spec."
+end
+
+-- Returns the new profile's id, or nil + a reason string if the name is taken.
 function EverGear:CreateCustomProfile(classToken, specName, name, weights)
+    if self:IsProfileNameTaken(classToken, specName, name) then
+        return nil, NameTakenMessage(name)
+    end
     local customTable = GetCustomProfileTable(classToken, specName, true)
     local id = GenerateProfileId()
-    customTable[id] = { name = name, weights = CloneWeights(weights) }
+    customTable[id] = { name = strtrim(name), weights = CloneWeights(weights) }
     return id
 end
 
@@ -365,7 +385,10 @@ function EverGear:RenameCustomProfile(classToken, specName, profileId, newName)
     if not entry then
         return false, "That profile no longer exists."
     end
-    entry.name = newName
+    if self:IsProfileNameTaken(classToken, specName, newName, profileId) then
+        return false, NameTakenMessage(newName)
+    end
+    entry.name = strtrim(newName)
     return true
 end
 
@@ -395,7 +418,7 @@ end
 -- the character's currently-active profile, and the target doesn't have to
 -- be the same class -- both are just class+spec+profileId triples resolved
 -- independently. Returns the new profile's id, or nil + a reason string if
--- the source profile couldn't be resolved.
+-- the source profile couldn't be resolved or the name is taken.
 function EverGear:CopyProfile(fromClass, fromSpec, fromProfileId, toClass, toSpec, newName)
     local sourceWeights = self:GetProfileWeights(fromClass, fromSpec, fromProfileId)
     if not sourceWeights then
@@ -403,8 +426,7 @@ function EverGear:CopyProfile(fromClass, fromSpec, fromProfileId, toClass, toSpe
     end
     local targetDefaults = self:GetBuiltinProfile(toClass, toSpec)
     local merged = MergeWeightsOnto(targetDefaults, sourceWeights)
-    local id = self:CreateCustomProfile(toClass, toSpec, newName, merged)
-    return id
+    return self:CreateCustomProfile(toClass, toSpec, newName, merged)
 end
 
 -- ===== JSON export / import (M2) =====
