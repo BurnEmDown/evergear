@@ -1120,9 +1120,9 @@ local CLASS_ARMOR_UNLOCK_LEVEL = {
 -- see 2H axes suggested). Flag any class+weapon combo that looks wrong in
 -- practice and we'll correct that specific entry.
 local CLASS_USABLE_WEAPON_TYPES = {
-    WARRIOR = { axe = true, bow = true, gun = true, mace = true, polearm = true, sword = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
+    WARRIOR = { axe = true, bow = true, gun = true, mace = true, polearm = true, sword = true, staff = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
     PALADIN = { axe = true, mace = true, polearm = true, sword = true, dagger = true },
-    HUNTER  = { axe = true, bow = true, gun = true, polearm = true, sword = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
+    HUNTER  = { axe = true, bow = true, gun = true, polearm = true, sword = true, staff = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
     ROGUE   = { bow = true, gun = true, sword = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
     PRIEST  = { mace = true, staff = true, dagger = true, wand = true },
     SHAMAN  = { axe = true, mace = true, staff = true, ["fist weapon"] = true, dagger = true },
@@ -1372,8 +1372,13 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
         local professionAllowed = (not itemProfession) or (professionFilter[itemProfession] ~= false)
         local boeAllowed = (not itemProfession) or (not professionBoEOnly[itemProfession]) or item.bindType == "BoE"
 
+        -- A quest reward can't be had before the quest can be picked up, even
+        -- when the item itself has no level requirement (most rewards don't):
+        -- source.minLevel is the quest's required level.
+        local requiredLevel = math.max(item.minLevel or 0, (item.source and item.source.minLevel) or 0)
+
         if item.id ~= equippedItemId
-            and (not item.minLevel or item.minLevel <= effectiveLevel)
+            and requiredLevel <= effectiveLevel
             and IsArmorTypeAllowed(item, playerInfo.classToken, effectiveLevel)
             and IsWeaponTypeAllowed(item, playerInfo.classToken)
             and IsClassAllowed(item, playerInfo.classToken)
