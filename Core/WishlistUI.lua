@@ -128,7 +128,16 @@ local wantedBarThumb = wantedBar:CreateTexture(nil, "OVERLAY")
 wantedBarThumb:SetColorTexture(THEME.goldDim[1], THEME.goldDim[2], THEME.goldDim[3], 0.9)
 wantedBarThumb:SetSize(WANTED_BAR_WIDTH, 40)
 wantedBar:SetThumbTexture(wantedBarThumb)
-wantedBar:SetScript("OnValueChanged", function(_, value) wantedScroll:SetVerticalScroll(value) end)
+-- This client puts a vertical slider's minimum at the BOTTOM, so the value
+-- runs the other way from the scroll offset: value = max - offset, which
+-- keeps the thumb at the top while the list is at its top.
+local wantedBarMax = 0
+local function SetWantedBarFromScroll(offset)
+    wantedBar:SetValue(wantedBarMax - offset)
+end
+wantedBar:SetScript("OnValueChanged", function(_, value)
+    wantedScroll:SetVerticalScroll(math.max(0, wantedBarMax - value))
+end)
 -- Mouse input lets the thumb be dragged (and the track clicked to jump);
 -- the slider moves the value itself, OnValueChanged scrolls the list. The
 -- grab area is a few pixels wider than the thin bar so it's easy to catch.
@@ -145,7 +154,7 @@ end
 wantedScroll:EnableMouseWheel(true)
 wantedScroll:SetScript("OnMouseWheel", function(self, delta)
     local target = math.min(WantedMaxScroll(), math.max(0, self:GetVerticalScroll() - delta * WANTED_ROW_HEIGHT))
-    if wantedBar:IsShown() then wantedBar:SetValue(target) else self:SetVerticalScroll(target) end
+    if wantedBar:IsShown() then SetWantedBarFromScroll(target) else self:SetVerticalScroll(target) end
 end)
 wantedBar:EnableMouseWheel(true)
 wantedBar:SetScript("OnMouseWheel", function(_, delta) wantedScroll:GetScript("OnMouseWheel")(wantedScroll, delta) end)
@@ -163,8 +172,9 @@ local function UpdateWantedScrollBar(listHeight)
     wantedBar:SetShown(needsBar)
     if needsBar then
         wantedBarThumb:SetHeight(math.max(20, viewHeight * viewHeight / listHeight))
+        wantedBarMax = maxScroll
         wantedBar:SetMinMaxValues(0, maxScroll)
-        wantedBar:SetValue(current)
+        SetWantedBarFromScroll(current)
     end
     wantedScroll:SetVerticalScroll(current)
 end
