@@ -303,6 +303,12 @@ end
 
 local newSetButton = CreateSmallButton("New", 50, function() StaticPopup_Show("EVERGEAR_NEW_SET") end)
 newSetButton:SetPoint("LEFT", setPicker, "RIGHT", -8, 2)
+if newSetButton.SetMotionScriptsWhileDisabled then newSetButton:SetMotionScriptsWhileDisabled(true) end
+newSetButton:SetScript("OnEnter", function(self)
+    if self:IsEnabled() then return end
+    Tooltip(self, "Gear set limit reached", "A character can have up to " .. EverGear.MAX_GEAR_SETS .. " gear sets. Delete one to make room.")
+end)
+newSetButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 local renameSetButton = CreateSmallButton("Rename", 64, function()
     local index = EverGear:GetActiveSetIndex()
     if index then StaticPopup_Show("EVERGEAR_RENAME_SET", nil, nil, index) end
@@ -437,6 +443,7 @@ local function RefreshSetsWindow()
     local set = index and sets[index]
 
     UIDropDownMenu_SetText(setPicker, set and set.name or "No sets")
+    newSetButton:SetEnabled(#EverGear:GetSets() < EverGear.MAX_GEAR_SETS)
     renameSetButton:SetEnabled(set ~= nil)
     deleteSetButton:SetEnabled(set ~= nil)
     setsEmpty:SetShown(set == nil)
@@ -515,14 +522,34 @@ local function PopupEditBox(popup)
     return popup.editBox or _G[popup:GetName() .. "EditBox"]
 end
 
+-- The red message at the top of the screen, like the game's own "can't do
+-- that" errors (chat as a fallback).
+local function ShowError(message)
+    if UIErrorsFrame and UIErrorsFrame.AddMessage then
+        UIErrorsFrame:AddMessage(message, 1.0, 0.1, 0.1)
+    else
+        print("|cff33ff99EverGear|r " .. message)
+    end
+end
+
+-- Returns true when the name was refused (taken, or the set limit reached),
+-- which keeps the popup open so another name can be typed.
 local function AcceptSetName(popup, data, isRename)
     local name = strtrim(PopupEditBox(popup):GetText() or "")
-    if name == "" then return end
+    if name == "" then return true end
     if isRename then
-        EverGear:RenameSet(data, name)
+        local ok, err = EverGear:RenameSet(data, name)
+        if not ok then
+            if err then ShowError(err) end
+            return true
+        end
     else
-        local index = EverGear:CreateSet(name)
-        -- "New set..." from a star's menu: put that item straight into the new set.
+        local index, err = EverGear:CreateSet(name)
+        if not index then
+            ShowError(err)
+            return true
+        end
+        -- "New set..." from the Alt-click menu: put that item straight into the new set.
         if data and data.itemId then EverGear:SetSetSlot(index, data.slotToken, data.itemId) end
         ShowSideWindow(setsFrame)
     end
@@ -534,11 +561,10 @@ StaticPopupDialogs["EVERGEAR_NEW_SET"] = {
     button2 = CANCEL or "Cancel",
     hasEditBox = true,
     maxLetters = 40,
-    OnAccept = function(self, data) AcceptSetName(self, data, false) end,
+    OnAccept = function(self, data) return AcceptSetName(self, data, false) end,
     EditBoxOnEnterPressed = function(self, data)
         local popup = self:GetParent()
-        AcceptSetName(popup, popup.data, false)
-        popup:Hide()
+        if not AcceptSetName(popup, popup.data, false) then popup:Hide() end
     end,
     EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
     timeout = 0, whileDead = true, hideOnEscape = true,
@@ -556,11 +582,10 @@ StaticPopupDialogs["EVERGEAR_RENAME_SET"] = {
         box:SetText(set and set.name or "")
         box:HighlightText()
     end,
-    OnAccept = function(self, data) AcceptSetName(self, data, true) end,
+    OnAccept = function(self, data) return AcceptSetName(self, data, true) end,
     EditBoxOnEnterPressed = function(self)
         local popup = self:GetParent()
-        AcceptSetName(popup, popup.data, true)
-        popup:Hide()
+        if not AcceptSetName(popup, popup.data, true) then popup:Hide() end
     end,
     EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
     timeout = 0, whileDead = true, hideOnEscape = true,
@@ -705,6 +730,10 @@ function EverGear:ShowStarMenu(anchor, itemId, slotTokens)
         info = UIDropDownMenu_CreateInfo()
         info.text = "New set..."
         info.notCheckable = true
+        if #EverGear:GetSets() >= EverGear.MAX_GEAR_SETS then
+            info.text = "New set... (" .. EverGear.MAX_GEAR_SETS .. " sets max)"
+            info.disabled = true
+        end
         info.func = function()
             StaticPopup_Show("EVERGEAR_NEW_SET", nil, nil, { itemId = itemId, slotToken = slotTokens[1] })
         end

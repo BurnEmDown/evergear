@@ -112,19 +112,48 @@ function EverGear:SetActiveSetIndex(index)
     self:NotifyWishlistChanged()
 end
 
+EverGear.MAX_GEAR_SETS = 20
+
+local function NormalizeName(name)
+    return strlower(strtrim(name or ""))
+end
+
+-- Set names are unique per character, ignoring case and outer spaces, so the
+-- picker, menus and tooltips never show two sets that look the same.
+-- exceptIndex lets a set be "renamed" to its own name.
+function EverGear:IsSetNameTaken(name, exceptIndex)
+    local wanted = NormalizeName(name)
+    for index, set in ipairs(CharDB().sets) do
+        if index ~= exceptIndex and NormalizeName(set.name) == wanted then return true end
+    end
+    return false
+end
+
+-- Returns the new set's index, or nil plus the reason it wasn't created.
 function EverGear:CreateSet(name)
     local sets = CharDB().sets
-    table.insert(sets, { name = name, slots = {} })
+    if #sets >= self.MAX_GEAR_SETS then
+        return nil, "You already have " .. self.MAX_GEAR_SETS .. " gear sets, the most a character can have. Delete one first."
+    end
+    if self:IsSetNameTaken(name) then
+        return nil, "You already have a gear set called \"" .. strtrim(name) .. "\"."
+    end
+    table.insert(sets, { name = strtrim(name), slots = {} })
     CharDB().activeSet = #sets
     self:NotifyWishlistChanged()
     return #sets
 end
 
+-- Returns true, or false plus the reason it wasn't renamed.
 function EverGear:RenameSet(index, name)
     local set = CharDB().sets[index]
-    if not set then return end
-    set.name = name
+    if not set then return false end
+    if self:IsSetNameTaken(name, index) then
+        return false, "You already have a gear set called \"" .. strtrim(name) .. "\"."
+    end
+    set.name = strtrim(name)
     self:NotifyWishlistChanged()
+    return true
 end
 
 function EverGear:DeleteSet(index)
