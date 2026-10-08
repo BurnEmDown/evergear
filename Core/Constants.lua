@@ -37,6 +37,7 @@ EverGear.VERSION = "0.0.27"
 --     zone = "The Stockade",
 --     boss = "Hamhock",         -- present for dungeonDrop/raidDrop
 --     quest = "Quest Title",    -- present for quest
+--     minLevel = 20,            -- optional, quest: the level the quest can be picked up at
 --     npc = "Mother Fang",      -- optional, worldDrop: the one mob (often a rare) it drops from
 --     name = "Kat Sampson",     -- vendor: who sells it
 --     note = "Blade of Silverlaine + Scroll of the Saber", -- special: how to get it

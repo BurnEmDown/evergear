@@ -5,5 +5,5 @@
 EverGear = EverGear or {}
 EverGear.Items = EverGear.Items or {}
 
-EverGear.Items[7746] = {id = 7746, name = "Explorers' League Commendation", slot = "NeckSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 40, minLevel = 28, confirmed = true, bindType = nil, source = {type = "quest", zone = "Ironforge", quest = "Mythology of the Titans", faction = "Alliance"}, stats = {SPIRIT = 9, STAMINA = 9}}
-EverGear.Items[9538] = {id = 9538, name = "Talvash's Gold Ring", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 37, minLevel = 10, confirmed = true, bindType = nil, source = {type = "quest", zone = "Ironforge", quest = "Gnome Improvement", faction = "Alliance"}, stats = {SPIRIT = 4, STAMINA = 10}}
+EverGear.Items[7746] = {id = 7746, name = "Explorers' League Commendation", slot = "NeckSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 40, minLevel = 28, confirmed = true, bindType = "BoP", source = {type = "quest", zone = "Ironforge", quest = "Mythology of the Titans", faction = "Alliance", minLevel = 28}, stats = {SPIRIT = 9, STAMINA = 9}}
+EverGear.Items[9538] = {id = 9538, name = "Talvash's Gold Ring", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 37, minLevel = 10, confirmed = true, bindType = "BoP", source = {type = "quest", zone = "Ironforge", quest = "Gnome Improvement", faction = "Alliance", minLevel = 28}, stats = {SPIRIT = 4, STAMINA = 10}}
