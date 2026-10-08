@@ -350,8 +350,35 @@ local function NameTakenMessage(name)
     return "There's already a profile called \"" .. strtrim(name) .. "\" for this spec."
 end
 
--- Returns the new profile's id, or nil + a reason string if the name is taken.
+-- Limits: custom profiles per class+spec (built-in ones don't count), and
+-- profile name length in characters.
+EverGear.MAX_CUSTOM_PROFILES_PER_SPEC = 8
+EverGear.MAX_PROFILE_NAME_LENGTH = 30
+
+-- Character count, not bytes, so accented names aren't cut short.
+local function NameLength(name)
+    return strlenutf8 and strlenutf8(name) or #name
+end
+
+function EverGear:CountCustomProfiles(classToken, specName)
+    local count = 0
+    for _ in pairs(GetCustomProfileTable(classToken, specName, false) or {}) do count = count + 1 end
+    return count
+end
+
+local function NameTooLongMessage()
+    return "Profile names can be at most " .. EverGear.MAX_PROFILE_NAME_LENGTH .. " characters."
+end
+
+-- Returns the new profile's id, or nil + a reason string (name taken or too
+-- long, or the spec already has the most custom profiles allowed).
 function EverGear:CreateCustomProfile(classToken, specName, name, weights)
+    if self:CountCustomProfiles(classToken, specName) >= self.MAX_CUSTOM_PROFILES_PER_SPEC then
+        return nil, "This spec already has " .. self.MAX_CUSTOM_PROFILES_PER_SPEC .. " custom profiles, the most allowed. Delete one first."
+    end
+    if NameLength(strtrim(name)) > self.MAX_PROFILE_NAME_LENGTH then
+        return nil, NameTooLongMessage()
+    end
     if self:IsProfileNameTaken(classToken, specName, name) then
         return nil, NameTakenMessage(name)
     end
@@ -384,6 +411,9 @@ function EverGear:RenameCustomProfile(classToken, specName, profileId, newName)
     local entry = customTable and customTable[profileId]
     if not entry then
         return false, "That profile no longer exists."
+    end
+    if NameLength(strtrim(newName)) > self.MAX_PROFILE_NAME_LENGTH then
+        return false, NameTooLongMessage()
     end
     if self:IsProfileNameTaken(classToken, specName, newName, profileId) then
         return false, NameTakenMessage(newName)

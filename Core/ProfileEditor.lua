@@ -224,6 +224,20 @@ local importButton = MakeCrudButton("Import...", -150, function()
     EverGear:ShowImportProfilePopup(editorClassToken, editorSpecName)
 end)
 
+-- New / Duplicate / Import are disabled once the spec has the most custom
+-- profiles allowed (see RefreshButtonStates); say why on hover.
+for _, btn in ipairs({ newButton, duplicateButton, importButton }) do
+    if btn.SetMotionScriptsWhileDisabled then btn:SetMotionScriptsWhileDisabled(true) end
+    btn:SetScript("OnEnter", function(self)
+        if self:IsEnabled() then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText("Profile limit reached")
+        GameTooltip:AddLine("A spec can have up to " .. EverGear.MAX_CUSTOM_PROFILES_PER_SPEC .. " custom profiles. Delete one to make room.", 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+end
+
 -- ===== Right column: weight grid (scrollable) =====
 
 local GRID_X = 14 + LIST_WIDTH + 14
@@ -448,6 +462,11 @@ RefreshButtonStates = function()
     for _, btn in ipairs(buttons) do
         if isDefault then btn:Disable() else btn:Enable() end
     end
+    -- New / Duplicate / Import each add a profile to this spec.
+    local roomLeft = EverGear:CountCustomProfiles(editorClassToken, editorSpecName) < EverGear.MAX_CUSTOM_PROFILES_PER_SPEC
+    for _, btn in ipairs({ newButton, duplicateButton, importButton }) do
+        btn:SetEnabled(roomLeft)
+    end
 end
 
 SelectProfileForEditing = function(profileId)
@@ -479,7 +498,7 @@ StaticPopupDialogs["EVERGEAR_NEW_PROFILE"] = {
     button1 = "Create",
     button2 = "Cancel",
     hasEditBox = true,
-    maxLetters = 40,
+    maxLetters = EverGear.MAX_PROFILE_NAME_LENGTH,
     OnShow = function(self)
         local editBox = self.EditBox or self.editBox
         editBox:SetText("")
@@ -508,7 +527,7 @@ StaticPopupDialogs["EVERGEAR_DUPLICATE_PROFILE"] = {
     button1 = "Duplicate",
     button2 = "Cancel",
     hasEditBox = true,
-    maxLetters = 40,
+    maxLetters = EverGear.MAX_PROFILE_NAME_LENGTH,
     OnShow = function(self)
         local editBox = self.EditBox or self.editBox
         local profiles = EverGear:GetProfileList(editorClassToken, editorSpecName)
@@ -543,7 +562,7 @@ StaticPopupDialogs["EVERGEAR_RENAME_PROFILE"] = {
     button1 = "Rename",
     button2 = "Cancel",
     hasEditBox = true,
-    maxLetters = 40,
+    maxLetters = EverGear.MAX_PROFILE_NAME_LENGTH,
     OnShow = function(self)
         local editBox = self.EditBox or self.editBox
         local profiles = EverGear:GetProfileList(editorClassToken, editorSpecName)
@@ -630,6 +649,7 @@ local copyNameEditBox = CreateFrame("EditBox", nil, copyPopup, "InputBoxTemplate
 copyNameEditBox:SetSize(170, 20)
 copyNameEditBox:SetPoint("TOP", copySpecDropdown, "BOTTOM", 0, -16)
 copyNameEditBox:SetAutoFocus(false)
+copyNameEditBox:SetMaxLetters(EverGear.MAX_PROFILE_NAME_LENGTH)
 
 local copyConfirmButton = CreateFrame("Button", nil, copyPopup, "UIPanelButtonTemplate")
 copyConfirmButton:SetSize(100, 20)
@@ -894,6 +914,18 @@ importImportButton:SetText("Import")
 -- needed -- see EVERGEAR_IMPORT_NAME_COLLISION below.
 local pendingImportWeights
 
+-- An imported profile's name can be longer than this addon allows (hand-edited
+-- JSON); cut it to the limit, whole characters only.
+local function TrimToLength(name, maxChars)
+    local out, count = {}, 0
+    for char in name:gmatch("[%z\1-\127\194-\244][\128-\191]*") do
+        count = count + 1
+        if count > maxChars then break end
+        out[#out + 1] = char
+    end
+    return strtrim(table.concat(out))
+end
+
 local function ImportNameCollides(classToken, specName, name)
     return EverGear:IsProfileNameTaken(classToken, specName, name)
 end
@@ -917,7 +949,7 @@ StaticPopupDialogs["EVERGEAR_IMPORT_NAME_COLLISION"] = {
     button1 = "Create",
     button2 = "Cancel",
     hasEditBox = true,
-    maxLetters = 40,
+    maxLetters = EverGear.MAX_PROFILE_NAME_LENGTH,
     OnShow = function(self)
         local editBox = self.EditBox or self.editBox
         editBox:SetText((self.data and self.data.suggestedName) or "Imported Profile")
@@ -943,7 +975,8 @@ importImportButton:SetScript("OnClick", function()
         return
     end
     importErrorText:SetText("")
-    local name = data.name or "Imported Profile"
+    local name = TrimToLength(strtrim(data.name or ""), EverGear.MAX_PROFILE_NAME_LENGTH)
+    if name == "" then name = "Imported Profile" end
     if ImportNameCollides(editorClassToken, editorSpecName, name) then
         pendingImportWeights = data.weights
         importPopup:Hide()
@@ -951,7 +984,7 @@ importImportButton:SetScript("OnClick", function()
             "EVERGEAR_IMPORT_NAME_COLLISION",
             name,
             HumanizeClassToken(editorClassToken) .. " " .. editorSpecName,
-            { suggestedName = name .. " (Imported)" }
+            { suggestedName = TrimToLength(name, EverGear.MAX_PROFILE_NAME_LENGTH - 11) .. " (Imported)" }
         )
     else
         FinishImport(name, data.weights)
