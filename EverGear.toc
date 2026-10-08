@@ -36,6 +36,7 @@ Data\Items_ScarletMonasteryGraveyard.lua
 Data\Items_ScarletMonasteryLibrary.lua
 Data\Items_ExcavationSiteWetlands.lua
 Data\Items_RazorfenKraul.lua
+Data\Items_CityOfDalaran.lua
 Data\Items_WorldDrops.lua
 Data\Items_LibraryBooks.lua
 Data\Items_ClassQuests.lua
