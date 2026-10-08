@@ -52,6 +52,27 @@ addon's main window. Policy, effective 2026-09-29:
 on 2026-09-30, matching client version 1.30.1.10124. If WoW Forever ships a client
 update, re-run that command and update this value if it changes.
 
+## Wanted list and gear sets
+
+Per character. **Alt-click any item** in the game (bags, character sheet, chat links,
+loot, quest rewards, vendors...) to put it on your **wanted list** or into a slot of a
+**gear set** (or start a new set). This also works on the item icons in EverGear's own
+window. The star next to an item in **Suggested Upgrades** adds it straight to the wanted
+list (click again to take it off). Gear tooltips get
+a line when the item is already on your wanted list or in a set.
+
+- **Wanted** (star button in the top-left corner of the main window, or `/eg wanted`): one row
+  per item with its source. When a wanted item shows up in your bags or is equipped,
+  EverGear marks it acquired (a green tick) and says so in chat; it stays on the list
+  until you remove it with the X. The check mark button ticks or unticks it by hand. A
+  scroll bar appears on the left once the list is longer than the window.
+- **Gear sets** (chest button below it, or `/eg sets`): pick a set at the top, create, rename or delete sets. The set
+  is shown as a paper doll; owned pieces get a tick, missing ones are greyed out, and the
+  header counts them ("5/9 acquired"). Click a piece to tick or untick it by hand, or to
+  take it out of the set. A character can have up to 20 sets, each with its own name of up to 30 characters.
+
+Once a piece counts as acquired it stays ticked, even if you later sell or replace it.
+
 ## Debug mode
 
 `/eg debug` toggles a developer mode for keeping the item database honest. While it is on,

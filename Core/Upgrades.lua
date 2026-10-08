@@ -1234,6 +1234,46 @@ local function IsWeaponTypeAllowed(item, classToken)
     return whitelist[item.weaponType] == true
 end
 
+-- Client item class/subclass -> this addon's weaponType/armorType, for items
+-- the data files don't have (anything Alt-clicked in the game).
+local WEAPON_SUBCLASS_TYPES = {
+    [0] = "axe", [1] = "axe", [2] = "bow", [3] = "gun", [4] = "mace", [5] = "mace",
+    [6] = "polearm", [7] = "sword", [8] = "sword", [10] = "staff", [13] = "fist weapon",
+    [15] = "dagger", [16] = "thrown", [18] = "crossbow", [19] = "wand",
+}
+local ARMOR_SUBCLASS_TYPES = { [1] = "Cloth", [2] = "Leather", [3] = "Mail", [4] = "Plate" }
+local RELIC_SUBCLASS_CLASSES = { [7] = { "PALADIN" }, [8] = { "DRUID" }, [9] = { "SHAMAN" } }  -- libram, idol, totem
+
+local function ItemFromClientInfo(itemId)
+    local getInfo = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
+    if not getInfo then return nil end
+    local _, _, _, _, _, classID, subclassID = getInfo(itemId)
+    if classID == 2 then
+        return { weaponType = WEAPON_SUBCLASS_TYPES[subclassID] }
+    elseif classID == 4 then
+        if subclassID == 6 then return { weaponType = "shield" } end
+        return { armorType = ARMOR_SUBCLASS_TYPES[subclassID], classes = RELIC_SUBCLASS_CLASSES[subclassID] }
+    end
+    return nil
+end
+
+-- Whether this character's class can use an item at all -- for the wanted
+-- list and gear sets. Those are plans, so the level-40 mail/plate unlock
+-- isn't held against it. Returns false plus the client's item subtype (e.g.
+-- "Wands") for the message, when it's known.
+function EverGear:CanPlayerUseItem(itemId)
+    local classToken = self:GetPlayerInfo().classToken
+    local item = self:GetItem(itemId) or ItemFromClientInfo(itemId)
+    if not (item and classToken) then return true end
+    if IsClassAllowed(item, classToken) and IsWeaponTypeAllowed(item, classToken)
+        and IsArmorTypeAllowed(item, classToken, ARMOR_PROFICIENCY_UNLOCK_LEVEL) then
+        return true
+    end
+    local getInfo = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
+    local subType = getInfo and select(3, getInfo(itemId))
+    return false, subType
+end
+
 -- ===== Public interface =====
 
 -- Returns (candidates, currentScore) for a REAL slot token:
