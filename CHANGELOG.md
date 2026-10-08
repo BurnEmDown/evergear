@@ -26,6 +26,8 @@
 - Library book rewards are listed as Special ("Hand in 10/20/25 library
   books") instead of quests; Truthseeker's Bow needs 25 books and level 30.
 - Talvash's Gold Ring (Gnome Improvement) is listed under Gnomeregan.
+- Malignant Root is listed as Special (turn in Rotheap Innards to Rethiel the
+  Greenwarden), not as a quest reward.
 - Arcane Runed Bracers and Rod of Sorrow stats; Rage of the Storm no longer
   shows a Stormstrike equip line.
 - Some Alliance-only quest rewards (Wetlands, Excavation Site) were offered
