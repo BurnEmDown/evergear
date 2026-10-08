@@ -129,6 +129,13 @@ wantedBarThumb:SetColorTexture(THEME.goldDim[1], THEME.goldDim[2], THEME.goldDim
 wantedBarThumb:SetSize(WANTED_BAR_WIDTH, 40)
 wantedBar:SetThumbTexture(wantedBarThumb)
 wantedBar:SetScript("OnValueChanged", function(_, value) wantedScroll:SetVerticalScroll(value) end)
+-- Mouse input lets the thumb be dragged (and the track clicked to jump);
+-- the slider moves the value itself, OnValueChanged scrolls the list. The
+-- grab area is a few pixels wider than the thin bar so it's easy to catch.
+wantedBar:EnableMouse(true)
+wantedBar:SetHitRectInsets(-4, -4, 0, 0)
+wantedBar:SetScript("OnEnter", function() wantedBarThumb:SetVertexColor(1.25, 1.25, 1.25) end)
+wantedBar:SetScript("OnLeave", function() wantedBarThumb:SetVertexColor(1, 1, 1) end)
 wantedBar:Hide()
 
 local function WantedMaxScroll()
