@@ -334,10 +334,57 @@ end
 -- GetBuiltinProfile(classToken, specName) themselves first -- this function
 -- clones/clamps whatever it's given but doesn't fill in missing keys.
 -- Returns the new profile's id.
+-- Profile names are unique within a class+spec (built-in ones included),
+-- ignoring case and outer spaces, so the Profile dropdown never shows two
+-- entries that look the same. exceptId lets a profile be "renamed" to its
+-- own name.
+function EverGear:IsProfileNameTaken(classToken, specName, name, exceptId)
+    local wanted = strlower(strtrim(name or ""))
+    for _, p in ipairs(self:GetProfileList(classToken, specName)) do
+        if p.id ~= exceptId and strlower(strtrim(p.name or "")) == wanted then return true end
+    end
+    return false
+end
+
+local function NameTakenMessage(name)
+    return "There's already a profile called \"" .. strtrim(name) .. "\" for this spec."
+end
+
+-- Limits: custom profiles per class+spec (built-in ones don't count), and
+-- profile name length in characters.
+EverGear.MAX_CUSTOM_PROFILES_PER_SPEC = 8
+EverGear.MAX_PROFILE_NAME_LENGTH = 30
+
+-- Character count, not bytes, so accented names aren't cut short.
+local function NameLength(name)
+    return strlenutf8 and strlenutf8(name) or #name
+end
+
+function EverGear:CountCustomProfiles(classToken, specName)
+    local count = 0
+    for _ in pairs(GetCustomProfileTable(classToken, specName, false) or {}) do count = count + 1 end
+    return count
+end
+
+local function NameTooLongMessage()
+    return "Profile names can be at most " .. EverGear.MAX_PROFILE_NAME_LENGTH .. " characters."
+end
+
+-- Returns the new profile's id, or nil + a reason string (name taken or too
+-- long, or the spec already has the most custom profiles allowed).
 function EverGear:CreateCustomProfile(classToken, specName, name, weights)
+    if self:CountCustomProfiles(classToken, specName) >= self.MAX_CUSTOM_PROFILES_PER_SPEC then
+        return nil, "This spec already has " .. self.MAX_CUSTOM_PROFILES_PER_SPEC .. " custom profiles, the most allowed. Delete one first."
+    end
+    if NameLength(strtrim(name)) > self.MAX_PROFILE_NAME_LENGTH then
+        return nil, NameTooLongMessage()
+    end
+    if self:IsProfileNameTaken(classToken, specName, name) then
+        return nil, NameTakenMessage(name)
+    end
     local customTable = GetCustomProfileTable(classToken, specName, true)
     local id = GenerateProfileId()
-    customTable[id] = { name = name, weights = CloneWeights(weights) }
+    customTable[id] = { name = strtrim(name), weights = CloneWeights(weights) }
     return id
 end
 
@@ -365,7 +412,13 @@ function EverGear:RenameCustomProfile(classToken, specName, profileId, newName)
     if not entry then
         return false, "That profile no longer exists."
     end
-    entry.name = newName
+    if NameLength(strtrim(newName)) > self.MAX_PROFILE_NAME_LENGTH then
+        return false, NameTooLongMessage()
+    end
+    if self:IsProfileNameTaken(classToken, specName, newName, profileId) then
+        return false, NameTakenMessage(newName)
+    end
+    entry.name = strtrim(newName)
     return true
 end
 
@@ -395,7 +448,7 @@ end
 -- the character's currently-active profile, and the target doesn't have to
 -- be the same class -- both are just class+spec+profileId triples resolved
 -- independently. Returns the new profile's id, or nil + a reason string if
--- the source profile couldn't be resolved.
+-- the source profile couldn't be resolved or the name is taken.
 function EverGear:CopyProfile(fromClass, fromSpec, fromProfileId, toClass, toSpec, newName)
     local sourceWeights = self:GetProfileWeights(fromClass, fromSpec, fromProfileId)
     if not sourceWeights then
@@ -403,8 +456,7 @@ function EverGear:CopyProfile(fromClass, fromSpec, fromProfileId, toClass, toSpe
     end
     local targetDefaults = self:GetBuiltinProfile(toClass, toSpec)
     local merged = MergeWeightsOnto(targetDefaults, sourceWeights)
-    local id = self:CreateCustomProfile(toClass, toSpec, newName, merged)
-    return id
+    return self:CreateCustomProfile(toClass, toSpec, newName, merged)
 end
 
 -- ===== JSON export / import (M2) =====
