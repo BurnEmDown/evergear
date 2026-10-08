@@ -113,70 +113,95 @@ local wantedList = CreateFrame("Frame", nil, wantedScroll)
 wantedList:SetSize(WANTED_ROW_WIDTH, 10)
 wantedScroll:SetScrollChild(wantedList)
 
-local wantedBar = CreateFrame("Slider", "EverGearWantedScrollBar", wantedFrame)
-wantedBar:SetOrientation("VERTICAL")
+-- The scroll bar is drawn and driven by hand (a track plus a thumb this code
+-- positions itself) rather than a Slider, so its direction never depends on
+-- how the client orients a vertical slider: the thumb's distance from the
+-- top of the track always matches how far down the list is scrolled.
+local WANTED_VIEW_HEIGHT = WANTED_HEIGHT + WANTED_LIST_TOP - WANTED_LIST_BOTTOM
+
+local wantedBar = CreateFrame("Frame", "EverGearWantedScrollBar", wantedFrame)
 wantedBar:SetWidth(WANTED_BAR_WIDTH)
 wantedBar:SetPoint("TOPLEFT", WANTED_LIST_SIDE, WANTED_LIST_TOP)
 wantedBar:SetPoint("BOTTOMLEFT", WANTED_LIST_SIDE, WANTED_LIST_BOTTOM)
-wantedBar:SetMinMaxValues(0, 0)
-wantedBar:SetValueStep(1)
-wantedBar:SetValue(0)
 local wantedBarTrack = wantedBar:CreateTexture(nil, "BACKGROUND")
 wantedBarTrack:SetAllPoints()
 wantedBarTrack:SetColorTexture(0, 0, 0, 0.5)
-local wantedBarThumb = wantedBar:CreateTexture(nil, "OVERLAY")
-wantedBarThumb:SetColorTexture(THEME.goldDim[1], THEME.goldDim[2], THEME.goldDim[3], 0.9)
-wantedBarThumb:SetSize(WANTED_BAR_WIDTH, 40)
-wantedBar:SetThumbTexture(wantedBarThumb)
--- This client puts a vertical slider's minimum at the BOTTOM, so the value
--- runs the other way from the scroll offset: value = max - offset, which
--- keeps the thumb at the top while the list is at its top.
-local wantedBarMax = 0
-local function SetWantedBarFromScroll(offset)
-    wantedBar:SetValue(wantedBarMax - offset)
-end
-wantedBar:SetScript("OnValueChanged", function(_, value)
-    wantedScroll:SetVerticalScroll(math.max(0, wantedBarMax - value))
-end)
--- Mouse input lets the thumb be dragged (and the track clicked to jump);
--- the slider moves the value itself, OnValueChanged scrolls the list. The
--- grab area is a few pixels wider than the thin bar so it's easy to catch.
-wantedBar:EnableMouse(true)
-wantedBar:SetHitRectInsets(-4, -4, 0, 0)
-wantedBar:SetScript("OnEnter", function() wantedBarThumb:SetVertexColor(1.25, 1.25, 1.25) end)
-wantedBar:SetScript("OnLeave", function() wantedBarThumb:SetVertexColor(1, 1, 1) end)
+
+local wantedThumb = CreateFrame("Button", "EverGearWantedScrollThumb", wantedBar)
+wantedThumb:SetWidth(WANTED_BAR_WIDTH)
+wantedThumb:SetHeight(40)
+wantedThumb:SetPoint("TOP", wantedBar, "TOP", 0, 0)
+local wantedThumbTexture = wantedThumb:CreateTexture(nil, "OVERLAY")
+wantedThumbTexture:SetAllPoints()
+wantedThumbTexture:SetColorTexture(THEME.goldDim[1], THEME.goldDim[2], THEME.goldDim[3], 0.9)
+-- A few pixels wider than the thin bar to grab, and a hover highlight.
+wantedThumb:SetHitRectInsets(-4, -4, 0, 0)
+wantedThumb:SetScript("OnEnter", function() wantedThumbTexture:SetVertexColor(1.25, 1.25, 1.25) end)
+wantedThumb:SetScript("OnLeave", function() wantedThumbTexture:SetVertexColor(1, 1, 1) end)
 wantedBar:Hide()
 
-local function WantedMaxScroll()
-    return math.max(0, wantedList:GetHeight() - wantedScroll:GetHeight())
+local wantedMaxScroll = 0
+
+local function WantedThumbTravel()
+    return math.max(1, WANTED_VIEW_HEIGHT - wantedThumb:GetHeight())
 end
+
+-- Scrolls the list to `offset` (clamped) and moves the thumb to match.
+local function SetWantedScroll(offset)
+    offset = math.min(wantedMaxScroll, math.max(0, offset))
+    wantedScroll:SetVerticalScroll(offset)
+    local y = wantedMaxScroll > 0 and (offset / wantedMaxScroll * WantedThumbTravel()) or 0
+    wantedThumb:SetPoint("TOP", wantedBar, "TOP", 0, -y)
+end
+
+-- Cursor height in the bar's own coordinates (UI scale applied).
+local function CursorY()
+    local _, y = GetCursorPosition()
+    return y / wantedBar:GetEffectiveScale()
+end
+
+-- Dragging: the list follows the thumb, so moving the mouse down scrolls down.
+local dragStartY, dragStartOffset
+wantedThumb:SetScript("OnMouseDown", function()
+    dragStartY, dragStartOffset = CursorY(), wantedScroll:GetVerticalScroll()
+end)
+wantedThumb:SetScript("OnUpdate", function()
+    if not dragStartY then return end
+    if not IsMouseButtonDown("LeftButton") then dragStartY = nil return end
+    local movedDown = dragStartY - CursorY()
+    SetWantedScroll(dragStartOffset + movedDown / WantedThumbTravel() * wantedMaxScroll)
+end)
+wantedThumb:SetScript("OnMouseUp", function() dragStartY = nil end)
+wantedThumb:SetScript("OnHide", function() dragStartY = nil end)
+
+-- Clicking the track (not the thumb) jumps there, centring the thumb on the click.
+wantedBar:EnableMouse(true)
+wantedBar:SetHitRectInsets(-4, -4, 0, 0)
+wantedBar:SetScript("OnMouseDown", function()
+    local top = wantedBar:GetTop()
+    if not top then return end
+    local thumbTop = (top - CursorY()) - wantedThumb:GetHeight() / 2
+    SetWantedScroll(thumbTop / WantedThumbTravel() * wantedMaxScroll)
+end)
 
 wantedScroll:EnableMouseWheel(true)
 wantedScroll:SetScript("OnMouseWheel", function(self, delta)
-    local target = math.min(WantedMaxScroll(), math.max(0, self:GetVerticalScroll() - delta * WANTED_ROW_HEIGHT))
-    if wantedBar:IsShown() then SetWantedBarFromScroll(target) else self:SetVerticalScroll(target) end
+    SetWantedScroll(self:GetVerticalScroll() - delta * WANTED_ROW_HEIGHT)
 end)
 wantedBar:EnableMouseWheel(true)
-wantedBar:SetScript("OnMouseWheel", function(_, delta) wantedScroll:GetScript("OnMouseWheel")(wantedScroll, delta) end)
+wantedBar:SetScript("OnMouseWheel", function(_, delta)
+    SetWantedScroll(wantedScroll:GetVerticalScroll() - delta * WANTED_ROW_HEIGHT)
+end)
 
--- Shows the bar only when the rows don't fit, sized to how much of the list
--- is visible, and keeps the scroll position inside the new range.
+-- Shows the bar only when the rows don't fit, sizes the thumb to how much of
+-- the list is visible, and keeps the scroll position inside the new range.
 local function UpdateWantedScrollBar(listHeight)
     listHeight = math.max(10, listHeight)
-    local viewHeight = WANTED_HEIGHT + WANTED_LIST_TOP - WANTED_LIST_BOTTOM
-    local needsBar = listHeight > viewHeight
     wantedList:SetHeight(listHeight)
-
-    local maxScroll = math.max(0, listHeight - viewHeight)
-    local current = math.min(wantedScroll:GetVerticalScroll(), maxScroll)
-    wantedBar:SetShown(needsBar)
-    if needsBar then
-        wantedBarThumb:SetHeight(math.max(20, viewHeight * viewHeight / listHeight))
-        wantedBarMax = maxScroll
-        wantedBar:SetMinMaxValues(0, maxScroll)
-        SetWantedBarFromScroll(current)
-    end
-    wantedScroll:SetVerticalScroll(current)
+    wantedMaxScroll = math.max(0, listHeight - WANTED_VIEW_HEIGHT)
+    wantedBar:SetShown(wantedMaxScroll > 0)
+    wantedThumb:SetHeight(math.max(20, WANTED_VIEW_HEIGHT * WANTED_VIEW_HEIGHT / listHeight))
+    SetWantedScroll(wantedScroll:GetVerticalScroll())
 end
 
 local wantedRows = {}
