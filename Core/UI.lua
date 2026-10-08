@@ -914,8 +914,9 @@ local function GetOrCreateDetailRow(index)
     end)
     row.icon = icon
 
-    -- Star: add this item to the wanted list or a gear set (menu in
-    -- WishlistUI.lua). Bright when the item is already on either, dim when not.
+    -- Star: one click puts the item on the wanted list (and a second click
+    -- takes it off). Bright while it's wanted. Gear sets go through Alt-click
+    -- on the icon instead (menu in WishlistUI.lua).
     local star = CreateFrame("Button", nil, row)
     star:SetSize(16, 16)
     star:SetPoint("TOPRIGHT", 0, 0)
@@ -923,13 +924,24 @@ local function GetOrCreateDetailRow(index)
     star:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
     star:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText("Want this")
-        GameTooltip:AddLine("Add it to your wanted list or a gear set.", 0.8, 0.8, 0.8, true)
+        if row.itemId and EverGear:IsWanted(row.itemId) then
+            GameTooltip:SetText("On your wanted list")
+            GameTooltip:AddLine("Click to take it off.", 0.8, 0.8, 0.8, true)
+        else
+            GameTooltip:SetText("Want this")
+            GameTooltip:AddLine("Click to add it to your wanted list. Alt-click the icon to put it in a gear set.", 0.8, 0.8, 0.8, true)
+        end
         GameTooltip:Show()
     end)
     star:SetScript("OnLeave", function() GameTooltip:Hide() end)
     star:SetScript("OnClick", function(self)
-        if row.itemId then EverGear:ShowStarMenu(self, row.itemId, row.slotToken) end
+        if not row.itemId then return end
+        if EverGear:IsWanted(row.itemId) then
+            EverGear:RemoveWanted(row.itemId)
+        else
+            EverGear:AddWanted(row.itemId, row.slotToken)
+        end
+        if GameTooltip:IsOwned(self) then self:GetScript("OnEnter")(self) end
     end)
     row.star = star
 
@@ -995,7 +1007,7 @@ EverGear.UIHelpers = {
 }
 
 local function UpdateStar(row)
-    local tracked = row.itemId and EverGear:IsTracked(row.itemId)
+    local tracked = row.itemId and EverGear:IsWanted(row.itemId)
     local texture = row.star:GetNormalTexture()
     texture:SetDesaturated(not tracked)
     texture:SetAlpha(tracked and 1 or 0.45)

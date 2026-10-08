@@ -99,14 +99,18 @@ wantedEmpty:SetText("Nothing here yet.\n\nAlt-click any item (bags, character sh
 -- Plain ScrollFrame, no Blizzard scroll templates (they can be missing from
 -- this client -- see CreateItemIconFrame in UI.lua for the same reason). The
 -- scroll bar on its left is a bare Slider, shown only while the list is
--- taller than the window; the list moves right to make room for it.
+-- taller than the window. Its space is always kept free, so nothing moves when
+-- it comes and goes.
 local WANTED_LIST_TOP, WANTED_LIST_BOTTOM, WANTED_LIST_SIDE = -44, 18, 18
 local WANTED_BAR_WIDTH, WANTED_BAR_GAP = 8, 8
 
 local wantedScroll = CreateFrame("ScrollFrame", "EverGearWantedScroll", wantedFrame)
 wantedScroll:SetPoint("BOTTOMRIGHT", -WANTED_LIST_SIDE, WANTED_LIST_BOTTOM)
+local WANTED_LIST_LEFT = WANTED_LIST_SIDE + WANTED_BAR_WIDTH + WANTED_BAR_GAP
+local WANTED_ROW_WIDTH = WANTED_WIDTH - WANTED_LIST_LEFT - WANTED_LIST_SIDE
+wantedScroll:SetPoint("TOPLEFT", WANTED_LIST_LEFT, WANTED_LIST_TOP)
 local wantedList = CreateFrame("Frame", nil, wantedScroll)
-wantedList:SetSize(WANTED_WIDTH - 2 * WANTED_LIST_SIDE, 10)
+wantedList:SetSize(WANTED_ROW_WIDTH, 10)
 wantedScroll:SetScrollChild(wantedList)
 
 local wantedBar = CreateFrame("Slider", "EverGearWantedScrollBar", wantedFrame)
@@ -141,13 +145,11 @@ wantedBar:SetScript("OnMouseWheel", function(_, delta) wantedScroll:GetScript("O
 
 -- Shows the bar only when the rows don't fit, sized to how much of the list
 -- is visible, and keeps the scroll position inside the new range.
-local function UpdateWantedScrollBar(rowCount)
-    local listHeight = math.max(10, rowCount * WANTED_ROW_HEIGHT)
+local function UpdateWantedScrollBar(listHeight)
+    listHeight = math.max(10, listHeight)
     local viewHeight = WANTED_HEIGHT + WANTED_LIST_TOP - WANTED_LIST_BOTTOM
     local needsBar = listHeight > viewHeight
-    local left = WANTED_LIST_SIDE + (needsBar and (WANTED_BAR_WIDTH + WANTED_BAR_GAP) or 0)
-    wantedScroll:SetPoint("TOPLEFT", left, WANTED_LIST_TOP)
-    wantedList:SetSize(WANTED_WIDTH - left - WANTED_LIST_SIDE, listHeight)
+    wantedList:SetHeight(listHeight)
 
     local maxScroll = math.max(0, listHeight - viewHeight)
     local current = math.min(wantedScroll:GetVerticalScroll(), maxScroll)
@@ -158,7 +160,6 @@ local function UpdateWantedScrollBar(rowCount)
         wantedBar:SetValue(current)
     end
     wantedScroll:SetVerticalScroll(current)
-    return wantedList:GetWidth()
 end
 
 local wantedRows = {}
@@ -177,7 +178,7 @@ end
 local function GetOrCreateWantedRow(index)
     if wantedRows[index] then return wantedRows[index] end
     local row = CreateFrame("Frame", nil, wantedList)
-    row:SetSize(WANTED_WIDTH - 2 * WANTED_LIST_SIDE, WANTED_ROW_HEIGHT)
+    row:SetSize(WANTED_ROW_WIDTH, WANTED_ROW_HEIGHT)
 
     local icon = H.CreateItemIconFrame(nil, row, 32)
     icon:SetPoint("TOPLEFT", 0, -2)
@@ -221,7 +222,12 @@ local function GetOrCreateWantedRow(index)
 
     local source = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     source:SetPoint("TOPLEFT", name, "BOTTOMLEFT", 0, -3)
-    source:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+    -- A fixed width that stops short of the tick / X buttons (icon 32 + gap 8
+    -- on the left; two 18px buttons, their 4px gap and 6px clearance on the
+    -- right), so long sources wrap instead of running under them, and so the
+    -- wrapped height is known straight away -- the row grows to fit it (see
+    -- RefreshWantedWindow).
+    source:SetWidth(WANTED_ROW_WIDTH - 40 - 46)
     source:SetJustifyH("LEFT")
     source:SetWordWrap(true)
     source:SetTextColor(0.7, 0.7, 0.7)
@@ -236,14 +242,13 @@ local function RefreshWantedWindow()
     wantedFrame.title:SetText("Wanted (" .. #list .. ")")
     wantedEmpty:SetShown(#list == 0)
     wantedScroll:SetShown(#list > 0)
-    local rowWidth = UpdateWantedScrollBar(#list)
 
+    local y = 0
     for i, entry in ipairs(list) do
         local row = GetOrCreateWantedRow(i)
         row.itemId = entry.itemId
         row:ClearAllPoints()
-        row:SetPoint("TOPLEFT", 0, -(i - 1) * WANTED_ROW_HEIGHT)
-        row:SetWidth(rowWidth)
+        row:SetPoint("TOPLEFT", 0, -y)
         row:Show()
 
         local acquired = EverGear:IsAcquired(entry.itemId)
@@ -262,8 +267,15 @@ local function RefreshWantedWindow()
         local slotName = EverGear.FRIENDLY_SLOT_NAMES[entry.slot or ""]
         local source = item and EverGear:GetSourceSummary(item) or "Source not in EverGear's data"
         row.sourceText:SetText((acquired and "|cff33e640Acquired|r - " or "") .. (slotName and (slotName .. " - ") or "") .. source)
+
+        -- Tall enough for the icon and for every wrapped line of text, plus a gap.
+        local textHeight = 1 + row.nameText:GetStringHeight() + 3 + row.sourceText:GetStringHeight()
+        local height = math.max(WANTED_ROW_HEIGHT, math.ceil(textHeight) + 8)
+        row:SetHeight(height)
+        y = y + height
     end
     for i = #list + 1, #wantedRows do wantedRows[i]:Hide() end
+    UpdateWantedScrollBar(y)
 end
 
 wantedFrame:SetScript("OnShow", RefreshWantedWindow)
@@ -306,7 +318,7 @@ setsEmpty:SetPoint("RIGHT", -24, 0)
 setsEmpty:SetJustifyH("LEFT")
 setsEmpty:SetWordWrap(true)
 setsEmpty:SetTextColor(unpack(THEME.parchment))
-setsEmpty:SetText("No gear sets yet.\n\nClick New to create one, then Alt-click any item (or use the star next to an item in Suggested Upgrades) to put it in the set.")
+setsEmpty:SetText("No gear sets yet.\n\nClick New to create one, then Alt-click any item (in your bags, the character sheet, EverGear's own window...) to put it in the set.")
 
 -- Paper-doll layout, same columns as the main window.
 local SET_LEFT = { "HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", "WristSlot" }
