@@ -1,9 +1,35 @@
 # Changelog
 
-All notable changes to EverGear are recorded here. Versioning policy: the
-patch digit (`0.0.X`) bumps on every shipped change, no matter how small.
-Moving to `0.1.0` or `1.0.0` is a deliberate decision, not a patch-count
-milestone -- see the "Versioning" section of `README.md`.
+## [0.0.28] - 2026-10-08
+
+### Added
+- Quest rewards are no longer suggested before you can pick up the quest:
+  each one now knows its quest's required level (e.g. the Morganth rewards
+  wait until 20, "Oh Brother..." until 15).
+- Rune-Etched Ring, Raptor's End, Dwarven Guard Cloak, Firestarter, Lesser
+  Magic Wand (Enchanting), Rage of the Storm (The Tempest's Weapons), and
+  Wild Headdress, Stromgarde Bracers, Arathi Armbands and War Rider Bracers
+  (Arathi Highlands Wanted quests).
+- Fight Club (Scarlet Monastery trash), and Crest of Elucidation and
+  Researcher's Night Light (Greater Friend of the Library, 25 books).
+
+### Fixed
+- "BoE only" on a profession still suggested Bind on Pickup items such as
+  Goblin Mining Helmet: bind types now come from the game's own item data.
+- "Usable Only" unticked Staves for Warriors and Hunters, who can use them.
+- Items that aren't in WoW Forever or have no stats (e.g. The Frozen Clutch,
+  "Encrypted by Forever Beta Build" in game) are no longer suggested.
+- Quest names: Seal of Wrynn (An Audience with the King), Razzeric's Racing
+  Grips (Safety First). Slain Baron's Signet, Grave Shroud and Monstrous
+  Cleaver show only your faction's quest (Abominable Creatures / Unending
+  Torment).
+- Library book rewards are listed as Special ("Hand in 10/20/25 library
+  books") instead of quests; Truthseeker's Bow needs 25 books and level 30.
+- Talvash's Gold Ring (Gnome Improvement) is listed under Gnomeregan.
+- Arcane Runed Bracers and Rod of Sorrow stats; Rage of the Storm no longer
+  shows a Stormstrike equip line.
+- Some Alliance-only quest rewards (Wetlands, Excavation Site) were offered
+  to Horde characters.
 
 ## [0.0.27] - 2026-10-07
 
