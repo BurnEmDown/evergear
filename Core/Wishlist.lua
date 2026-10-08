@@ -16,11 +16,6 @@
 
 EverGear = EverGear or {}
 
--- Labels for the key binding in Bindings.xml (Key Bindings > AddOns > EverGear).
--- Set here, in a plain data file, so they exist even if a UI file fails to load.
-BINDING_HEADER_EVERGEAR = "EverGear"
-BINDING_NAME_EVERGEAR_HOVERED_ITEM = "Add hovered item to wanted list / set"
-
 local function CharDB()
     local charDB = EverGear:GetCharDB()
     charDB.wanted = charDB.wanted or {}
@@ -88,12 +83,11 @@ function EverGear:IsAcquired(itemId)
     return CharDB().acquired[itemId] == true
 end
 
--- Ticks (or unticks) an item by hand. Ticking a wanted item also takes it off
--- the wanted list -- "acquired" and "no longer interested" both remove it.
+-- Ticks (or unticks) an item by hand. A wanted item stays on the wanted list,
+-- marked as acquired, until the player removes it.
 function EverGear:SetAcquired(itemId, acquired)
     local charDB = CharDB()
     charDB.acquired[itemId] = acquired and true or nil
-    if acquired then charDB.wanted[itemId] = nil end
     self:NotifyWishlistChanged()
 end
 
@@ -202,8 +196,9 @@ end
 
 -- ===== Automatic acquire detection =====
 -- Looks through equipped gear and the backpack + bags for anything on the
--- wanted list or in a set. A wanted item that turns up is ticked and taken off
--- the list, with a chat line so it's never a silent surprise.
+-- wanted list or in a set. One that turns up is ticked as acquired (it stays on
+-- the wanted list until the player removes it), with a chat line for wanted
+-- items so it's never a silent change.
 
 local GetBagSlots = (C_Container and C_Container.GetContainerNumSlots) or GetContainerNumSlots
 local GetBagItemId = (C_Container and C_Container.GetContainerItemID) or GetContainerItemID
@@ -232,8 +227,7 @@ function EverGear:ScanForAcquiredItems()
             charDB.acquired[itemId] = true
             changed = true
             if wanted then
-                charDB.wanted[itemId] = nil
-                Print("You got " .. self:GetWishlistItemName(itemId, wanted.name) .. " -- removed it from your wanted list.")
+                Print("You got " .. self:GetWishlistItemName(itemId, wanted.name) .. " from your wanted list -- marked as acquired.")
             end
         end
     end)

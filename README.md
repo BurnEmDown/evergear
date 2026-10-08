@@ -57,14 +57,14 @@ update, re-run that command and update this value if it changes.
 Per character. **Alt-click any item** in the game (bags, character sheet, chat links,
 loot, quest rewards, vendors...), or click the star next to an item in **Suggested
 Upgrades**, to put it on your **wanted list** or into a slot of a **gear set** (or start a
-new set). There's also a key binding (Key Bindings > AddOns > EverGear) that does the same
-for whatever item you're hovering, no click needed. Gear tooltips get a line saying
-whether the item is already on your list or in a set.
+new set). This also works on the item icons in EverGear's own window. Gear tooltips get
+a line when the item is already on your wanted list or in a set.
 
 - **Wanted** (star button in the top-left corner of the main window, or `/eg wanted`): one row
-  per item with its source. The check mark means "acquired", the X "no longer
-  interested"; both take it off the list. When a wanted item shows up in your bags or is
-  equipped, EverGear removes it by itself and says so in chat.
+  per item with its source. When a wanted item shows up in your bags or is equipped,
+  EverGear marks it acquired (a green tick) and says so in chat; it stays on the list
+  until you remove it with the X. The check mark button ticks or unticks it by hand. A
+  scroll bar appears on the left once the list is longer than the window.
 - **Gear sets** (chest button below it, or `/eg sets`): pick a set at the top, create, rename or delete sets. The set
   is shown as a paper doll; owned pieces get a tick, missing ones are greyed out, and the
   header counts them ("5/9 acquired"). Click a piece to tick or untick it by hand, or to

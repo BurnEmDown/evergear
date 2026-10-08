@@ -1,6 +1,6 @@
 -- Windows for the per-character wanted list and gear sets (data in
 -- Wishlist.lua), plus the "add to..." menu behind the star on each Suggested
--- Upgrades row, Alt-click on any item, and the hovered-item key binding.
+-- Upgrades row and Alt-click on any item.
 --
 -- Both windows open to the LEFT of the main window, the same spot as the EP
 -- profile editor, and only one of the three is shown at a time. Shared visual
@@ -96,21 +96,70 @@ wantedEmpty:SetWordWrap(true)
 wantedEmpty:SetTextColor(unpack(THEME.parchment))
 wantedEmpty:SetText("Nothing here yet.\n\nAlt-click any item (bags, character sheet, chat links, loot, quest rewards...) or click the star next to an item in Suggested Upgrades to add it to this character's wanted list.")
 
--- Plain ScrollFrame scrolled with the mouse wheel -- no Blizzard scroll-bar
--- template, since templates can be missing from this client (see
--- CreateItemIconFrame in UI.lua for the same reason).
+-- Plain ScrollFrame, no Blizzard scroll templates (they can be missing from
+-- this client -- see CreateItemIconFrame in UI.lua for the same reason). The
+-- scroll bar on its left is a bare Slider, shown only while the list is
+-- taller than the window; the list moves right to make room for it.
+local WANTED_LIST_TOP, WANTED_LIST_BOTTOM, WANTED_LIST_SIDE = -44, 18, 18
+local WANTED_BAR_WIDTH, WANTED_BAR_GAP = 8, 8
+
 local wantedScroll = CreateFrame("ScrollFrame", "EverGearWantedScroll", wantedFrame)
-wantedScroll:SetPoint("TOPLEFT", 18, -44)
-wantedScroll:SetPoint("BOTTOMRIGHT", -18, 18)
+wantedScroll:SetPoint("BOTTOMRIGHT", -WANTED_LIST_SIDE, WANTED_LIST_BOTTOM)
+local wantedList = CreateFrame("Frame", nil, wantedScroll)
+wantedList:SetSize(WANTED_WIDTH - 2 * WANTED_LIST_SIDE, 10)
+wantedScroll:SetScrollChild(wantedList)
+
+local wantedBar = CreateFrame("Slider", "EverGearWantedScrollBar", wantedFrame)
+wantedBar:SetOrientation("VERTICAL")
+wantedBar:SetWidth(WANTED_BAR_WIDTH)
+wantedBar:SetPoint("TOPLEFT", WANTED_LIST_SIDE, WANTED_LIST_TOP)
+wantedBar:SetPoint("BOTTOMLEFT", WANTED_LIST_SIDE, WANTED_LIST_BOTTOM)
+wantedBar:SetMinMaxValues(0, 0)
+wantedBar:SetValueStep(1)
+wantedBar:SetValue(0)
+local wantedBarTrack = wantedBar:CreateTexture(nil, "BACKGROUND")
+wantedBarTrack:SetAllPoints()
+wantedBarTrack:SetColorTexture(0, 0, 0, 0.5)
+local wantedBarThumb = wantedBar:CreateTexture(nil, "OVERLAY")
+wantedBarThumb:SetColorTexture(THEME.goldDim[1], THEME.goldDim[2], THEME.goldDim[3], 0.9)
+wantedBarThumb:SetSize(WANTED_BAR_WIDTH, 40)
+wantedBar:SetThumbTexture(wantedBarThumb)
+wantedBar:SetScript("OnValueChanged", function(_, value) wantedScroll:SetVerticalScroll(value) end)
+wantedBar:Hide()
+
+local function WantedMaxScroll()
+    return math.max(0, wantedList:GetHeight() - wantedScroll:GetHeight())
+end
+
 wantedScroll:EnableMouseWheel(true)
 wantedScroll:SetScript("OnMouseWheel", function(self, delta)
-    local maxScroll = math.max(0, self:GetScrollChild():GetHeight() - self:GetHeight())
-    local target = self:GetVerticalScroll() - delta * WANTED_ROW_HEIGHT
-    self:SetVerticalScroll(math.min(maxScroll, math.max(0, target)))
+    local target = math.min(WantedMaxScroll(), math.max(0, self:GetVerticalScroll() - delta * WANTED_ROW_HEIGHT))
+    if wantedBar:IsShown() then wantedBar:SetValue(target) else self:SetVerticalScroll(target) end
 end)
-local wantedList = CreateFrame("Frame", nil, wantedScroll)
-wantedList:SetSize(WANTED_WIDTH - 36, 10)
-wantedScroll:SetScrollChild(wantedList)
+wantedBar:EnableMouseWheel(true)
+wantedBar:SetScript("OnMouseWheel", function(_, delta) wantedScroll:GetScript("OnMouseWheel")(wantedScroll, delta) end)
+
+-- Shows the bar only when the rows don't fit, sized to how much of the list
+-- is visible, and keeps the scroll position inside the new range.
+local function UpdateWantedScrollBar(rowCount)
+    local listHeight = math.max(10, rowCount * WANTED_ROW_HEIGHT)
+    local viewHeight = WANTED_HEIGHT + WANTED_LIST_TOP - WANTED_LIST_BOTTOM
+    local needsBar = listHeight > viewHeight
+    local left = WANTED_LIST_SIDE + (needsBar and (WANTED_BAR_WIDTH + WANTED_BAR_GAP) or 0)
+    wantedScroll:SetPoint("TOPLEFT", left, WANTED_LIST_TOP)
+    wantedList:SetSize(WANTED_WIDTH - left - WANTED_LIST_SIDE, listHeight)
+
+    local maxScroll = math.max(0, listHeight - viewHeight)
+    local current = math.min(wantedScroll:GetVerticalScroll(), maxScroll)
+    wantedBar:SetShown(needsBar)
+    if needsBar then
+        wantedBarThumb:SetHeight(math.max(20, viewHeight * viewHeight / listHeight))
+        wantedBar:SetMinMaxValues(0, maxScroll)
+        wantedBar:SetValue(current)
+    end
+    wantedScroll:SetVerticalScroll(current)
+    return wantedList:GetWidth()
+end
 
 local wantedRows = {}
 
@@ -128,7 +177,7 @@ end
 local function GetOrCreateWantedRow(index)
     if wantedRows[index] then return wantedRows[index] end
     local row = CreateFrame("Frame", nil, wantedList)
-    row:SetSize(WANTED_WIDTH - 36, WANTED_ROW_HEIGHT)
+    row:SetSize(WANTED_WIDTH - 2 * WANTED_LIST_SIDE, WANTED_ROW_HEIGHT)
 
     local icon = H.CreateItemIconFrame(nil, row, 32)
     icon:SetPoint("TOPLEFT", 0, -2)
@@ -140,12 +189,28 @@ local function GetOrCreateWantedRow(index)
     icon:SetScript("OnLeave", function() GameTooltip:Hide() end)
     row.icon = icon
 
-    row.removeButton = CreateRowButton(row, REMOVE_TEXTURE, "No longer interested",
+    -- Green tick on the icon once the item has been looted / bought / ticked.
+    local acquiredMark = icon:CreateTexture(nil, "OVERLAY")
+    acquiredMark:SetSize(18, 18)
+    acquiredMark:SetPoint("BOTTOMRIGHT", 4, -4)
+    acquiredMark:SetTexture(CHECK_TEXTURE)
+    row.acquiredMark = acquiredMark
+
+    row.removeButton = CreateRowButton(row, REMOVE_TEXTURE, "Remove",
         "Take it off the wanted list.", function(itemId) EverGear:RemoveWanted(itemId) end)
     row.removeButton:SetPoint("TOPRIGHT", 0, -4)
-    row.acquiredButton = CreateRowButton(row, CHECK_TEXTURE, "Acquired",
-        "Mark it as acquired and take it off the wanted list.", function(itemId) EverGear:SetAcquired(itemId, true) end)
-    row.acquiredButton:SetPoint("RIGHT", row.removeButton, "LEFT", -4, 0)
+    -- Toggles acquired; the item stays on the list either way.
+    local acquiredButton = CreateRowButton(row, CHECK_TEXTURE, "Acquired", nil,
+        function(itemId) EverGear:SetAcquired(itemId, not EverGear:IsAcquired(itemId)) end)
+    acquiredButton:SetScript("OnEnter", function(self)
+        if EverGear:IsAcquired(self:GetParent().itemId) then
+            Tooltip(self, "Acquired", "Click to mark it as not acquired.")
+        else
+            Tooltip(self, "Mark as acquired", "Happens by itself when it turns up in your bags. Remove it with the X when you're done.")
+        end
+    end)
+    acquiredButton:SetPoint("RIGHT", row.removeButton, "LEFT", -4, 0)
+    row.acquiredButton = acquiredButton
 
     local name = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     name:SetPoint("TOPLEFT", icon, "TOPRIGHT", 8, -1)
@@ -171,13 +236,20 @@ local function RefreshWantedWindow()
     wantedFrame.title:SetText("Wanted (" .. #list .. ")")
     wantedEmpty:SetShown(#list == 0)
     wantedScroll:SetShown(#list > 0)
+    local rowWidth = UpdateWantedScrollBar(#list)
 
     for i, entry in ipairs(list) do
         local row = GetOrCreateWantedRow(i)
         row.itemId = entry.itemId
         row:ClearAllPoints()
         row:SetPoint("TOPLEFT", 0, -(i - 1) * WANTED_ROW_HEIGHT)
+        row:SetWidth(rowWidth)
         row:Show()
+
+        local acquired = EverGear:IsAcquired(entry.itemId)
+        row.acquiredMark:SetShown(acquired)
+        row.acquiredButton:GetNormalTexture():SetDesaturated(not acquired)
+        row.acquiredButton:SetAlpha(acquired and 1 or 0.6)
 
         local item = EverGear:GetItem(entry.itemId)
         local _, _, quality = H.SafeGetItemInfo(entry.itemId)
@@ -189,10 +261,9 @@ local function RefreshWantedWindow()
 
         local slotName = EverGear.FRIENDLY_SLOT_NAMES[entry.slot or ""]
         local source = item and EverGear:GetSourceSummary(item) or "Source not in EverGear's data"
-        row.sourceText:SetText((slotName and (slotName .. " - ") or "") .. source)
+        row.sourceText:SetText((acquired and "|cff33e640Acquired|r - " or "") .. (slotName and (slotName .. " - ") or "") .. source)
     end
     for i = #list + 1, #wantedRows do wantedRows[i]:Hide() end
-    wantedList:SetHeight(math.max(10, #list * WANTED_ROW_HEIGHT))
 end
 
 wantedFrame:SetScript("OnShow", RefreshWantedWindow)
@@ -486,7 +557,7 @@ StaticPopupDialogs["EVERGEAR_DELETE_SET"] = {
 
 -- ===== "Add to..." menu =====
 -- Opened from the star on a Suggested Upgrades row, from Alt-clicking any item
--- in the game, or from the key binding (hovered item). Wanted list on top, then
+-- in the game (or in EverGear's own windows). Wanted list on top, then
 -- the gear sets, then "New set...". An item that fits two slots (rings,
 -- trinkets, one-handed weapons) gets one entry per slot under each set.
 
@@ -623,7 +694,7 @@ function EverGear:ShowStarMenu(anchor, itemId, slotTokens)
     ToggleDropDownMenu(1, nil, starMenu, anchor, 0, 0)
 end
 
--- Menu for any item link (Alt-click, key binding), opened at the cursor.
+-- Menu for any item link (Alt-click), opened at the cursor.
 -- Returns false for things that can't go in a slot (potions, quest items, ...).
 function EverGear:ShowItemMenu(itemLink)
     local itemId, slots = self:GetItemSlots(itemLink)
@@ -645,7 +716,7 @@ if type(HandleModifiedItemClick) == "function" then
     hooksecurefunc("HandleModifiedItemClick", OnModifiedItemClick)
 else
     -- Older-style clients without the shared handler: at least bags and the
-    -- character sheet (the hover key binding still covers everything else).
+    -- character sheet.
     if type(ContainerFrameItemButton_OnModifiedClick) == "function" then
         hooksecurefunc("ContainerFrameItemButton_OnModifiedClick", function(self)
             local getLink = (C_Container and C_Container.GetContainerItemLink) or GetContainerItemLink
@@ -659,21 +730,8 @@ else
     end
 end
 
--- Key binding (Key Bindings > AddOns > EverGear, see Bindings.xml; its labels
--- are set in Wishlist.lua): opens the menu for whatever item the mouse is
--- over, no click needed.
-
-function EverGear:ShowHoveredItemMenu()
-    for _, tip in ipairs({ GameTooltip, ItemRefTooltip }) do
-        if tip and tip:IsShown() and tip.GetItem then
-            local _, itemLink = tip:GetItem()
-            if itemLink and self:ShowItemMenu(itemLink) then return end
-        end
-    end
-end
-
--- One line at the bottom of gear tooltips: where the item already is, or how
--- to add it.
+-- One line at the bottom of gear tooltips, only for items already on the
+-- wanted list or in a set: "EverGear: wanted, set: 'Tank' (acquired)".
 local function OnItemTooltip(tooltip)
     if not tooltip.GetItem then return end
     local _, itemLink = tooltip:GetItem()
@@ -684,14 +742,12 @@ local function OnItemTooltip(tooltip)
     if EverGear:IsWanted(itemId) then table.insert(where, "wanted") end
     for _, set in ipairs(EverGear:GetSets()) do
         for _, setItemId in pairs(set.slots) do
-            if setItemId == itemId then table.insert(where, set.name) break end
+            if setItemId == itemId then table.insert(where, "set: '" .. set.name .. "'") break end
         end
     end
     if #where > 0 then
         local status = EverGear:IsAcquired(itemId) and " (acquired)" or ""
         tooltip:AddLine("EverGear: " .. table.concat(where, ", ") .. status, 1.00, 0.82, 0.20)
-    else
-        tooltip:AddLine("EverGear: Alt-click to add to wanted list / set", 0.55, 0.55, 0.55)
     end
 end
 

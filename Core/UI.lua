@@ -394,7 +394,7 @@ end
 -- those two).
 local profileEditorButton = CreateFrame("Button", "EverGearProfileEditorButton", mainFrame)
 profileEditorButton:SetSize(20, 20)
-profileEditorButton:SetPoint("RIGHT", profileDropdown, "LEFT", 2, 2)  -- 6px right of its old spot so it clears the Sets button
+profileEditorButton:SetPoint("RIGHT", profileDropdown, "LEFT", 14, 2)  -- tucked in close to the dropdown, clear of the Sets button
 profileEditorButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Note_01")
 profileEditorButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 profileEditorButton:SetScript("OnEnter", function(self)
@@ -753,6 +753,12 @@ local function CreateSlotButton(slotToken)
     end)
     btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
     btn:SetScript("OnClick", function(self)
+        -- Alt-click: the wanted list / gear set menu for the equipped item,
+        -- same as Alt-clicking it on the character sheet.
+        if IsAltKeyDown() and self.currentLink and EverGear.ShowItemMenu then
+            EverGear:ShowItemMenu(self.currentLink)
+            return
+        end
         EverGear:ShowUpgradeDetail(self.slotToken)
     end)
 
@@ -901,6 +907,11 @@ local function GetOrCreateDetailRow(index)
         end
     end)
     icon:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    icon:SetScript("OnClick", function(self)
+        if IsAltKeyDown() and self.itemLink and EverGear.ShowItemMenu then
+            EverGear:ShowItemMenu(self.itemLink)
+        end
+    end)
     row.icon = icon
 
     -- Star: add this item to the wanted list or a gear set (menu in
