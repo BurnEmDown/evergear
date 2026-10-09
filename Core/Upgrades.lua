@@ -1342,6 +1342,10 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     -- profession -- everything else (dungeon drops, quests, vendor items)
     -- is untouched by this filter regardless of its state.
     local professionFilter = charDB.professionFilter or {}
+    -- EverGearDB.zoneFilter[zoneName] == false hides everything sourced from
+    -- that zone or dungeon (UI.lua's zone filter panel). Items with no
+    -- source.zone (crafted, world drops from all over) are never hidden by it.
+    local zoneFilter = charDB.zoneFilter or {}
 
     -- "BoE only" per profession (EverGearDB.professionBoEOnly[profName] ==
     -- true, set via the same profession filter panel) -- for browsing a
@@ -1384,6 +1388,8 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
         local itemProfession = item.source and item.source.type == "craft" and item.source.profession
         local professionAllowed = (not itemProfession) or (professionFilter[itemProfession] ~= false)
         local boeAllowed = (not itemProfession) or (not professionBoEOnly[itemProfession]) or item.bindType == "BoE"
+        local itemZone = item.source and item.source.zone
+        local zoneAllowed = (not itemZone) or (zoneFilter[itemZone] ~= false)
 
         -- A quest reward can't be had before the quest can be picked up, even
         -- when the item itself has no level requirement (most rewards don't):
@@ -1399,6 +1405,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
             and weaponTypeAllowed
             and professionAllowed
             and boeAllowed
+            and zoneAllowed
             and not (tankShieldOnly and item.weaponType and item.weaponType ~= "shield" and item.weaponType ~= "offhand")
         then
             local armorValue = (item.stats and item.stats.ARMOR) or 0

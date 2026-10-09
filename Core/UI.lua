@@ -253,8 +253,15 @@ local RefreshProfileDropdown
 local function SpecDropdown_OnClick(self)
     local charDB = EverGear:GetCharDB()
     local oldSpec = charDB.spec
+    -- Remember the profile used with the spec being left (also covers
+    -- characters from before profiles were remembered per spec), then go
+    -- back to whichever one was last used with the new spec.
+    if oldSpec then
+        charDB.profileBySpec = charDB.profileBySpec or {}
+        charDB.profileBySpec[oldSpec] = charDB.profileId
+    end
     charDB.spec = self.value
-    charDB.profileId = EverGear:GetDefaultProfileId(EverGear:GetPlayerInfo().classToken, charDB.spec)
+    EverGear:SetActiveProfileId(EverGear:GetRememberedProfileId(EverGear:GetPlayerInfo().classToken, charDB.spec))
     UIDropDownMenu_SetSelectedValue(specDropdown, self.value)
     if RefreshProfileDropdown then RefreshProfileDropdown() end
     -- Re-points the EP profile editor at the new spec too, but only if it
@@ -306,7 +313,7 @@ profileLabel:SetText("EP Profile")
 profileLabel:SetTextColor(unpack(THEME.goldDim))
 
 local function ProfileDropdown_OnClick(self)
-    EverGear:GetCharDB().profileId = self.value
+    EverGear:SetActiveProfileId(self.value)
     UIDropDownMenu_SetSelectedValue(profileDropdown, self.value)
     EverGear:RefreshUI()
 end
@@ -436,7 +443,7 @@ lookaheadRow:SetPoint("TOP", mainFrame, "TOP", 0, -106)
 
 local lookaheadLabel = lookaheadRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 lookaheadLabel:SetPoint("TOP", lookaheadRow, "TOP", 0, 0)
-lookaheadLabel:SetText("Current Level")
+lookaheadLabel:SetText("Look Ahead: Off")
 lookaheadLabel:SetTextColor(unpack(THEME.goldDim))
 
 -- Reset button sits to the slider's left; shifting the slider right by half
@@ -448,18 +455,43 @@ local sliderXOffset = (RESET_BUTTON_SIZE + RESET_BUTTON_GAP) / 2
 
 local lookaheadSlider = CreateFrame("Slider", "EverGearLookaheadSlider", lookaheadRow, "BackdropTemplate")
 lookaheadSlider:SetOrientation("HORIZONTAL")
-lookaheadSlider:SetSize(170, 14)
-lookaheadSlider:SetPoint("TOP", lookaheadLabel, "BOTTOM", sliderXOffset, -6)
+lookaheadSlider:SetSize(170, 17)
+lookaheadSlider:SetPoint("TOP", lookaheadLabel, "BOTTOM", sliderXOffset, -4)
 lookaheadSlider:SetHitRectInsets(0, 0, -6, -6)
 lookaheadSlider:SetThumbTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
+-- The game's own slider art (the same track as the Interface Options
+-- sliders), so it reads as something to drag rather than a plain bar.
 lookaheadSlider:SetBackdrop({
-    bgFile = "Interface\\Buttons\\WHITE8X8",
-    edgeFile = "Interface\\Buttons\\WHITE8X8",
-    edgeSize = 1,
+    bgFile = "Interface\\Buttons\\UI-SliderBar-Background",
+    edgeFile = "Interface\\Buttons\\UI-SliderBar-Border",
+    tile = true, tileSize = 8, edgeSize = 8,
+    insets = { left = 3, right = 3, top = 6, bottom = 6 },
 })
-lookaheadSlider:SetBackdropColor(0.06, 0.06, 0.08, 1)
-lookaheadSlider:SetBackdropBorderColor(0.6, 0.56, 0.42, 1)
 lookaheadSlider:SetValueStep(1)
+
+-- Gold fill from the left end up to the thumb: how far ahead it looks.
+local lookaheadFill = lookaheadSlider:CreateTexture(nil, "BORDER")
+lookaheadFill:SetColorTexture(THEME.gold[1], THEME.gold[2], THEME.gold[3], 0.55)
+lookaheadFill:SetHeight(5)
+lookaheadFill:SetPoint("LEFT", lookaheadSlider, "LEFT", 3, 0)
+lookaheadFill:SetPoint("RIGHT", lookaheadSlider:GetThumbTexture(), "CENTER", 0, 0)
+
+-- The highest level it can look ahead to, at the slider's right end.
+local lookaheadMaxText = lookaheadRow:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+lookaheadMaxText:SetPoint("LEFT", lookaheadSlider, "RIGHT", 4, 0)
+
+lookaheadSlider:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText("Look ahead")
+    GameTooltip:AddLine("Drag the slider (or use the mouse wheel over it) to also see upgrades you'll be able to use at higher levels. "
+        .. "The button on the left goes back to your current level.", 0.8, 0.8, 0.8, true)
+    GameTooltip:Show()
+end)
+lookaheadSlider:SetScript("OnLeave", function() GameTooltip:Hide() end)
+lookaheadSlider:EnableMouseWheel(true)
+lookaheadSlider:SetScript("OnMouseWheel", function(self, delta)
+    self:SetValue(self:GetValue() + delta)
+end)
 if lookaheadSlider.SetObeyStepOnDrag then
     lookaheadSlider:SetObeyStepOnDrag(true)
 end
@@ -488,12 +520,11 @@ lookaheadResetButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 -- button, not every automatic bounds sync.
 local syncingSlider = false
 
--- Shows a plain "Current Level" label when the slider is at its minimum
--- (nothing being looked ahead to), and the level number only once it's
--- actually been moved past that.
+-- "Look Ahead: Off" while the slider is at its minimum (nothing being looked
+-- ahead to), and the level number once it's been moved past that.
 local function UpdateLookaheadLabel(value)
     if value <= GetLookaheadMin() then
-        lookaheadLabel:SetText("Current Level")
+        lookaheadLabel:SetText("Look Ahead: Off")
     else
         lookaheadLabel:SetText("Look Ahead: Lvl " .. tostring(value))
     end
@@ -515,6 +546,7 @@ local function SyncLookaheadBounds()
     lookaheadSlider:SetMinMaxValues(minLevel, maxLevel)
     lookaheadSlider:SetValue(stored)
     syncingSlider = false
+    lookaheadMaxText:SetText(tostring(maxLevel))
     UpdateLookaheadLabel(stored)
 end
 
@@ -541,6 +573,7 @@ local filterCheckboxes = {}
 -- later.
 local weaponFilterPanel
 local professionFilterPanel
+local zoneFilterPanel
 
 local function CreateFilterCheckbox(name, label, key)
     local cb = CreateFrame("CheckButton", name, mainFrame, "UICheckButtonTemplate")
@@ -639,6 +672,10 @@ versionText:SetPoint("BOTTOMLEFT", 10, versionText:GetStringHeight())
 -- ===== Slot buttons =====
 
 local slotButtons = {}
+-- The slot the mouse is resting on, and how long it has to rest there before
+-- the slot's suggested upgrades open by themselves.
+local hoveredSlot
+local HOVER_DETAIL_DELAY = 0.3
 local leftItems, rightItems, bottomItems = {}, {}, {}
 
 -- Hand-built item-icon button instead of Blizzard's "ItemButtonTemplate" XML
@@ -750,8 +787,20 @@ local function CreateSlotButton(slotToken)
             GameTooltip:SetText((EverGear.FRIENDLY_SLOT_NAMES[self.slotToken] or self.slotToken) .. " (empty)")
         end
         GameTooltip:Show()
+        -- Resting on a slot for a moment shows its suggested upgrades too,
+        -- without a click (see ShowUpgradeDetailOnHover).
+        hoveredSlot = self.slotToken
+        local slotToken = self.slotToken
+        if C_Timer and C_Timer.After then
+            C_Timer.After(HOVER_DETAIL_DELAY, function()
+                if hoveredSlot == slotToken then EverGear:ShowUpgradeDetailOnHover(slotToken) end
+            end)
+        end
     end)
-    btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    btn:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+        hoveredSlot = nil
+    end)
     btn:SetScript("OnClick", function(self)
         -- Alt-click: the wanted list / gear set menu for the equipped item,
         -- same as Alt-clicking it on the character sheet.
@@ -1051,6 +1100,24 @@ function EverGear:HideUpgradeDetail()
     detailPanel:Hide()
 end
 
+-- Hover version of a slot click: opens the slot's suggested upgrades, but
+-- only when there are some. Like a click, it leaves the Wanted, Gear Sets and
+-- EP profile windows open (the panel stacks below them). It doesn't open
+-- while a weapon, profession or zone filter panel is open, since showing the
+-- upgrades closes those and the mouse often crosses the slots on its way to
+-- a checkbox. The panel stays open when the mouse moves on, so its rows can
+-- be used, and switches to whichever slot is hovered next.
+function EverGear:ShowUpgradeDetailOnHover(slotToken)
+    local btn = slotButtons[slotToken]
+    if not (btn and mainFrame:IsShown()) then return end
+    if not btn.upgradeList or #btn.upgradeList == 0 then return end
+    if detailPanel:IsShown() and currentDetailSlot == slotToken then return end
+    for _, filterPanel in ipairs({ weaponFilterPanel, professionFilterPanel, zoneFilterPanel }) do
+        if filterPanel and filterPanel:IsShown() then return end
+    end
+    self:ShowUpgradeDetail(slotToken)
+end
+
 function EverGear:ShowUpgradeDetail(slotToken)
     local btn = slotButtons[slotToken]
     if not btn then return end
@@ -1059,6 +1126,7 @@ function EverGear:ShowUpgradeDetail(slotToken)
 
     if weaponFilterPanel then weaponFilterPanel:Hide() end
     if professionFilterPanel then professionFilterPanel:Hide() end
+    if zoneFilterPanel then zoneFilterPanel:Hide() end
 
     local candidates = btn.upgradeList or {}
     local shownCount = math.min(#candidates, MAX_DETAIL_CANDIDATES)
@@ -1314,6 +1382,7 @@ weaponFilterButton:SetScript("OnClick", function()
     end
     detailPanel:Hide()
     professionFilterPanel:Hide()
+    zoneFilterPanel:Hide()
     weaponFilterPanel:ClearAllPoints()
     weaponFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
     weaponFilterPanel:Show()
@@ -1478,9 +1547,207 @@ professionFilterButton:SetScript("OnClick", function()
     end
     detailPanel:Hide()
     weaponFilterPanel:Hide()
+    zoneFilterPanel:Hide()
     professionFilterPanel:ClearAllPoints()
     professionFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
     professionFilterPanel:Show()
+end)
+
+-- ===== Zone filter panel =====
+-- Same button+popup checklist idea, for where an item comes from: each zone
+-- and dungeon named as an item's source (quest rewards, boss and trash drops,
+-- a zone's rare mob, vendors). Unticking one hides everything from there.
+-- Items that aren't tied to one place (crafted items, world drops from all
+-- over, class quests) are never hidden by it. Dungeons and zones are listed
+-- separately; a place counts as a dungeon when any of its items is a
+-- dungeon drop. The list is built from the item data the first time the
+-- panel opens, so new zones show up without touching this code.
+local function GetZoneFilters()
+    local charDB = EverGear:GetCharDB()
+    charDB.zoneFilter = charDB.zoneFilter or {}
+    return charDB.zoneFilter
+end
+
+local ZONE_ROW_HEIGHT = 20
+local ZONE_DUNGEON_COL_WIDTH = 190
+local ZONE_ZONE_COL_WIDTH = 160
+local ZONE_TOP_Y = -56
+
+zoneFilterPanel = CreateFrame("Frame", "EverGearZoneFilterPanel", mainFrame, "BackdropTemplate")
+zoneFilterPanel:SetBackdrop({
+    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+    tile = true, tileSize = 32, edgeSize = 32,
+    insets = { left = 11, right = 12, top = 12, bottom = 11 }
+})
+zoneFilterPanel:Hide()
+
+local zoneFilterCloseButton = CreateFrame("Button", nil, zoneFilterPanel, "UIPanelCloseButton")
+zoneFilterCloseButton:SetPoint("TOPRIGHT", -2, -2)
+
+local zoneFilterHeader = zoneFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+zoneFilterHeader:SetPoint("TOP", 0, -14)
+zoneFilterHeader:SetText("Zones & Dungeons")
+zoneFilterHeader:SetTextColor(unpack(THEME.gold))
+
+local function ZoneSectionHeader(text, x)
+    local header = zoneFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    header:SetPoint("TOPLEFT", x, ZONE_TOP_Y + 18)
+    header:SetText(text)
+    header:SetTextColor(unpack(THEME.goldDim))
+end
+
+local zoneFilterCheckboxes = {}
+
+local function RefreshZoneFilterCheckboxes()
+    for _, entry in ipairs(zoneFilterCheckboxes) do
+        entry.cb:SetChecked(GetZoneFilters()[entry.zone] ~= false)
+    end
+end
+
+-- Every place named as an item source, split into dungeons and zones, each
+-- sorted by name ("The Deadmines" under D).
+local function CollectZones()
+    local isDungeon, seen = {}, {}
+    for _, item in pairs(EverGear.Items) do
+        local source = item.source
+        if source and source.zone then
+            seen[source.zone] = true
+            if source.type == "dungeonDrop" or source.type == "raidDrop" then isDungeon[source.zone] = true end
+        end
+    end
+    local dungeons, zones = {}, {}
+    for zone in pairs(seen) do
+        table.insert(isDungeon[zone] and dungeons or zones, zone)
+    end
+    local function SortKey(zone) return (zone:gsub("^The ", "")) end
+    local function ByName(a, b) return SortKey(a) < SortKey(b) end
+    table.sort(dungeons, ByName)
+    table.sort(zones, ByName)
+    return dungeons, zones
+end
+
+local function AddZoneCheckbox(zone, x, y)
+    local cb = CreateFrame("CheckButton", nil, zoneFilterPanel, "UICheckButtonTemplate")
+    cb:SetSize(22, 22)
+    cb:SetPoint("TOPLEFT", x, y)
+    local label = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    label:SetPoint("LEFT", cb, "RIGHT", 1, 1)
+    label:SetText(zone)
+    cb:SetScript("OnClick", function(self)
+        GetZoneFilters()[zone] = self:GetChecked() and true or false
+        EverGear:RefreshUI()
+    end)
+    table.insert(zoneFilterCheckboxes, { cb = cb, zone = zone })
+end
+
+-- Builds the checklist on first open (the item data isn't loaded yet when
+-- this file runs). One column of dungeons, then the zones in two columns.
+local function BuildZoneFilterPanel()
+    if #zoneFilterCheckboxes > 0 then return end
+    local dungeons, zones = CollectZones()
+    local left = 16
+    ZoneSectionHeader("Dungeons", left + 4)
+    for i, zone in ipairs(dungeons) do
+        AddZoneCheckbox(zone, left, ZONE_TOP_Y - (i - 1) * ZONE_ROW_HEIGHT)
+    end
+    local zoneLeft = left + ZONE_DUNGEON_COL_WIDTH
+    local perColumn = math.ceil(#zones / 2)
+    ZoneSectionHeader("Zones", zoneLeft + 4)
+    for i, zone in ipairs(zones) do
+        local col = math.floor((i - 1) / perColumn)
+        local row = (i - 1) % perColumn
+        AddZoneCheckbox(zone, zoneLeft + col * ZONE_ZONE_COL_WIDTH, ZONE_TOP_Y - row * ZONE_ROW_HEIGHT)
+    end
+    local rows = math.max(#dungeons, perColumn)
+    zoneFilterPanel:SetSize(zoneLeft + 2 * ZONE_ZONE_COL_WIDTH + 8, -ZONE_TOP_Y + rows * ZONE_ROW_HEIGHT + 70)
+end
+
+local function SetAllZones(shown)
+    for _, entry in ipairs(zoneFilterCheckboxes) do GetZoneFilters()[entry.zone] = shown end
+    RefreshZoneFilterCheckboxes()
+    EverGear:RefreshUI()
+end
+
+local zoneFilterAllButton = CreateFrame("Button", nil, zoneFilterPanel, "UIPanelButtonTemplate")
+zoneFilterAllButton:SetSize(90, 20)
+zoneFilterAllButton:SetPoint("BOTTOMLEFT", 16, 14)
+zoneFilterAllButton:SetText("Show All")
+zoneFilterAllButton:SetScript("OnClick", function() SetAllZones(true) end)
+
+local zoneFilterNoneButton = CreateFrame("Button", nil, zoneFilterPanel, "UIPanelButtonTemplate")
+zoneFilterNoneButton:SetSize(90, 20)
+zoneFilterNoneButton:SetPoint("LEFT", zoneFilterAllButton, "RIGHT", 8, 0)
+zoneFilterNoneButton:SetText("Show None")
+zoneFilterNoneButton:SetScript("OnClick", function() SetAllZones(false) end)
+
+-- One-time: ticks the places whose level range includes the character's
+-- level and unticks the rest, plus the other faction's starting zones and
+-- dungeons.
+-- Clicking it again after leveling updates the ticks; until then they stay
+-- as set (and can be changed by hand).
+local function FilterZonesToCurrentLevel()
+    local playerInfo = EverGear:GetPlayerInfo()
+    local level = playerInfo.level or 1
+    local otherFaction = {}
+    for _, zone in ipairs(EverGear.OTHER_FACTION_ZONES[playerInfo.faction or ""] or {}) do
+        otherFaction[zone] = true
+    end
+    local filters = GetZoneFilters()
+    for _, entry in ipairs(zoneFilterCheckboxes) do
+        local range = EverGear.ZONE_LEVEL_RANGES[entry.zone]
+        local inRange = (not range) or (level >= range[1] and level <= range[2])
+        filters[entry.zone] = inRange and not otherFaction[entry.zone]
+    end
+    RefreshZoneFilterCheckboxes()
+    EverGear:RefreshUI()
+end
+
+local zoneFilterLevelButton = CreateFrame("Button", nil, zoneFilterPanel, "UIPanelButtonTemplate")
+zoneFilterLevelButton:SetSize(110, 20)
+zoneFilterLevelButton:SetPoint("LEFT", zoneFilterNoneButton, "RIGHT", 8, 0)
+zoneFilterLevelButton:SetText("Current Level")
+zoneFilterLevelButton:SetScript("OnClick", FilterZonesToCurrentLevel)
+zoneFilterLevelButton:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText("Current Level")
+    GameTooltip:AddLine("Shows only the zones and dungeons meant for your current level, and hides the other "
+        .. "faction's starting zones and dungeons. Click it again after leveling up to update.", 0.8, 0.8, 0.8, true)
+    GameTooltip:Show()
+end)
+zoneFilterLevelButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+local zoneFilterNote = zoneFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+zoneFilterNote:SetPoint("BOTTOMLEFT", zoneFilterAllButton, "TOPLEFT", 0, 6)
+zoneFilterNote:SetPoint("RIGHT", zoneFilterPanel, "RIGHT", -16, 0)
+zoneFilterNote:SetJustifyH("LEFT")
+zoneFilterNote:SetText("Crafted items and world drops from all over aren't tied to one place, so they always show.")
+
+local zoneFilterButton = CreateFrame("Button", "EverGearZoneFilterButton", mainFrame)
+zoneFilterButton:SetSize(20, 20)
+zoneFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -92)
+zoneFilterButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Map_01")
+zoneFilterButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+zoneFilterButton:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    GameTooltip:SetText("Zone filters")
+    GameTooltip:AddLine("Hide items from specific zones and dungeons.", 0.8, 0.8, 0.8, true)
+    GameTooltip:Show()
+end)
+zoneFilterButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+zoneFilterButton:SetScript("OnClick", function()
+    if zoneFilterPanel:IsShown() then
+        zoneFilterPanel:Hide()
+        return
+    end
+    BuildZoneFilterPanel()
+    RefreshZoneFilterCheckboxes()
+    detailPanel:Hide()
+    weaponFilterPanel:Hide()
+    professionFilterPanel:Hide()
+    zoneFilterPanel:ClearAllPoints()
+    zoneFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
+    zoneFilterPanel:Show()
 end)
 
 -- ===== Wanted list / gear sets buttons =====
