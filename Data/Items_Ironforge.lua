@@ -6,3 +6,4 @@ EverGear = EverGear or {}
 EverGear.Items = EverGear.Items or {}
 
 EverGear.Items[7746] = {id = 7746, name = "Explorers' League Commendation", slot = "NeckSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 40, minLevel = 28, confirmed = true, bindType = "BoP", source = {type = "quest", zone = "Ironforge", quest = "Mythology of the Titans", faction = "Alliance", minLevel = 28}, stats = {SPIRIT = 9, STAMINA = 9}}
+EverGear.Items[4535] = {id = 4535, name = "Ironforge Memorial Ring", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = nil, confirmed = true, bindType = "BoP", source = {type = "quest", zone = "Ironforge", quest = "A King's Tribute", faction = "Alliance", minLevel = 25}, stats = {STAMINA = 5, SPIRIT = 4}}
