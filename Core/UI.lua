@@ -253,8 +253,15 @@ local RefreshProfileDropdown
 local function SpecDropdown_OnClick(self)
     local charDB = EverGear:GetCharDB()
     local oldSpec = charDB.spec
+    -- Remember the profile used with the spec being left (also covers
+    -- characters from before profiles were remembered per spec), then go
+    -- back to whichever one was last used with the new spec.
+    if oldSpec then
+        charDB.profileBySpec = charDB.profileBySpec or {}
+        charDB.profileBySpec[oldSpec] = charDB.profileId
+    end
     charDB.spec = self.value
-    charDB.profileId = EverGear:GetDefaultProfileId(EverGear:GetPlayerInfo().classToken, charDB.spec)
+    EverGear:SetActiveProfileId(EverGear:GetRememberedProfileId(EverGear:GetPlayerInfo().classToken, charDB.spec))
     UIDropDownMenu_SetSelectedValue(specDropdown, self.value)
     if RefreshProfileDropdown then RefreshProfileDropdown() end
     -- Re-points the EP profile editor at the new spec too, but only if it
@@ -306,7 +313,7 @@ profileLabel:SetText("EP Profile")
 profileLabel:SetTextColor(unpack(THEME.goldDim))
 
 local function ProfileDropdown_OnClick(self)
-    EverGear:GetCharDB().profileId = self.value
+    EverGear:SetActiveProfileId(self.value)
     UIDropDownMenu_SetSelectedValue(profileDropdown, self.value)
     EverGear:RefreshUI()
 end
@@ -640,6 +647,10 @@ versionText:SetPoint("BOTTOMLEFT", 10, versionText:GetStringHeight())
 -- ===== Slot buttons =====
 
 local slotButtons = {}
+-- The slot the mouse is resting on, and how long it has to rest there before
+-- the slot's suggested upgrades open by themselves.
+local hoveredSlot
+local HOVER_DETAIL_DELAY = 0.3
 local leftItems, rightItems, bottomItems = {}, {}, {}
 
 -- Hand-built item-icon button instead of Blizzard's "ItemButtonTemplate" XML
@@ -751,8 +762,20 @@ local function CreateSlotButton(slotToken)
             GameTooltip:SetText((EverGear.FRIENDLY_SLOT_NAMES[self.slotToken] or self.slotToken) .. " (empty)")
         end
         GameTooltip:Show()
+        -- Resting on a slot for a moment shows its suggested upgrades too,
+        -- without a click (see ShowUpgradeDetailOnHover).
+        hoveredSlot = self.slotToken
+        local slotToken = self.slotToken
+        if C_Timer and C_Timer.After then
+            C_Timer.After(HOVER_DETAIL_DELAY, function()
+                if hoveredSlot == slotToken then EverGear:ShowUpgradeDetailOnHover(slotToken) end
+            end)
+        end
     end)
-    btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    btn:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+        hoveredSlot = nil
+    end)
     btn:SetScript("OnClick", function(self)
         -- Alt-click: the wanted list / gear set menu for the equipped item,
         -- same as Alt-clicking it on the character sheet.
@@ -1028,6 +1051,24 @@ end
 -- window instead of following it.
 function EverGear:HideUpgradeDetail()
     detailPanel:Hide()
+end
+
+-- Hover version of a slot click: opens the slot's suggested upgrades, but
+-- only when there are some. Like a click, it leaves the Wanted, Gear Sets and
+-- EP profile windows open (the panel stacks below them). It doesn't open
+-- while a weapon or profession filter panel is open, since showing the
+-- upgrades closes those and the mouse often crosses the slots on its way to
+-- a checkbox. The panel stays open when the mouse moves on, so its rows can
+-- be used, and switches to whichever slot is hovered next.
+function EverGear:ShowUpgradeDetailOnHover(slotToken)
+    local btn = slotButtons[slotToken]
+    if not (btn and mainFrame:IsShown()) then return end
+    if not btn.upgradeList or #btn.upgradeList == 0 then return end
+    if detailPanel:IsShown() and currentDetailSlot == slotToken then return end
+    for _, filterPanel in ipairs({ weaponFilterPanel, professionFilterPanel }) do
+        if filterPanel and filterPanel:IsShown() then return end
+    end
+    self:ShowUpgradeDetail(slotToken)
 end
 
 function EverGear:ShowUpgradeDetail(slotToken)
