@@ -56,7 +56,8 @@ local WEAPON_SUBCLASS = {
 }
 local RANGED_WEAPON_TYPES = { bow = true, gun = true, crossbow = true, thrown = true, wand = true }
 local ARMOR_SUBCLASS = { [1] = "Cloth", [2] = "Leather", [3] = "Mail", [4] = "Plate" }
-local RELIC_SUBCLASS = { [7] = "libram", [8] = "idol", [9] = "totem" }  -- armor subclasses
+-- Armor subclasses; 9 (Totems) and 11 (Relic) are both the Shaman's "relic" type.
+local RELIC_SUBCLASS = { [7] = "libram", [8] = "idol", [9] = "relic", [11] = "relic" }
 
 local function GetInstant(link)
     local fn = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
