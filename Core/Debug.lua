@@ -44,6 +44,8 @@ local SLOT_FOR_EQUIP_LOC = {
     INVTYPE_HOLDABLE = "SecondaryHandSlot",
     INVTYPE_RANGED = "RangedSlot", INVTYPE_RANGEDRIGHT = "RangedSlot",
     INVTYPE_THROWN = "RangedSlot",
+    -- Librams, idols and totems go in the ranged ("Relic") slot; see RELIC_SUBCLASS.
+    INVTYPE_RELIC = "RangedSlot",
 }
 
 -- Weapon subclassID (classID 2) -> (weaponType, melee). 2H-ness comes from equipLoc.
@@ -54,6 +56,8 @@ local WEAPON_SUBCLASS = {
 }
 local RANGED_WEAPON_TYPES = { bow = true, gun = true, crossbow = true, thrown = true, wand = true }
 local ARMOR_SUBCLASS = { [1] = "Cloth", [2] = "Leather", [3] = "Mail", [4] = "Plate" }
+-- Armor subclasses; 9 (Totems) and 11 (Relic) are both the Shaman's "relic" type.
+local RELIC_SUBCLASS = { [7] = "libram", [8] = "idol", [9] = "relic", [11] = "relic" }
 
 local function GetInstant(link)
     local fn = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
@@ -268,7 +272,7 @@ end
 
 -- Builds the canonical record for a link, as the game shows it. Returns nil for anything
 -- that isn't a trackable piece of equipment, or whose data isn't cached yet.
-function EverGear:BuildLiveItemRecord(link)
+function EverGear:BuildLiveItemRecord(link, includeWhite)
     if not link then return nil end
     local itemId, _, _, equipLoc, _, classID, subClassID = GetInstant(link)
     local slot = equipLoc and SLOT_FOR_EQUIP_LOC[equipLoc]
@@ -294,8 +298,9 @@ function EverGear:BuildLiveItemRecord(link)
     local baseName = GetFullInfo(itemId)
     if not baseName then return nil, "uncached" end
     if name ~= baseName and name:sub(1, #baseName + 4) == baseName .. " of " then return nil, "suffix" end
-    -- Gray (0) and white (1) items never matter for upgrades; only flag green and better.
-    if quality and quality < 2 then return nil, "lowQuality" end
+    -- Gray (0) and white (1) items rarely matter for upgrades, so hovering only flags green
+    -- and better. The item browser's Check all also checks white items (includeWhite).
+    if quality and quality < (includeWhite and 1 or 2) then return nil, "lowQuality" end
 
     -- Quest rewards report a required level of 0 (sometimes 1): the item itself has no
     -- minimum, the quest does. The database prefers the quest's level, which the tooltip
@@ -313,6 +318,8 @@ function EverGear:BuildLiveItemRecord(link)
             record.weaponType = "shield"
         elseif equipLoc == "INVTYPE_HOLDABLE" then
             record.weaponType = "offhand"
+        elseif equipLoc == "INVTYPE_RELIC" then
+            record.weaponType = RELIC_SUBCLASS[subClassID]
         else
             record.armorType = ARMOR_SUBCLASS[subClassID]
         end
@@ -352,9 +359,11 @@ local function NormalizeForCompare(stats)
         out.ARMOR = (out.ARMOR or 0) + out.BONUS_ARMOR
         out.BONUS_ARMOR = nil
     end
+    -- Spell power stacks with any separate spell damage / healing on the item
+    -- (Earthen Silk Slippers: +18 spell power and +6 spell damage = 24 damage).
     if out.SPELL_POWER then
-        out.SPELL_DAMAGE = out.SPELL_DAMAGE or out.SPELL_POWER
-        out.SPELL_HEALING = out.SPELL_HEALING or out.SPELL_POWER
+        out.SPELL_DAMAGE = (out.SPELL_DAMAGE or 0) + out.SPELL_POWER
+        out.SPELL_HEALING = (out.SPELL_HEALING or 0) + out.SPELL_POWER
         out.SPELL_POWER = nil
     end
     return out
@@ -754,12 +763,12 @@ end
 -- Returns "ok" or "differs"; a difference is captured right away (keeping any
 -- note already typed for it). Returns nil plus the reason when it can't be
 -- checked: "uncached" (ask the server, try again later), "suffix",
--- "lowQuality" or "notEquippable".
+-- "lowQuality" (gray) or "notEquippable". Unlike hovering, white items are checked too.
 function EverGear:CheckItemAgainstGame(itemId)
     local dbItem = self:GetItem(itemId)
     if not dbItem then return nil, "unknown" end
     local _, link = GetFullInfo(itemId)
-    local record, reason, notes = self:BuildLiveItemRecord(link or ("item:" .. itemId))
+    local record, reason, notes = self:BuildLiveItemRecord(link or ("item:" .. itemId), true)
     if not record then return nil, reason or "notEquippable" end
 
     local diffs = self:CompareLiveToDatabase(record, dbItem)
