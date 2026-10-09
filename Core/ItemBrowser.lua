@@ -39,7 +39,8 @@ local SORTS = {
 -- Current filters. nil = no filter on that field.
 local filters = { sort = "level" }
 
-local frame, scroll, rows, countText, debugCheck
+local frame, scroll, rows, countText, debugCheck, checkAllButton
+local StartScan, StopScan, IsScanning
 local bar, thumb
 local filtered = {}
 local offset = 0
@@ -529,6 +530,23 @@ local function BuildWindow()
     end)
     reset:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
+    checkAllButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    checkAllButton:SetSize(110, 22)
+    checkAllButton:SetPoint("RIGHT", reset, "LEFT", -6, 0)
+    checkAllButton:SetText("Check all")
+    checkAllButton:SetScript("OnClick", function()
+        if IsScanning() then StopScan(true) else StartScan() end
+    end)
+    checkAllButton:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText("Check all")
+        GameTooltip:AddLine("Checks every item in the list against the game, no hovering needed. "
+            .. "Items that differ are captured automatically, and the debug window opens at the end "
+            .. "so you can export the JSON.", 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    checkAllButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
     countText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     countText:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", LIST_SIDE + 4, LIST_TOP + 2)
     countText:SetTextColor(unpack(THEME.parchment))
@@ -595,6 +613,107 @@ local function BuildWindow()
         ApplyFilters()
     end)
 end
+
+-- ===== Check all =====
+-- Goes through a snapshot of the listed items a few per frame. Items the
+-- client hasn't loaded yet are requested and retried in later passes; the
+-- debug window opens at the end on the last item that differed.
+
+local SCAN_PER_FRAME = 4
+local SCAN_RETRY_PASSES = 4
+local SCAN_RETRY_DELAY = 1.5
+
+local scan
+local scanner = CreateFrame("Frame")
+scanner:Hide()
+
+function IsScanning()
+    return scan ~= nil
+end
+
+local function Print(msg)
+    print("|cff33ff99EverGear|r " .. msg)
+end
+
+local function UpdateScanButton()
+    if not checkAllButton then return end
+    if scan then
+        local done = math.floor(scan.done / math.max(1, scan.total) * 100)
+        checkAllButton:SetText(string.format("Stop (%d%%)", done))
+    else
+        checkAllButton:SetText("Check all")
+    end
+end
+
+function StopScan(cancelled)
+    if not scan then return end
+    local result = scan
+    scan = nil
+    scanner:Hide()
+    UpdateScanButton()
+
+    local counts = result.counts
+    Print(string.format("%s %d items: |cff33e640%d match|r, |cffff9933%d differ|r (captured)%s%s.",
+        cancelled and "Stopped after checking" or "Checked",
+        counts.ok + counts.differs, counts.ok, counts.differs,
+        counts.skipped > 0 and (", " .. counts.skipped .. " skipped (gray/white, random-suffix or not gear)") or "",
+        #result.retry > 0 and (", " .. #result.retry .. " couldn't be loaded from the server") or ""))
+    if frame then
+        local keep = offset
+        ApplyFilters()
+        SetOffset(keep)
+    end
+    if result.lastDiffer then EverGear:ShowDebugCapture(result.lastDiffer) end
+end
+
+function StartScan()
+    if scan or #filtered == 0 then return end
+    scan = {
+        queue = {}, index = 0, retry = {}, pass = 1, wait = 0,
+        done = 0, total = #filtered,
+        counts = { ok = 0, differs = 0, skipped = 0 },
+    }
+    for i, item in ipairs(filtered) do scan.queue[i] = item.id end
+    UpdateScanButton()
+    scanner:Show()
+end
+
+scanner:SetScript("OnUpdate", function(_, elapsed)
+    if not scan then scanner:Hide() return end
+    if scan.wait > 0 then
+        scan.wait = scan.wait - elapsed
+        return
+    end
+    for _ = 1, SCAN_PER_FRAME do
+        scan.index = scan.index + 1
+        local itemId = scan.queue[scan.index]
+        if not itemId then
+            -- End of this pass: retry what wasn't loaded yet, after a pause.
+            if #scan.retry > 0 and scan.pass < SCAN_RETRY_PASSES then
+                scan.queue, scan.retry, scan.index = scan.retry, {}, 0
+                scan.pass = scan.pass + 1
+                scan.wait = SCAN_RETRY_DELAY
+                return
+            end
+            StopScan(false)
+            return
+        end
+        local status, reason = EverGear:CheckItemAgainstGame(itemId)
+        if status then
+            scan.counts[status] = scan.counts[status] + 1
+            if status == "differs" then scan.lastDiffer = itemId end
+            scan.done = scan.done + 1
+        elseif reason == "uncached" then
+            if C_Item and C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(itemId) end
+            scan.retry[#scan.retry + 1] = itemId
+        else
+            scan.counts.skipped = scan.counts.skipped + 1
+            scan.done = scan.done + 1
+        end
+    end
+    UpdateScanButton()
+    if frame and frame:IsShown() then RefreshRows() end
+end)
 
 -- ===== Item cache =====
 -- Rarity and the item link need the client's item cache. On open, ask the
