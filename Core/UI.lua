@@ -861,6 +861,9 @@ end
 -- Redrawn whenever the window opens and when gear or appearance changes.
 local characterModel = CreateFrame("PlayerModel", "EverGearCharacterModel", content)
 characterModel:EnableMouse(true)
+-- Shown by ApplyCharacterModelSetting (below) once the saved setting can be
+-- read, so a model turned off is never drawn, not even for a moment.
+characterModel:Hide()
 
 local function RefreshCharacterModel()
     if not characterModel:IsVisible() then return end
@@ -885,12 +888,53 @@ end)
 characterModel:SetScript("OnShow", RefreshCharacterModel)
 
 local modelWatcher = CreateFrame("Frame")
-modelWatcher:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
-modelWatcher:RegisterEvent("UNIT_MODEL_CHANGED")
 modelWatcher:SetScript("OnEvent", function(_, event, unit)
     if event == "UNIT_MODEL_CHANGED" and unit ~= "player" then return end
     RefreshCharacterModel()
 end)
+
+-- The model can be turned off (eye button above it) for weaker computers.
+-- Off means no model at all: it's hidden, emptied, and stops listening for
+-- gear changes. The choice is account-wide (EverGearDB.hideCharacterModel),
+-- since it's about the computer, not the character.
+local modelToggle = CreateFrame("Button", "EverGearCharacterModelToggle", content)
+modelToggle:SetSize(16, 16)
+modelToggle:SetPoint("TOP", content, "TOP", 0, -2)
+modelToggle:SetFrameLevel(characterModel:GetFrameLevel() + 2)
+modelToggle:SetNormalTexture("Interface\\Icons\\Spell_Holy_MindVision")
+modelToggle:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+
+local function ApplyCharacterModelSetting()
+    local hidden = EverGearDB.hideCharacterModel == true
+    characterModel:SetShown(not hidden)
+    modelToggle:GetNormalTexture():SetDesaturated(hidden)
+    modelToggle:SetAlpha(hidden and 0.5 or 1)
+    if hidden then
+        modelWatcher:UnregisterAllEvents()
+        if characterModel.ClearModel then characterModel:ClearModel() end
+    else
+        modelWatcher:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+        modelWatcher:RegisterEvent("UNIT_MODEL_CHANGED")
+        RefreshCharacterModel()
+    end
+end
+
+modelToggle:SetScript("OnClick", function(self)
+    EverGearDB.hideCharacterModel = not EverGearDB.hideCharacterModel
+    ApplyCharacterModelSetting()
+    if self:IsMouseOver() and self:GetScript("OnEnter") then self:GetScript("OnEnter")(self) end
+end)
+modelToggle:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    if EverGearDB.hideCharacterModel then
+        GameTooltip:SetText("Show character model")
+    else
+        GameTooltip:SetText("Hide character model")
+        GameTooltip:AddLine("Turning it off can help the game run smoother on weaker computers.", 0.8, 0.8, 0.8, true)
+    end
+    GameTooltip:Show()
+end)
+modelToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 local function RepositionAll()
     local h = content:GetHeight()
@@ -934,7 +978,7 @@ mainFrame:SetScript("OnShow", function()
     RepositionFilters()
     RepositionAll()
     SyncLookaheadBounds()
-    RefreshCharacterModel()
+    ApplyCharacterModelSetting()
 end)
 
 -- ===== Detail panel =====
