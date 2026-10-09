@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.0.29] - 2026-10-09
+
+### Added
+- Wanted list and gear sets, per character. Alt-click any item (bags,
+  character sheet, chat links, loot, quest rewards, EverGear's own window)
+  to put it on the wanted list or into a gear set; the star on a Suggested
+  Upgrades row adds it to the wanted list. Open them with the buttons in the
+  top-left corner of the main window, or `/eg wanted` and `/eg sets`.
+  - Wanted items that turn up in your bags or get equipped are ticked as
+    acquired and stay on the list until you remove them.
+  - Up to 20 gear sets per character, with unique names of up to 30
+    characters. A set can't hold a two-hander and an off-hand item together,
+    and items your class can't use are refused.
+  - Gear tooltips say when an item is wanted or in a set.
+- City of Dalaran: quest rewards for both factions and the full boss loot.
+- Razorfen Downs: drops from Mordresh Fire Eye, Glutton and Tuten'kash.
+- More items, among them Knight's Lance, Brewer's Bracers, Repurposed Hair
+  Band, Hunter's Muzzle Loader, Quillord Mail Leggings, Thorncursed Grips,
+  Thornweaver Drape, Dire Wand, Fury Ring and Nat Pagle's Extreme Anglin'
+  Boots.
+
+### Changed
+- EP profiles: up to 8 custom profiles per class and spec, and names must be
+  unique within a spec and at most 30 characters.
+- Items listed by tracker sites (wowtbc.gg, wowhead) count as confirmed.
+
+### Fixed
+- Stats updated from in-game checks for many items, among them Fallen
+  Guard's Pendant (it was ranked too high for tanks), Master Hunter's Bow and
+  Rifle, Defias Renegade Ring, Lucine Longsword, Burning Sliver, Reliquary
+  Mantle, Pronged Reaver, Tiger Band, Beetle Clasps and Talvash's Gold Ring.
+- Truthseeker's Bow requires level 40.
+- Debug mode missed armor values over 999 (e.g. Collection Plate's 1,380
+  armor) and reported them as a difference.
+
 ## [0.0.28] - 2026-10-08
 
 ### Added
