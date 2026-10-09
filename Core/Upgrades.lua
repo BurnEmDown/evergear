@@ -1132,6 +1132,8 @@ local CLASS_USABLE_WEAPON_TYPES = {
 }
 
 local CLASS_CAN_USE_SHIELD = { WARRIOR = true, PALADIN = true, SHAMAN = true }
+-- Librams (Paladin), idols (Druid) and totems (Shaman).
+local CLASS_CAN_USE_RELIC = { PALADIN = true, DRUID = true, SHAMAN = true }
 
 -- Exposed so UI.lua can build the weapon-type filter checklist from the same
 -- per-class whitelist used for usability checks below, rather than keeping a
@@ -1207,7 +1209,10 @@ function EverGear:IsWeaponFilterKeyUsable(filterKey, classToken)
         return CLASS_CAN_USE_SHIELD[classToken] == true
     end
     if baseType == "offhand" then
-        return true  -- relic-style items -- see IsWeaponTypeAllowed below
+        return true  -- orb-style items -- see IsWeaponTypeAllowed below
+    end
+    if baseType == "relic" then
+        return CLASS_CAN_USE_RELIC[classToken] == true
     end
     local whitelist = CLASS_USABLE_WEAPON_TYPES[classToken]
     return whitelist ~= nil and whitelist[baseType] == true
@@ -1218,8 +1223,11 @@ local function IsWeaponTypeAllowed(item, classToken)
     if item.weaponType == "shield" then
         return CLASS_CAN_USE_SHIELD[classToken] == true
     end
+    if item.weaponType == "relic" then
+        return CLASS_CAN_USE_RELIC[classToken] == true
+    end
     if item.weaponType == "offhand" then
-        -- A relic-style held-in-off-hand item (Libram/Idol/Totem/Orb/etc) --
+        -- An orb-style held-in-off-hand item (Orb, tome, etc) --
         -- not gated by CLASS_USABLE_WEAPON_TYPES at all, since that table is
         -- only ever populated with real weapon subtypes and has no "offhand"
         -- key for any class -- treating it like the others would hide these
@@ -1252,7 +1260,10 @@ local function ItemFromClientInfo(itemId)
         return { weaponType = WEAPON_SUBCLASS_TYPES[subclassID] }
     elseif classID == 4 then
         if subclassID == 6 then return { weaponType = "shield" } end
-        return { armorType = ARMOR_SUBCLASS_TYPES[subclassID], classes = RELIC_SUBCLASS_CLASSES[subclassID] }
+        if RELIC_SUBCLASS_CLASSES[subclassID] then
+            return { weaponType = "relic", classes = RELIC_SUBCLASS_CLASSES[subclassID] }
+        end
+        return { armorType = ARMOR_SUBCLASS_TYPES[subclassID] }
     end
     return nil
 end
@@ -1343,7 +1354,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     -- meant to hold a shield in the off-hand. Off-hand-only WEAPONS (e.g. Shoni's
     -- Disarming Tool) share SecondaryHandSlot with shields, and their raw stats can
     -- outscore a shield, so they must never be offered as a "swap" for a shield
-    -- there. Relic-style "offhand" items and shields themselves are untouched.
+    -- there. Orb-style "offhand" items and shields themselves are untouched.
     local tankShieldOnly = false
     if realSlotToken == "SecondaryHandSlot"
         and CLASS_CAN_USE_SHIELD[playerInfo.classToken]
