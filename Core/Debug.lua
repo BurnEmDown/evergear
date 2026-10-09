@@ -44,7 +44,7 @@ local SLOT_FOR_EQUIP_LOC = {
     INVTYPE_HOLDABLE = "SecondaryHandSlot",
     INVTYPE_RANGED = "RangedSlot", INVTYPE_RANGEDRIGHT = "RangedSlot",
     INVTYPE_THROWN = "RangedSlot",
-    -- Idols, totems and librams go in the ranged slot; the data calls them "offhand".
+    -- Idols, totems and librams go in the ranged slot (weaponType "relic", below).
     INVTYPE_RELIC = "RangedSlot",
 }
 
@@ -314,8 +314,10 @@ function EverGear:BuildLiveItemRecord(link, includeWhite)
     if classID == 4 then
         if equipLoc == "INVTYPE_SHIELD" then
             record.weaponType = "shield"
-        elseif equipLoc == "INVTYPE_HOLDABLE" or equipLoc == "INVTYPE_RELIC" then
+        elseif equipLoc == "INVTYPE_HOLDABLE" then
             record.weaponType = "offhand"
+        elseif equipLoc == "INVTYPE_RELIC" then
+            record.weaponType = "relic"
         else
             record.armorType = ARMOR_SUBCLASS[subClassID]
         end
