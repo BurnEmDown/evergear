@@ -168,6 +168,10 @@ local function ReadTooltipStats(link)
     local function Fragment(text)
         if not text or text == "" then return end
         text = StripColor(text)
+        -- Large numbers carry a thousands separator ("1,380 Armor" on a shield);
+        -- drop it so the number patterns below match. Lines with a colon
+        -- (Equip:, Use:, Classes: ...) are kept as the tooltip shows them.
+        if not text:find(":") then text = text:gsub("(%d),(%d%d%d)", "%1%2") end
 
         local sign, n, statName = text:match("^([%+%-])(%d+) (%a+)$")
         if sign and PRIMARY_STATS[statName] then
