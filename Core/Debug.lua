@@ -352,9 +352,11 @@ local function NormalizeForCompare(stats)
         out.ARMOR = (out.ARMOR or 0) + out.BONUS_ARMOR
         out.BONUS_ARMOR = nil
     end
+    -- Spell power stacks with any separate spell damage / healing on the item
+    -- (Earthen Silk Slippers: +18 spell power and +6 spell damage = 24 damage).
     if out.SPELL_POWER then
-        out.SPELL_DAMAGE = out.SPELL_DAMAGE or out.SPELL_POWER
-        out.SPELL_HEALING = out.SPELL_HEALING or out.SPELL_POWER
+        out.SPELL_DAMAGE = (out.SPELL_DAMAGE or 0) + out.SPELL_POWER
+        out.SPELL_HEALING = (out.SPELL_HEALING or 0) + out.SPELL_POWER
         out.SPELL_POWER = nil
     end
     return out
