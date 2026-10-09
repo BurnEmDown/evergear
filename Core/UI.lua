@@ -253,8 +253,15 @@ local RefreshProfileDropdown
 local function SpecDropdown_OnClick(self)
     local charDB = EverGear:GetCharDB()
     local oldSpec = charDB.spec
+    -- Remember the profile used with the spec being left (also covers
+    -- characters from before profiles were remembered per spec), then go
+    -- back to whichever one was last used with the new spec.
+    if oldSpec then
+        charDB.profileBySpec = charDB.profileBySpec or {}
+        charDB.profileBySpec[oldSpec] = charDB.profileId
+    end
     charDB.spec = self.value
-    charDB.profileId = EverGear:GetDefaultProfileId(EverGear:GetPlayerInfo().classToken, charDB.spec)
+    EverGear:SetActiveProfileId(EverGear:GetRememberedProfileId(EverGear:GetPlayerInfo().classToken, charDB.spec))
     UIDropDownMenu_SetSelectedValue(specDropdown, self.value)
     if RefreshProfileDropdown then RefreshProfileDropdown() end
     -- Re-points the EP profile editor at the new spec too, but only if it
@@ -306,7 +313,7 @@ profileLabel:SetText("EP Profile")
 profileLabel:SetTextColor(unpack(THEME.goldDim))
 
 local function ProfileDropdown_OnClick(self)
-    EverGear:GetCharDB().profileId = self.value
+    EverGear:SetActiveProfileId(self.value)
     UIDropDownMenu_SetSelectedValue(profileDropdown, self.value)
     EverGear:RefreshUI()
 end
