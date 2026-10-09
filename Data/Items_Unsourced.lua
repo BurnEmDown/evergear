@@ -5,16 +5,3 @@
 EverGear = EverGear or {}
 EverGear.Items = EverGear.Items or {}
 
-
--- Held back (no known source yet); used by debug mode only.
-EverGear.PendingItems = EverGear.PendingItems or {}
-EverGear.PendingItems[273031] = "Runemender's Seal"
-EverGear.PendingItems[273041] = "Slitherwrap Girdle"
-EverGear.PendingItems[273038] = "Garb of Fallen Felbark"
-EverGear.PendingItems[273039] = "Blightleaf Rope"
-EverGear.PendingItems[273049] = "Archmagister's Faceted Pendant"
-EverGear.PendingItems[273036] = "Graveweave Bindings"
-EverGear.PendingItems[273042] = "Manascale Treads"
-EverGear.PendingItems[273044] = "Violet Sorcerer's Robes"
-EverGear.PendingItems[273053] = "Tendonscraper Dagger"
-EverGear.PendingItems[273054] = "Cartilage Shapers"
