@@ -713,9 +713,13 @@ local function OnItemTooltip(tooltip)
         return
     end
     local diffs = EverGear:CompareLiveToDatabase(record, dbItem)
+    -- Remembered so the item browser (ItemBrowser.lua) can show what's been checked.
+    EverGearDB.debugChecked = EverGearDB.debugChecked or {}
+    EverGearDB.debugChecked[record.id] = #diffs > 0 and "differs" or "ok"
     if #diffs > 0 then
         ShowFlaggedItem(record, "differs", diffs, notes, dbItem.stats)
     end
+    if EverGear.OnItemBrowserCheck then EverGear:OnItemBrowserCheck() end
 end
 
 local function HookTooltips()
@@ -749,6 +753,9 @@ function EverGear:HandleDebugCommand(arg)
         if debugPendingCheck then debugPendingCheck:SetChecked(EverGearDB.debugShowPending) end
         print("|cff33ff99EverGear|r debug: pending-source items popups " .. (EverGearDB.debugShowPending and "|cff00ff00ON|r" or "|cffff4040OFF|r"))
         return
+    elseif arg == "items" then
+        EverGear:ToggleItemBrowser()
+        return
     elseif arg == "clear" then
         EverGearDB.debugCaptures = {}
         RefreshCaptureUI()
@@ -767,8 +774,10 @@ function EverGear:HandleDebugCommand(arg)
     if EverGearDB.debugMode then
         print("|cff33ff99EverGear|r debug mode |cff00ff00ON|r -- hover an item that's missing or wrong in the addon to flag it.")
         print("  /eg debug export  -- show captured items as JSON     /eg debug clear  -- forget captures")
+        print("  /eg debug items  -- browse every item in EverGear's data")
     else
         print("|cff33ff99EverGear|r debug mode |cffff4040OFF|r.")
         if debugFrame then debugFrame:Hide() end
     end
+    if EverGear.OnItemBrowserCheck then EverGear:OnItemBrowserCheck() end
 end
