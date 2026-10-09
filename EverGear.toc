@@ -40,6 +40,7 @@ Data\Items_RazorfenDowns.lua
 Data\Items_WorldDrops.lua
 Data\Items_LibraryBooks.lua
 Data\Items_ClassQuests.lua
+Data\Items_ProfessionQuests.lua
 Data\Items_Unsourced.lua
 Data\RandomSuffixItems.lua
 Data\Items_Crafted_Blacksmithing.lua
