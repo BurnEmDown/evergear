@@ -268,7 +268,7 @@ end
 
 -- Builds the canonical record for a link, as the game shows it. Returns nil for anything
 -- that isn't a trackable piece of equipment, or whose data isn't cached yet.
-function EverGear:BuildLiveItemRecord(link)
+function EverGear:BuildLiveItemRecord(link, includeWhite)
     if not link then return nil end
     local itemId, _, _, equipLoc, _, classID, subClassID = GetInstant(link)
     local slot = equipLoc and SLOT_FOR_EQUIP_LOC[equipLoc]
@@ -294,8 +294,9 @@ function EverGear:BuildLiveItemRecord(link)
     local baseName = GetFullInfo(itemId)
     if not baseName then return nil, "uncached" end
     if name ~= baseName and name:sub(1, #baseName + 4) == baseName .. " of " then return nil, "suffix" end
-    -- Gray (0) and white (1) items never matter for upgrades; only flag green and better.
-    if quality and quality < 2 then return nil, "lowQuality" end
+    -- Gray (0) and white (1) items rarely matter for upgrades, so hovering only flags green
+    -- and better. The item browser's Check all also checks white items (includeWhite).
+    if quality and quality < (includeWhite and 1 or 2) then return nil, "lowQuality" end
 
     -- Quest rewards report a required level of 0 (sometimes 1): the item itself has no
     -- minimum, the quest does. The database prefers the quest's level, which the tooltip
@@ -756,12 +757,12 @@ end
 -- Returns "ok" or "differs"; a difference is captured right away (keeping any
 -- note already typed for it). Returns nil plus the reason when it can't be
 -- checked: "uncached" (ask the server, try again later), "suffix",
--- "lowQuality" or "notEquippable".
+-- "lowQuality" (gray) or "notEquippable". Unlike hovering, white items are checked too.
 function EverGear:CheckItemAgainstGame(itemId)
     local dbItem = self:GetItem(itemId)
     if not dbItem then return nil, "unknown" end
     local _, link = GetFullInfo(itemId)
-    local record, reason, notes = self:BuildLiveItemRecord(link or ("item:" .. itemId))
+    local record, reason, notes = self:BuildLiveItemRecord(link or ("item:" .. itemId), true)
     if not record then return nil, reason or "notEquippable" end
 
     local diffs = self:CompareLiveToDatabase(record, dbItem)

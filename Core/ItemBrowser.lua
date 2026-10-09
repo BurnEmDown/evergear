@@ -656,7 +656,7 @@ function StopScan(cancelled)
     Print(string.format("%s %d items: |cff33e640%d match|r, |cffff9933%d differ|r (captured)%s%s.",
         cancelled and "Stopped after checking" or "Checked",
         counts.ok + counts.differs, counts.ok, counts.differs,
-        counts.skipped > 0 and (", " .. counts.skipped .. " skipped (gray/white, random-suffix or not gear)") or "",
+        counts.skipped > 0 and (", " .. counts.skipped .. " skipped (gray, random-suffix or not gear)") or "",
         #result.retry > 0 and (", " .. #result.retry .. " couldn't be loaded from the server") or ""))
     if frame then
         local keep = offset
