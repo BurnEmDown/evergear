@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.0.30] - 2026-10-10
+
+### Added
+- Librams, idols and relics have their own rows in the weapon-type filter.
+  Each is only suggested to its own class: librams to Paladins, idols to
+  Druids, relics to Shamans.
+
+### Fixed
+- Updated the stats of about 170 items to match the recent game patch. Many
+  quest rewards, dungeon drops and caster weapons had changed, so
+  suggestions for them are more accurate now.
+- Shields now count their block value, and several weapons are correctly
+  marked as two-handed.
+- Corrected the equipment slot of a few items, such as Viny Wrappings
+  (feet), Mystic Shawl (back) and two wands that go in the ranged slot.
+
 ## [0.0.29] - 2026-10-09
 
 ### Added
