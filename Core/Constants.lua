@@ -111,6 +111,68 @@ EverGear.EMPTY_SLOT_TEXTURES = {
 -- just need a row added here -- everything else reads this list generically.
 -- Raid Drop deliberately omitted for now (not relevant until the addon has
 -- raid data) -- add it back here when that data exists.
+-- Level range of each zone and dungeon items come from, for the zone filter's
+-- "Current Level" button (UI.lua). From wowhead.com/forever's zone list,
+-- except where noted. Dun Morogh, Duskwood and Thousand Needles are listed
+-- there as 1-56, 10-30 and 6-35, which don't match where their quests are,
+-- so they use the Classic ranges. Wowhead has no range for WoW Forever's own
+-- dungeons, or for each Scarlet Monastery wing: those come from the levels
+-- of their items (and the Classic wing ranges). A place missing from here is
+-- left shown by the button.
+EverGear.ZONE_LEVEL_RANGES = {
+    -- Zones
+    ["Dun Morogh"] = { 1, 10 },            -- wowhead: 1-56
+    ["Elwynn Forest"] = { 1, 10 },
+    ["Durotar"] = { 1, 10 },
+    ["Mulgore"] = { 1, 10 },
+    ["Teldrassil"] = { 1, 11 },
+    ["Tirisfal Glades"] = { 1, 12 },
+    ["Zephras Isle"] = { 1, 12 },
+    ["Westfall"] = { 9, 18 },
+    ["Loch Modan"] = { 10, 18 },
+    ["Silverpine Forest"] = { 10, 20 },
+    ["The Barrens"] = { 10, 33 },
+    ["Darkshore"] = { 11, 19 },
+    ["Redridge Mountains"] = { 15, 25 },
+    ["Stonetalon Mountains"] = { 15, 25 },
+    ["Duskwood"] = { 18, 30 },             -- wowhead: 10-30
+    ["Ashenvale"] = { 19, 30 },
+    ["Hillsbrad Foothills"] = { 20, 31 },
+    ["Wetlands"] = { 20, 30 },
+    ["Thousand Needles"] = { 25, 35 },     -- wowhead: 6-35
+    ["Alterac Mountains"] = { 27, 39 },
+    ["Arathi Highlands"] = { 30, 40 },
+    ["Desolace"] = { 30, 39 },
+    ["Stranglethorn Vale"] = { 30, 50 },
+    ["Badlands"] = { 36, 45 },
+    ["Swamp of Sorrows"] = { 36, 43 },
+    ["Stormwind City"] = { 1, 60 },
+    ["Ironforge"] = { 1, 60 },
+    -- Dungeons
+    ["Hall of Thanes"] = { 9, 15 },                -- from its items
+    ["Ragefire Chasm"] = { 15, 25 },
+    ["The Deadmines"] = { 15, 25 },
+    ["Ruins of Lordaeron"] = { 15, 22 },           -- from its items
+    ["Wailing Caverns"] = { 17, 27 },
+    ["Blackfathom Deeps"] = { 22, 32 },
+    ["Shadowfang Keep"] = { 22, 30 },
+    ["The Stockade"] = { 22, 32 },
+    ["Excavation Site: Wetlands"] = { 22, 28 },    -- from its items
+    ["City of Dalaran"] = { 24, 30 },              -- from its items
+    ["Gnomeregan"] = { 26, 36 },
+    ["Scarlet Monastery: Graveyard"] = { 26, 36 }, -- Classic wing range
+    ["Scarlet Monastery: Library"] = { 29, 39 },   -- Classic wing range
+    ["Razorfen Kraul"] = { 32, 42 },
+    ["Razorfen Downs"] = { 37, 47 },
+}
+
+-- Starting zones of the other faction, which the zone filter's "Current
+-- Level" button always unticks.
+EverGear.OTHER_FACTION_ZONES = {
+    Alliance = { "Mulgore", "Durotar", "Tirisfal Glades", "The Barrens", "Silverpine Forest" },
+    Horde = { "Elwynn Forest", "Dun Morogh", "Westfall", "Loch Modan", "Teldrassil", "Darkshore" },
+}
+
 EverGear.SOURCE_TYPE_FILTERS = {
     { key = "quest",       label = "Quest" },
     { key = "vendor",      label = "Vendor" },

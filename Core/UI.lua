@@ -1634,6 +1634,41 @@ zoneFilterNoneButton:SetPoint("LEFT", zoneFilterAllButton, "RIGHT", 8, 0)
 zoneFilterNoneButton:SetText("Show None")
 zoneFilterNoneButton:SetScript("OnClick", function() SetAllZones(false) end)
 
+-- One-time: ticks the places whose level range includes the character's
+-- level and unticks the rest, plus the other faction's starting zones.
+-- Clicking it again after leveling updates the ticks; until then they stay
+-- as set (and can be changed by hand).
+local function FilterZonesToCurrentLevel()
+    local playerInfo = EverGear:GetPlayerInfo()
+    local level = playerInfo.level or 1
+    local otherFaction = {}
+    for _, zone in ipairs(EverGear.OTHER_FACTION_ZONES[playerInfo.faction or ""] or {}) do
+        otherFaction[zone] = true
+    end
+    local filters = GetZoneFilters()
+    for _, entry in ipairs(zoneFilterCheckboxes) do
+        local range = EverGear.ZONE_LEVEL_RANGES[entry.zone]
+        local inRange = (not range) or (level >= range[1] and level <= range[2])
+        filters[entry.zone] = inRange and not otherFaction[entry.zone]
+    end
+    RefreshZoneFilterCheckboxes()
+    EverGear:RefreshUI()
+end
+
+local zoneFilterLevelButton = CreateFrame("Button", nil, zoneFilterPanel, "UIPanelButtonTemplate")
+zoneFilterLevelButton:SetSize(110, 20)
+zoneFilterLevelButton:SetPoint("LEFT", zoneFilterNoneButton, "RIGHT", 8, 0)
+zoneFilterLevelButton:SetText("Current Level")
+zoneFilterLevelButton:SetScript("OnClick", FilterZonesToCurrentLevel)
+zoneFilterLevelButton:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText("Current Level")
+    GameTooltip:AddLine("Shows only the zones and dungeons meant for your current level, and hides the other "
+        .. "faction's starting zones. Click it again after leveling up to update.", 0.8, 0.8, 0.8, true)
+    GameTooltip:Show()
+end)
+zoneFilterLevelButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
 local zoneFilterNote = zoneFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 zoneFilterNote:SetPoint("BOTTOMLEFT", zoneFilterAllButton, "TOPLEFT", 0, 6)
 zoneFilterNote:SetPoint("RIGHT", zoneFilterPanel, "RIGHT", -16, 0)
