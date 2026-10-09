@@ -805,6 +805,43 @@ for i, slotToken in ipairs(bottomRow) do
     table.insert(bottomItems, { frame = btn, index = i })
 end
 
+-- ===== Character model =====
+-- The player's own character, in the space between the two slot columns and
+-- above the weapon row, like the real character sheet. Drag it to turn it.
+-- Redrawn whenever the window opens and when gear or appearance changes.
+local characterModel = CreateFrame("PlayerModel", "EverGearCharacterModel", content)
+characterModel:EnableMouse(true)
+
+local function RefreshCharacterModel()
+    if not characterModel:IsVisible() then return end
+    characterModel:SetUnit("player")
+end
+
+local MODEL_TURN_SPEED = 0.02  -- radians per pixel dragged
+local dragStartX, dragStartFacing
+characterModel:SetScript("OnMouseDown", function(self, button)
+    if button ~= "LeftButton" then return end
+    dragStartX = GetCursorPosition()
+    dragStartFacing = self:GetFacing() or 0
+end)
+characterModel:SetScript("OnMouseUp", function() dragStartX = nil end)
+characterModel:SetScript("OnHide", function() dragStartX = nil end)
+characterModel:SetScript("OnUpdate", function(self)
+    if not dragStartX then return end
+    if not IsMouseButtonDown("LeftButton") then dragStartX = nil return end
+    local x = GetCursorPosition()
+    self:SetFacing(dragStartFacing + (x - dragStartX) * MODEL_TURN_SPEED)
+end)
+characterModel:SetScript("OnShow", RefreshCharacterModel)
+
+local modelWatcher = CreateFrame("Frame")
+modelWatcher:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+modelWatcher:RegisterEvent("UNIT_MODEL_CHANGED")
+modelWatcher:SetScript("OnEvent", function(_, event, unit)
+    if event == "UNIT_MODEL_CHANGED" and unit ~= "player" then return end
+    RefreshCharacterModel()
+end)
+
 local function RepositionAll()
     local h = content:GetHeight()
     local w = content:GetWidth()
@@ -830,6 +867,13 @@ local function RepositionAll()
         item.frame:ClearAllPoints()
         item.frame:SetPoint("TOPLEFT", content, "TOPLEFT", bottomStartX + (item.index - 1) * (ICON_SIZE + 10), bottomRowY)
     end
+
+    -- Between the slot columns, from the top row down to just above the
+    -- weapon row.
+    local MODEL_GAP = 6
+    characterModel:ClearAllPoints()
+    characterModel:SetPoint("TOPLEFT", content, "TOPLEFT", LEFT_MARGIN + ICON_SIZE + MODEL_GAP, TOP_Y)
+    characterModel:SetPoint("BOTTOMRIGHT", content, "TOPRIGHT", -(RIGHT_MARGIN + ICON_SIZE + MODEL_GAP), bottomRowY + MODEL_GAP)
 end
 
 content:SetScript("OnSizeChanged", RepositionAll)
@@ -840,6 +884,7 @@ mainFrame:SetScript("OnShow", function()
     RepositionFilters()
     RepositionAll()
     SyncLookaheadBounds()
+    RefreshCharacterModel()
 end)
 
 -- ===== Detail panel =====
