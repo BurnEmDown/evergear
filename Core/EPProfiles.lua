@@ -312,6 +312,29 @@ function EverGear:GetProfileWeights(classToken, specName, profileId)
     return MergeWeightsOnto(self:GetBuiltinProfile(classToken, specName), entry.weights)
 end
 
+-- Makes profileId this character's active profile, and remembers it as the
+-- one last used for the current spec (charDB.profileBySpec), so switching
+-- back to that spec later picks it again instead of the default.
+function EverGear:SetActiveProfileId(profileId)
+    local charDB = self:GetCharDB()
+    charDB.profileId = profileId
+    if charDB.spec then
+        charDB.profileBySpec = charDB.profileBySpec or {}
+        charDB.profileBySpec[charDB.spec] = profileId
+    end
+end
+
+-- The profile this character last used for specName, or the spec's default
+-- if there isn't one (or it has since been deleted).
+function EverGear:GetRememberedProfileId(classToken, specName)
+    local charDB = self:GetCharDB()
+    local profileId = charDB.profileBySpec and charDB.profileBySpec[specName]
+    if profileId and self:GetProfileWeights(classToken, specName, profileId) then
+        return profileId
+    end
+    return self:GetDefaultProfileId(classToken, specName)
+end
+
 -- Resolves this CHARACTER's active profile for classToken+specName (reads
 -- charDB.profileId). Falls back to -- and self-heals charDB.profileId back
 -- to -- the builtin default if the saved id no longer exists (e.g. deleted
