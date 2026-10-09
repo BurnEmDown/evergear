@@ -44,7 +44,7 @@ local SLOT_FOR_EQUIP_LOC = {
     INVTYPE_HOLDABLE = "SecondaryHandSlot",
     INVTYPE_RANGED = "RangedSlot", INVTYPE_RANGEDRIGHT = "RangedSlot",
     INVTYPE_THROWN = "RangedSlot",
-    -- Idols, totems and librams go in the ranged slot (weaponType "relic", below).
+    -- Librams, idols and totems go in the ranged ("Relic") slot; see RELIC_SUBCLASS.
     INVTYPE_RELIC = "RangedSlot",
 }
 
@@ -56,6 +56,7 @@ local WEAPON_SUBCLASS = {
 }
 local RANGED_WEAPON_TYPES = { bow = true, gun = true, crossbow = true, thrown = true, wand = true }
 local ARMOR_SUBCLASS = { [1] = "Cloth", [2] = "Leather", [3] = "Mail", [4] = "Plate" }
+local RELIC_SUBCLASS = { [7] = "libram", [8] = "idol", [9] = "totem" }  -- armor subclasses
 
 local function GetInstant(link)
     local fn = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
@@ -317,7 +318,7 @@ function EverGear:BuildLiveItemRecord(link, includeWhite)
         elseif equipLoc == "INVTYPE_HOLDABLE" then
             record.weaponType = "offhand"
         elseif equipLoc == "INVTYPE_RELIC" then
-            record.weaponType = "relic"
+            record.weaponType = RELIC_SUBCLASS[subClassID]
         else
             record.armorType = ARMOR_SUBCLASS[subClassID]
         end
