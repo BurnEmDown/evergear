@@ -930,7 +930,6 @@ modelToggle:SetScript("OnEnter", function(self)
         GameTooltip:SetText("Show character model")
     else
         GameTooltip:SetText("Hide character model")
-        GameTooltip:AddLine("Turning it off can help the game run smoother on weaker computers.", 0.8, 0.8, 0.8, true)
     end
     GameTooltip:Show()
 end)
