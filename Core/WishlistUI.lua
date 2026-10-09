@@ -230,6 +230,8 @@ local function GetOrCreateWantedRow(index)
         GameTooltip:Show()
     end)
     icon:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    -- Ctrl-click previews it on the character, Shift-click links it in chat.
+    icon:SetScript("OnClick", function(self) EverGear:HandleItemModifiedClick(self:GetParent().itemId) end)
     row.icon = icon
 
     -- Green tick on the icon once the item has been looted / bought / ticked.
@@ -435,6 +437,7 @@ local function CreateSetSlotButton(slotToken)
     end)
     btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
     btn:SetScript("OnClick", function(self)
+        if EverGear:HandleItemModifiedClick(self.itemId) then return end
         local index = EverGear:GetActiveSetIndex()
         if index and self.itemId then ShowSetSlotMenu(self, index, self.slotToken, self.itemId) end
     end)
