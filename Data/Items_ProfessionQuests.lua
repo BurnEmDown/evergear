@@ -6,3 +6,4 @@ EverGear = EverGear or {}
 EverGear.Items = EverGear.Items or {}
 
 EverGear.Items[19969] = {id = 19969, name = "Nat Pagle's Extreme Anglin' Boots", slot = "FeetSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 40, minLevel = nil, confirmed = true, bindType = "BoP", source = {type = "special", note = "Fishing: hand in a Brownell's Blue Striped Racer (Rare Fish quest)"}, stats = {ARMOR = 36, EQUIP_1 = "Increased Fishing +5.", STAMINA = 12}}
+EverGear.Items[19972] = {id = 19972, name = "Lucky Fishing Hat", slot = "HeadSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 40, minLevel = nil, confirmed = true, bindType = "BoP", source = {type = "special", note = "Fishing: hand in a Keefer's Angelfish (Rare Fish quest)"}, stats = {ARMOR = 43, EQUIP_1 = "Increased Fishing +5.", STAMINA = 15}}
