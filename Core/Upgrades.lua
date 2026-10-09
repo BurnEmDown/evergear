@@ -1132,8 +1132,9 @@ local CLASS_USABLE_WEAPON_TYPES = {
 }
 
 local CLASS_CAN_USE_SHIELD = { WARRIOR = true, PALADIN = true, SHAMAN = true }
--- Librams (Paladin), idols (Druid) and totems (Shaman).
-local CLASS_CAN_USE_RELIC = { PALADIN = true, DRUID = true, SHAMAN = true }
+-- Relics (the ranged-slot items that aren't ranged weapons) and the one
+-- class that can use each kind.
+local RELIC_CLASS = { libram = "PALADIN", idol = "DRUID", totem = "SHAMAN" }
 
 -- Exposed so UI.lua can build the weapon-type filter checklist from the same
 -- per-class whitelist used for usability checks below, rather than keeping a
@@ -1211,8 +1212,8 @@ function EverGear:IsWeaponFilterKeyUsable(filterKey, classToken)
     if baseType == "offhand" then
         return true  -- orb-style items -- see IsWeaponTypeAllowed below
     end
-    if baseType == "relic" then
-        return CLASS_CAN_USE_RELIC[classToken] == true
+    if RELIC_CLASS[baseType] then
+        return RELIC_CLASS[baseType] == classToken
     end
     local whitelist = CLASS_USABLE_WEAPON_TYPES[classToken]
     return whitelist ~= nil and whitelist[baseType] == true
@@ -1223,8 +1224,8 @@ local function IsWeaponTypeAllowed(item, classToken)
     if item.weaponType == "shield" then
         return CLASS_CAN_USE_SHIELD[classToken] == true
     end
-    if item.weaponType == "relic" then
-        return CLASS_CAN_USE_RELIC[classToken] == true
+    if RELIC_CLASS[item.weaponType] then
+        return RELIC_CLASS[item.weaponType] == classToken
     end
     if item.weaponType == "offhand" then
         -- An orb-style held-in-off-hand item (Orb, tome, etc) --
@@ -1250,7 +1251,7 @@ local WEAPON_SUBCLASS_TYPES = {
     [15] = "dagger", [16] = "thrown", [18] = "crossbow", [19] = "wand",
 }
 local ARMOR_SUBCLASS_TYPES = { [1] = "Cloth", [2] = "Leather", [3] = "Mail", [4] = "Plate" }
-local RELIC_SUBCLASS_CLASSES = { [7] = { "PALADIN" }, [8] = { "DRUID" }, [9] = { "SHAMAN" } }  -- libram, idol, totem
+local RELIC_SUBCLASS_TYPES = { [7] = "libram", [8] = "idol", [9] = "totem" }
 
 local function ItemFromClientInfo(itemId)
     local getInfo = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
@@ -1260,8 +1261,8 @@ local function ItemFromClientInfo(itemId)
         return { weaponType = WEAPON_SUBCLASS_TYPES[subclassID] }
     elseif classID == 4 then
         if subclassID == 6 then return { weaponType = "shield" } end
-        if RELIC_SUBCLASS_CLASSES[subclassID] then
-            return { weaponType = "relic", classes = RELIC_SUBCLASS_CLASSES[subclassID] }
+        if RELIC_SUBCLASS_TYPES[subclassID] then
+            return { weaponType = RELIC_SUBCLASS_TYPES[subclassID] }
         end
         return { armorType = ARMOR_SUBCLASS_TYPES[subclassID] }
     end
