@@ -166,11 +166,13 @@ EverGear.ZONE_LEVEL_RANGES = {
     ["Razorfen Downs"] = { 37, 47 },
 }
 
--- Starting zones of the other faction, which the zone filter's "Current
--- Level" button always unticks.
+-- The other faction's starting zones and faction-specific dungeons, which the
+-- zone filter's "Current Level" button always unticks.
 EverGear.OTHER_FACTION_ZONES = {
-    Alliance = { "Mulgore", "Durotar", "Tirisfal Glades", "The Barrens", "Silverpine Forest" },
-    Horde = { "Elwynn Forest", "Dun Morogh", "Westfall", "Loch Modan", "Teldrassil", "Darkshore" },
+    Alliance = { "Mulgore", "Durotar", "Tirisfal Glades", "The Barrens", "Silverpine Forest",
+                 "Ragefire Chasm" },
+    Horde = { "Elwynn Forest", "Dun Morogh", "Westfall", "Loch Modan", "Teldrassil", "Darkshore",
+              "The Stockade", "Hall of Thanes" },
 }
 
 EverGear.SOURCE_TYPE_FILTERS = {
