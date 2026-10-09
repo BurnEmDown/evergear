@@ -88,7 +88,7 @@ local RefreshButtonStates
 local function ActivateIfCurrentSpec(classToken, specName, profileId)
     local charDB = EverGear:GetCharDB()
     if classToken ~= EverGear:GetPlayerInfo().classToken or specName ~= charDB.spec then return end
-    charDB.profileId = profileId
+    EverGear:SetActiveProfileId(profileId)
     if EverGear.RefreshProfileDropdown then EverGear.RefreshProfileDropdown() end
     if EverGear.Frame and EverGear.Frame:IsShown() then EverGear:RefreshUI() end
 end
