@@ -24,7 +24,6 @@
 ### Changed
 - EP profiles: up to 8 custom profiles per class and spec, and names must be
   unique within a spec and at most 30 characters.
-- Items listed by tracker sites (wowtbc.gg, wowhead) count as confirmed.
 
 ### Fixed
 - Stats updated from in-game checks for many items, among them Fallen
@@ -32,8 +31,6 @@
   Rifle, Defias Renegade Ring, Lucine Longsword, Burning Sliver, Reliquary
   Mantle, Pronged Reaver, Tiger Band, Beetle Clasps and Talvash's Gold Ring.
 - Truthseeker's Bow requires level 40.
-- Debug mode missed armor values over 999 (e.g. Collection Plate's 1,380
-  armor) and reported them as a difference.
 
 ## [0.0.28] - 2026-10-08
 
