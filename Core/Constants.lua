@@ -141,10 +141,16 @@ EverGear.WEAPON_TYPE_FILTER_LIST = {
     { key = "thrown",       label = "Thrown" },
     { key = "shield",       label = "Shield" },
     -- Synthetic type (see evergear-backend's convert_to_canonical.py) for
-    -- Libram/Idol/Totem/Orb-style held-in-off-hand items that aren't a real
-    -- weapon or shield -- occupies the same slot as Shield, so it needs its
-    -- own row rather than being lumped in with (or invisible to) that filter.
+    -- Orb/tome-style held-in-off-hand items that aren't a real weapon or
+    -- shield -- occupies the same slot as Shield, so it needs its own row
+    -- rather than being lumped in with (or invisible to) that filter.
     { key = "offhand",      label = "Off Hand" },
+    -- Librams (Paladin), idols (Druid) and relics (Shaman -- the game's type
+    -- name, though most are called "Totem of ..."): they go in the ranged
+    -- slot but aren't ranged weapons, and each is usable by one class only.
+    { key = "libram",       label = "Libram" },
+    { key = "idol",         label = "Idol" },
+    { key = "relic",        label = "Relic" },
 }
 
 -- Professions that actually produce equippable gear -- gathering professions
