@@ -1053,18 +1053,19 @@ function EverGear:HideUpgradeDetail()
 end
 
 -- Hover version of a slot click: opens the slot's suggested upgrades, but
--- only when there are some, and never over something else the player has
--- open on that side (the Wanted, Gear Sets or EP profile windows, or a filter
--- panel). The panel then stays open when the mouse moves on, so its rows can
+-- only when there are some. Like a click, it leaves the Wanted, Gear Sets and
+-- EP profile windows open (the panel stacks below them). It doesn't open
+-- while a weapon or profession filter panel is open, since showing the
+-- upgrades closes those and the mouse often crosses the slots on its way to
+-- a checkbox. The panel stays open when the mouse moves on, so its rows can
 -- be used, and switches to whichever slot is hovered next.
 function EverGear:ShowUpgradeDetailOnHover(slotToken)
     local btn = slotButtons[slotToken]
     if not (btn and mainFrame:IsShown()) then return end
     if not btn.upgradeList or #btn.upgradeList == 0 then return end
     if detailPanel:IsShown() and currentDetailSlot == slotToken then return end
-    for _, other in ipairs({ EverGearWantedFrame, EverGearSetsFrame, EverGearProfileEditor,
-                             weaponFilterPanel, professionFilterPanel }) do
-        if other and other:IsShown() then return end
+    for _, filterPanel in ipairs({ weaponFilterPanel, professionFilterPanel }) do
+        if filterPanel and filterPanel:IsShown() then return end
     end
     self:ShowUpgradeDetail(slotToken)
 end
