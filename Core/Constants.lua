@@ -21,7 +21,7 @@ EverGear.VERSION = "0.0.28"
 --   armorType = "Cloth",        -- Cloth / Leather / Mail / Plate / nil for non-armor
 --   ilvl = 5,
 --   minLevel = 3,
---   confirmed = true,           -- false = seen on a tracker site but not yet in-game verified
+--   confirmed = true,           -- verified in-game or listed by a tracker site (wowtbc.gg, wowhead...)
 --   bindType = "BoE",           -- "BoE" / "BoP" / "BoU" / nil (unconfirmed -- treated as NOT
 --                                -- BoE by the "BoE only" profession filter in UI.lua, never
 --                                -- assumed). Currently only populated for crafted items:
