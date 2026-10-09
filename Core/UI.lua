@@ -855,6 +855,86 @@ for i, slotToken in ipairs(bottomRow) do
     table.insert(bottomItems, { frame = btn, index = i })
 end
 
+-- ===== Character model =====
+-- The player's own character, in the space between the two slot columns and
+-- above the weapon row, like the real character sheet. Drag it to turn it.
+-- Redrawn whenever the window opens and when gear or appearance changes.
+local characterModel = CreateFrame("PlayerModel", "EverGearCharacterModel", content)
+characterModel:EnableMouse(true)
+-- Shown by ApplyCharacterModelSetting (below) once the saved setting can be
+-- read, so a model turned off is never drawn, not even for a moment.
+characterModel:Hide()
+
+local function RefreshCharacterModel()
+    if not characterModel:IsVisible() then return end
+    characterModel:SetUnit("player")
+end
+
+local MODEL_TURN_SPEED = 0.02  -- radians per pixel dragged
+local dragStartX, dragStartFacing
+characterModel:SetScript("OnMouseDown", function(self, button)
+    if button ~= "LeftButton" then return end
+    dragStartX = GetCursorPosition()
+    dragStartFacing = self:GetFacing() or 0
+end)
+characterModel:SetScript("OnMouseUp", function() dragStartX = nil end)
+characterModel:SetScript("OnHide", function() dragStartX = nil end)
+characterModel:SetScript("OnUpdate", function(self)
+    if not dragStartX then return end
+    if not IsMouseButtonDown("LeftButton") then dragStartX = nil return end
+    local x = GetCursorPosition()
+    self:SetFacing(dragStartFacing + (x - dragStartX) * MODEL_TURN_SPEED)
+end)
+characterModel:SetScript("OnShow", RefreshCharacterModel)
+
+local modelWatcher = CreateFrame("Frame")
+modelWatcher:SetScript("OnEvent", function(_, event, unit)
+    if event == "UNIT_MODEL_CHANGED" and unit ~= "player" then return end
+    RefreshCharacterModel()
+end)
+
+-- The model can be turned off (eye button above it) for weaker computers.
+-- Off means no model at all: it's hidden, emptied, and stops listening for
+-- gear changes. The choice is account-wide (EverGearDB.hideCharacterModel),
+-- since it's about the computer, not the character.
+local modelToggle = CreateFrame("Button", "EverGearCharacterModelToggle", content)
+modelToggle:SetSize(16, 16)
+modelToggle:SetPoint("TOP", content, "TOP", 0, -2)
+modelToggle:SetFrameLevel(characterModel:GetFrameLevel() + 2)
+modelToggle:SetNormalTexture("Interface\\Icons\\Spell_Holy_MindVision")
+modelToggle:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+
+local function ApplyCharacterModelSetting()
+    local hidden = EverGearDB.hideCharacterModel == true
+    characterModel:SetShown(not hidden)
+    modelToggle:GetNormalTexture():SetDesaturated(hidden)
+    modelToggle:SetAlpha(hidden and 0.5 or 1)
+    if hidden then
+        modelWatcher:UnregisterAllEvents()
+        if characterModel.ClearModel then characterModel:ClearModel() end
+    else
+        modelWatcher:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+        modelWatcher:RegisterEvent("UNIT_MODEL_CHANGED")
+        RefreshCharacterModel()
+    end
+end
+
+modelToggle:SetScript("OnClick", function(self)
+    EverGearDB.hideCharacterModel = not EverGearDB.hideCharacterModel
+    ApplyCharacterModelSetting()
+    if self:IsMouseOver() and self:GetScript("OnEnter") then self:GetScript("OnEnter")(self) end
+end)
+modelToggle:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    if EverGearDB.hideCharacterModel then
+        GameTooltip:SetText("Show character model")
+    else
+        GameTooltip:SetText("Hide character model")
+    end
+    GameTooltip:Show()
+end)
+modelToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
 local function RepositionAll()
     local h = content:GetHeight()
     local w = content:GetWidth()
@@ -880,6 +960,13 @@ local function RepositionAll()
         item.frame:ClearAllPoints()
         item.frame:SetPoint("TOPLEFT", content, "TOPLEFT", bottomStartX + (item.index - 1) * (ICON_SIZE + 10), bottomRowY)
     end
+
+    -- Between the slot columns, from the top row down to just above the
+    -- weapon row.
+    local MODEL_GAP = 6
+    characterModel:ClearAllPoints()
+    characterModel:SetPoint("TOPLEFT", content, "TOPLEFT", LEFT_MARGIN + ICON_SIZE + MODEL_GAP, TOP_Y)
+    characterModel:SetPoint("BOTTOMRIGHT", content, "TOPRIGHT", -(RIGHT_MARGIN + ICON_SIZE + MODEL_GAP), bottomRowY + MODEL_GAP)
 end
 
 content:SetScript("OnSizeChanged", RepositionAll)
@@ -890,6 +977,7 @@ mainFrame:SetScript("OnShow", function()
     RepositionFilters()
     RepositionAll()
     SyncLookaheadBounds()
+    ApplyCharacterModelSetting()
 end)
 
 -- ===== Detail panel =====
