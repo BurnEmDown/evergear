@@ -405,6 +405,18 @@ local function Captures()
     return EverGearDB.debugCaptures
 end
 
+local function StoreCapture(record, status, diffs, notes, addonStats, sourceNote)
+    Captures()[record.id] = {
+        record = record,
+        status = status,
+        diffs = diffs,
+        notes = notes,
+        addonStats = addonStats,
+        sourceNote = sourceNote,
+        level = UnitLevel("player"),
+    }
+end
+
 local function CaptureCount()
     local n = 0
     for _ in pairs(Captures()) do n = n + 1 end
@@ -535,15 +547,7 @@ local function BuildWindow()
     captureButton:SetText("Capture")
     captureButton:SetScript("OnClick", function()
         if not current then return end
-        Captures()[current.record.id] = {
-            record = current.record,
-            status = current.status,
-            diffs = current.diffs,
-            notes = current.notes,
-            addonStats = current.addonStats,
-            sourceNote = sourceBox:GetText(),
-            level = UnitLevel("player"),
-        }
+        StoreCapture(current.record, current.status, current.diffs, current.notes, current.addonStats, sourceBox:GetText())
         print("|cff33ff99EverGear|r debug: captured " .. current.record.name .. " (" .. CaptureCount() .. " total).")
         RefreshCaptureUI()
     end)
@@ -693,7 +697,7 @@ end
 local lastLink
 local function OnItemTooltip(tooltip)
     if not (EverGearDB and EverGearDB.debugMode) then return end
-    if not tooltip or not tooltip.GetItem then return end
+    if not tooltip or not tooltip.GetItem or tooltip == scanTooltip then return end
     local _, link = tooltip:GetItem()
     if not link or link == lastLink then return end
     lastLink = link
@@ -717,9 +721,13 @@ local function OnItemTooltip(tooltip)
         return
     end
     local diffs = EverGear:CompareLiveToDatabase(record, dbItem)
+    -- Remembered so the item browser (ItemBrowser.lua) can show what's been checked.
+    EverGearDB.debugChecked = EverGearDB.debugChecked or {}
+    EverGearDB.debugChecked[record.id] = #diffs > 0 and "differs" or "ok"
     if #diffs > 0 then
         ShowFlaggedItem(record, "differs", diffs, notes, dbItem.stats)
     end
+    if EverGear.OnItemBrowserCheck then EverGear:OnItemBrowserCheck() end
 end
 
 local function HookTooltips()
@@ -739,6 +747,39 @@ if not pcall(HookTooltips) and TooltipDataProcessor and Enum and Enum.TooltipDat
     end)
 end
 
+-- ===== Checking without hovering =====
+-- Used by the item browser's "Check all" (ItemBrowser.lua).
+
+-- Checks one database item against the game through the hidden scan tooltip.
+-- Returns "ok" or "differs"; a difference is captured right away (keeping any
+-- note already typed for it). Returns nil plus the reason when it can't be
+-- checked: "uncached" (ask the server, try again later), "suffix",
+-- "lowQuality" or "notEquippable".
+function EverGear:CheckItemAgainstGame(itemId)
+    local dbItem = self:GetItem(itemId)
+    if not dbItem then return nil, "unknown" end
+    local _, link = GetFullInfo(itemId)
+    local record, reason, notes = self:BuildLiveItemRecord(link or ("item:" .. itemId))
+    if not record then return nil, reason or "notEquippable" end
+
+    local diffs = self:CompareLiveToDatabase(record, dbItem)
+    local status = #diffs > 0 and "differs" or "ok"
+    EverGearDB.debugChecked = EverGearDB.debugChecked or {}
+    EverGearDB.debugChecked[itemId] = status
+    if status == "differs" then
+        local existing = Captures()[itemId]
+        StoreCapture(record, status, diffs, notes, dbItem.stats, existing and existing.sourceNote)
+    end
+    return status
+end
+
+-- Opens the debug window on an item that's already captured.
+function EverGear:ShowDebugCapture(itemId)
+    local entry = Captures()[itemId]
+    if not entry then return end
+    ShowFlaggedItem(entry.record, entry.status, entry.diffs, entry.notes, entry.addonStats)
+end
+
 -- ===== Slash commands =====
 
 function EverGear:HandleDebugCommand(arg)
@@ -752,6 +793,9 @@ function EverGear:HandleDebugCommand(arg)
         EverGearDB.debugShowPending = (EverGearDB.debugShowPending == false)
         if debugPendingCheck then debugPendingCheck:SetChecked(EverGearDB.debugShowPending) end
         print("|cff33ff99EverGear|r debug: pending-source items popups " .. (EverGearDB.debugShowPending and "|cff00ff00ON|r" or "|cffff4040OFF|r"))
+        return
+    elseif arg == "items" then
+        EverGear:ToggleItemBrowser()
         return
     elseif arg == "clear" then
         EverGearDB.debugCaptures = {}
@@ -771,8 +815,10 @@ function EverGear:HandleDebugCommand(arg)
     if EverGearDB.debugMode then
         print("|cff33ff99EverGear|r debug mode |cff00ff00ON|r -- hover an item that's missing or wrong in the addon to flag it.")
         print("  /eg debug export  -- show captured items as JSON     /eg debug clear  -- forget captures")
+        print("  /eg debug items  -- browse every item in EverGear's data")
     else
         print("|cff33ff99EverGear|r debug mode |cffff4040OFF|r.")
         if debugFrame then debugFrame:Hide() end
     end
+    if EverGear.OnItemBrowserCheck then EverGear:OnItemBrowserCheck() end
 end
