@@ -82,6 +82,17 @@ local RefreshProfileList
 local RefreshWeightGrid
 local RefreshButtonStates
 
+-- A profile just created (New, Duplicate, Import, or Copy) for the spec this
+-- character is playing becomes its active profile, so the suggestions use it
+-- straight away. One made for another spec leaves the active profile alone.
+local function ActivateIfCurrentSpec(classToken, specName, profileId)
+    local charDB = EverGear:GetCharDB()
+    if classToken ~= EverGear:GetPlayerInfo().classToken or specName ~= charDB.spec then return end
+    EverGear:SetActiveProfileId(profileId)
+    if EverGear.RefreshProfileDropdown then EverGear.RefreshProfileDropdown() end
+    if EverGear.Frame and EverGear.Frame:IsShown() then EverGear:RefreshUI() end
+end
+
 -- ===== State =====
 -- Which class+spec the editor is currently browsing (defaults to the
 -- player's own on open, but "Copy to..." can switch it to a DIFFERENT
@@ -517,6 +528,7 @@ StaticPopupDialogs["EVERGEAR_NEW_PROFILE"] = {
         end
         SelectProfileForEditing(id)
         if EverGear.RefreshProfileDropdown then EverGear.RefreshProfileDropdown() end
+        ActivateIfCurrentSpec(editorClassToken, editorSpecName, id)
     end,
     EditBoxOnEnterPressed = function(self) self:GetParent().button1:Click() end,
     timeout = 0, whileDead = true, hideOnEscape = true,
@@ -552,6 +564,7 @@ StaticPopupDialogs["EVERGEAR_DUPLICATE_PROFILE"] = {
         end
         SelectProfileForEditing(id)
         if EverGear.RefreshProfileDropdown then EverGear.RefreshProfileDropdown() end
+        ActivateIfCurrentSpec(editorClassToken, editorSpecName, id)
     end,
     EditBoxOnEnterPressed = function(self) self:GetParent().button1:Click() end,
     timeout = 0, whileDead = true, hideOnEscape = true,
@@ -725,6 +738,7 @@ copyConfirmButton:SetScript("OnClick", function()
     editorSpecName = copyTargetSpec
     SelectProfileForEditing(id)
     if EverGear.RefreshProfileDropdown then EverGear.RefreshProfileDropdown() end
+    ActivateIfCurrentSpec(copyTargetClass, copyTargetSpec, id)
 end)
 
 function EverGear:ShowCopyProfilePopup(fromClass, fromSpec, fromProfileId, fromWeights)
@@ -941,6 +955,7 @@ local function FinishImport(name, weights)
     importPopup:Hide()
     SelectProfileForEditing(id)
     if EverGear.RefreshProfileDropdown then EverGear.RefreshProfileDropdown() end
+    ActivateIfCurrentSpec(editorClassToken, editorSpecName, id)
     return true
 end
 
