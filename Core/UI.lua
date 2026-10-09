@@ -436,7 +436,7 @@ lookaheadRow:SetPoint("TOP", mainFrame, "TOP", 0, -106)
 
 local lookaheadLabel = lookaheadRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 lookaheadLabel:SetPoint("TOP", lookaheadRow, "TOP", 0, 0)
-lookaheadLabel:SetText("Current Level")
+lookaheadLabel:SetText("Look Ahead: Off")
 lookaheadLabel:SetTextColor(unpack(THEME.goldDim))
 
 -- Reset button sits to the slider's left; shifting the slider right by half
@@ -448,18 +448,43 @@ local sliderXOffset = (RESET_BUTTON_SIZE + RESET_BUTTON_GAP) / 2
 
 local lookaheadSlider = CreateFrame("Slider", "EverGearLookaheadSlider", lookaheadRow, "BackdropTemplate")
 lookaheadSlider:SetOrientation("HORIZONTAL")
-lookaheadSlider:SetSize(170, 14)
-lookaheadSlider:SetPoint("TOP", lookaheadLabel, "BOTTOM", sliderXOffset, -6)
+lookaheadSlider:SetSize(170, 17)
+lookaheadSlider:SetPoint("TOP", lookaheadLabel, "BOTTOM", sliderXOffset, -4)
 lookaheadSlider:SetHitRectInsets(0, 0, -6, -6)
 lookaheadSlider:SetThumbTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
+-- The game's own slider art (the same track as the Interface Options
+-- sliders), so it reads as something to drag rather than a plain bar.
 lookaheadSlider:SetBackdrop({
-    bgFile = "Interface\\Buttons\\WHITE8X8",
-    edgeFile = "Interface\\Buttons\\WHITE8X8",
-    edgeSize = 1,
+    bgFile = "Interface\\Buttons\\UI-SliderBar-Background",
+    edgeFile = "Interface\\Buttons\\UI-SliderBar-Border",
+    tile = true, tileSize = 8, edgeSize = 8,
+    insets = { left = 3, right = 3, top = 6, bottom = 6 },
 })
-lookaheadSlider:SetBackdropColor(0.06, 0.06, 0.08, 1)
-lookaheadSlider:SetBackdropBorderColor(0.6, 0.56, 0.42, 1)
 lookaheadSlider:SetValueStep(1)
+
+-- Gold fill from the left end up to the thumb: how far ahead it looks.
+local lookaheadFill = lookaheadSlider:CreateTexture(nil, "BORDER")
+lookaheadFill:SetColorTexture(THEME.gold[1], THEME.gold[2], THEME.gold[3], 0.55)
+lookaheadFill:SetHeight(5)
+lookaheadFill:SetPoint("LEFT", lookaheadSlider, "LEFT", 3, 0)
+lookaheadFill:SetPoint("RIGHT", lookaheadSlider:GetThumbTexture(), "CENTER", 0, 0)
+
+-- The highest level it can look ahead to, at the slider's right end.
+local lookaheadMaxText = lookaheadRow:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+lookaheadMaxText:SetPoint("LEFT", lookaheadSlider, "RIGHT", 4, 0)
+
+lookaheadSlider:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText("Look ahead")
+    GameTooltip:AddLine("Drag the slider (or use the mouse wheel over it) to also see upgrades you'll be able to use at higher levels. "
+        .. "The button on the left goes back to your current level.", 0.8, 0.8, 0.8, true)
+    GameTooltip:Show()
+end)
+lookaheadSlider:SetScript("OnLeave", function() GameTooltip:Hide() end)
+lookaheadSlider:EnableMouseWheel(true)
+lookaheadSlider:SetScript("OnMouseWheel", function(self, delta)
+    self:SetValue(self:GetValue() + delta)
+end)
 if lookaheadSlider.SetObeyStepOnDrag then
     lookaheadSlider:SetObeyStepOnDrag(true)
 end
@@ -488,12 +513,11 @@ lookaheadResetButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 -- button, not every automatic bounds sync.
 local syncingSlider = false
 
--- Shows a plain "Current Level" label when the slider is at its minimum
--- (nothing being looked ahead to), and the level number only once it's
--- actually been moved past that.
+-- "Look Ahead: Off" while the slider is at its minimum (nothing being looked
+-- ahead to), and the level number once it's been moved past that.
 local function UpdateLookaheadLabel(value)
     if value <= GetLookaheadMin() then
-        lookaheadLabel:SetText("Current Level")
+        lookaheadLabel:SetText("Look Ahead: Off")
     else
         lookaheadLabel:SetText("Look Ahead: Lvl " .. tostring(value))
     end
@@ -515,6 +539,7 @@ local function SyncLookaheadBounds()
     lookaheadSlider:SetMinMaxValues(minLevel, maxLevel)
     lookaheadSlider:SetValue(stored)
     syncingSlider = false
+    lookaheadMaxText:SetText(tostring(maxLevel))
     UpdateLookaheadLabel(stored)
 end
 
