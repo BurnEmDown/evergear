@@ -145,12 +145,12 @@ EverGear.WEAPON_TYPE_FILTER_LIST = {
     -- shield -- occupies the same slot as Shield, so it needs its own row
     -- rather than being lumped in with (or invisible to) that filter.
     { key = "offhand",      label = "Off Hand" },
-    -- Librams (Paladin), idols (Druid) and totems (Shaman): they go in the
-    -- ranged ("Relic") slot but aren't ranged weapons, and each is usable by
-    -- one class only.
+    -- Librams (Paladin), idols (Druid) and relics (Shaman -- the game's type
+    -- name, though most are called "Totem of ..."): they go in the ranged
+    -- slot but aren't ranged weapons, and each is usable by one class only.
     { key = "libram",       label = "Libram" },
     { key = "idol",         label = "Idol" },
-    { key = "totem",        label = "Totem" },
+    { key = "relic",        label = "Relic" },
 }
 
 -- Professions that actually produce equippable gear -- gathering professions

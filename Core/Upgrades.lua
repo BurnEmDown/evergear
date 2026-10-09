@@ -1134,7 +1134,7 @@ local CLASS_USABLE_WEAPON_TYPES = {
 local CLASS_CAN_USE_SHIELD = { WARRIOR = true, PALADIN = true, SHAMAN = true }
 -- Relics (the ranged-slot items that aren't ranged weapons) and the one
 -- class that can use each kind.
-local RELIC_CLASS = { libram = "PALADIN", idol = "DRUID", totem = "SHAMAN" }
+local RELIC_CLASS = { libram = "PALADIN", idol = "DRUID", relic = "SHAMAN" }
 
 -- Exposed so UI.lua can build the weapon-type filter checklist from the same
 -- per-class whitelist used for usability checks below, rather than keeping a
@@ -1251,7 +1251,8 @@ local WEAPON_SUBCLASS_TYPES = {
     [15] = "dagger", [16] = "thrown", [18] = "crossbow", [19] = "wand",
 }
 local ARMOR_SUBCLASS_TYPES = { [1] = "Cloth", [2] = "Leather", [3] = "Mail", [4] = "Plate" }
-local RELIC_SUBCLASS_TYPES = { [7] = "libram", [8] = "idol", [9] = "totem" }
+-- Armor subclasses: 9 (Totems) and 11 (Relic) are both the Shaman's "Relic" type.
+local RELIC_SUBCLASS_TYPES = { [7] = "libram", [8] = "idol", [9] = "relic", [11] = "relic" }
 
 local function ItemFromClientInfo(itemId)
     local getInfo = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
