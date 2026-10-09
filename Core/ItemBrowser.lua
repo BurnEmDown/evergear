@@ -291,6 +291,8 @@ local function CreateRow(index)
     -- Shift-click links it in chat, Ctrl-click previews it, like any item.
     row:SetScript("OnClick", function(self)
         if not self.item then return end
+        if EverGear:HandleItemModifiedClick(self.item.id) then return end
+        -- Alt-click: the wanted list / gear set menu (WishlistUI.lua's hook).
         local _, link = H.SafeGetItemInfo(self.item.id)
         if link and HandleModifiedItemClick then HandleModifiedItemClick(link) end
     end)

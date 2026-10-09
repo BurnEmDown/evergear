@@ -808,6 +808,7 @@ local function CreateSlotButton(slotToken)
             EverGear:ShowItemMenu(self.currentLink)
             return
         end
+        if EverGear:HandleItemModifiedClick(self.currentLink) then return end
         EverGear:ShowUpgradeDetail(self.slotToken)
     end)
 
@@ -959,7 +960,9 @@ local function GetOrCreateDetailRow(index)
     icon:SetScript("OnClick", function(self)
         if IsAltKeyDown() and self.itemLink and EverGear.ShowItemMenu then
             EverGear:ShowItemMenu(self.itemLink)
+            return
         end
+        EverGear:HandleItemModifiedClick(self.itemLink)
     end)
     row.icon = icon
 
@@ -1042,6 +1045,25 @@ local function SafeGetItemIcon(itemId)
         return GetItemIcon(itemId)
     end
     return nil
+end
+
+-- Ctrl-click previews an item on the character (the game's dressing room) and
+-- Shift-click links it in chat, the same as clicking an item anywhere else in
+-- the game. Returns true when it handled the click. Takes an item id or link;
+-- the dressing room also works for an item the client hasn't cached yet.
+function EverGear:HandleItemModifiedClick(itemIdOrLink)
+    if not itemIdOrLink or IsAltKeyDown() then return false end
+    if not (IsControlKeyDown() or IsShiftKeyDown()) then return false end
+    local itemId = type(itemIdOrLink) == "number" and itemIdOrLink or self:GetItemIDFromLink(itemIdOrLink)
+    local _, fullLink = SafeGetItemInfo(itemId or itemIdOrLink)
+    local link = fullLink or (type(itemIdOrLink) == "string" and itemIdOrLink) or BuildItemLink(itemId)
+    if IsControlKeyDown() then
+        if DressUpItemLink then DressUpItemLink(link) end
+        return true
+    end
+    -- Shift: a chat link needs the full link, which only a cached item has.
+    if fullLink and ChatEdit_InsertLink then ChatEdit_InsertLink(fullLink) end
+    return true
 end
 
 -- Shared with WishlistUI.lua so its windows look the same as this one.
