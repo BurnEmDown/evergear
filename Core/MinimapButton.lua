@@ -8,7 +8,10 @@
 
 EverGear = EverGear or {}
 
-local RADIUS = 80  -- distance from Minimap's center, in pixels
+-- Distance past the Minimap's edge, in pixels: the button sits outside the
+-- rim, along the edge (half the Minimap's width + 17, tested in game -- 5,
+-- LibDBIcon's value, still left it too far inside on this client).
+local EDGE_OFFSET = 17
 
 local button = CreateFrame("Button", "EverGearMinimapButton", Minimap)
 button:SetSize(31, 31)
@@ -36,8 +39,9 @@ border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
 
 local function UpdatePosition()
     local angle = math.rad(EverGearDB.minimapAngle or 225)
+    local radius = (Minimap:GetWidth() / 2) + EDGE_OFFSET
     button:ClearAllPoints()
-    button:SetPoint("CENTER", Minimap, "CENTER", math.cos(angle) * RADIUS, math.sin(angle) * RADIUS)
+    button:SetPoint("CENTER", Minimap, "CENTER", math.cos(angle) * radius, math.sin(angle) * radius)
 end
 
 button:SetScript("OnClick", function()
@@ -66,5 +70,9 @@ end)
 button:SetScript("OnDragStop", function(self)
     self:SetScript("OnUpdate", nil)
 end)
+
+-- The Minimap can change size (other addons, minimap scaling), so the radius
+-- is re-read whenever it does.
+Minimap:HookScript("OnSizeChanged", UpdatePosition)
 
 UpdatePosition()

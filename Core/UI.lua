@@ -191,6 +191,10 @@ mainFrame:SetBackdrop({
 })
 mainFrame:Hide()
 mainFrame:SetResizable(false)
+-- Escape closes the window (instead of opening the game menu), like the
+-- game's own panels. Hiding it also closes the profile editor, its popups
+-- and the Wanted / Gear Sets windows (OnHide above).
+tinsert(UISpecialFrames, "EverGearFrame")
 
 local title = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 title:SetPoint("TOP", 0, -16)
