@@ -926,18 +926,11 @@ local function ApplyCharacterModelSetting()
         modelWatcher:RegisterEvent("UNIT_MODEL_CHANGED")
         RefreshCharacterModel()
     end
-    -- The Gear Sets window's model follows the same setting.
-    if EverGear.OnCharacterModelSettingChanged then EverGear:OnCharacterModelSettingChanged() end
-end
-
--- Also used by the Gear Sets window's own eye button.
-function EverGear:SetCharacterModelHidden(hidden)
-    EverGearDB.hideCharacterModel = hidden
-    ApplyCharacterModelSetting()
 end
 
 modelToggle:SetScript("OnClick", function(self)
-    EverGear:SetCharacterModelHidden(not EverGearDB.hideCharacterModel)
+    EverGearDB.hideCharacterModel = not EverGearDB.hideCharacterModel
+    ApplyCharacterModelSetting()
     if self:IsMouseOver() and self:GetScript("OnEnter") then self:GetScript("OnEnter")(self) end
 end)
 modelToggle:SetScript("OnEnter", function(self)

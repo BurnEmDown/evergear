@@ -474,8 +474,9 @@ end
 -- since a plain PlayerModel can't try items on. It wears only the set's
 -- items: slots the set leaves empty are bare, so a new set shows the
 -- character undressed. Drag it to turn it. The eye button above it turns it
--- on/off; that's the same account-wide setting as the main window's button
--- (EverGearDB.hideCharacterModel), so both models go on and off together.
+-- on/off. That's its own account-wide setting (EverGearDB.hideSetModel),
+-- separate from the main window's model, so each window's model can be on or
+-- off independently.
 local ALL_SET_SLOTS = {}
 for _, list in ipairs({ SET_LEFT, SET_RIGHT, SET_BOTTOM }) do
     for _, slotToken in ipairs(list) do table.insert(ALL_SET_SLOTS, slotToken) end
@@ -508,12 +509,13 @@ setModelToggle:SetNormalTexture("Interface\\Icons\\Spell_Holy_MindVision")
 setModelToggle:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 setModelToggle:Hide()
 setModelToggle:SetScript("OnClick", function(self)
-    EverGear:SetCharacterModelHidden(not EverGearDB.hideCharacterModel)
+    EverGearDB.hideSetModel = not EverGearDB.hideSetModel
+    EverGear:OnSetModelSettingChanged()
     if self:IsMouseOver() and self:GetScript("OnEnter") then self:GetScript("OnEnter")(self) end
 end)
 setModelToggle:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:SetText(EverGearDB.hideCharacterModel and "Show character model" or "Hide character model")
+    GameTooltip:SetText(EverGearDB.hideSetModel and "Show character model" or "Hide character model")
     GameTooltip:Show()
 end)
 setModelToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -523,7 +525,7 @@ setModelToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
 local dressedSetKey
 
 local function RefreshSetModel(set)
-    local hidden = EverGearDB.hideCharacterModel == true
+    local hidden = EverGearDB.hideSetModel == true
     setModelToggle:SetShown(set ~= nil and setModel ~= nil)
     setModelToggle:GetNormalTexture():SetDesaturated(hidden)
     setModelToggle:SetAlpha(hidden and 0.5 or 1)
@@ -611,8 +613,8 @@ end
 setsFrame:SetScript("OnShow", RefreshSetsWindow)
 setsFrame:HookScript("OnHide", function() dressedSetKey = nil end)
 
--- Turning the model on/off in either window applies to both.
-function EverGear:OnCharacterModelSettingChanged()
+-- The eye button above the model (defined before RefreshSetsWindow).
+function EverGear:OnSetModelSettingChanged()
     if setsFrame:IsShown() then RefreshSetsWindow() end
 end
 
