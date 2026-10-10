@@ -481,7 +481,81 @@ end
 -- another..." on a filled one) and lists every shirt or tabard in the game
 -- (EverGear.Cosmetics), minus the other faction's. Type to search; the mouse
 -- wheel scrolls. Clicking one puts it in the set; Ctrl-click previews it.
+-- ===== Row-list scroll bar =====
+-- For lists drawn as a fixed set of rows over a scrolling offset (the picker
+-- below). Same look and feel as the Wanted list's bar: a thin track with a
+-- thumb sized to how much of the list is visible, shown only when it doesn't
+-- all fit. Drag the thumb, click the track to jump, or use the mouse wheel.
+-- onScroll(newOffset) is called with the wanted first row (0-based); the
+-- owner clamps it, redraws, and calls bar:Update(offset, maxOffset, visible,
+-- total) to move the thumb.
+local function CreateRowScrollBar(name, parent, width)
+    local bar = CreateFrame("Frame", name, parent)
+    bar:SetWidth(width)
+    local track = bar:CreateTexture(nil, "BACKGROUND")
+    track:SetAllPoints()
+    track:SetColorTexture(0, 0, 0, 0.5)
+
+    local thumb = CreateFrame("Button", name .. "Thumb", bar)
+    thumb:SetWidth(width)
+    thumb:SetHeight(40)
+    thumb:SetPoint("TOP", bar, "TOP", 0, 0)
+    local thumbTexture = thumb:CreateTexture(nil, "OVERLAY")
+    thumbTexture:SetAllPoints()
+    thumbTexture:SetColorTexture(THEME.goldDim[1], THEME.goldDim[2], THEME.goldDim[3], 0.9)
+    thumb:SetHitRectInsets(-4, -4, 0, 0)
+    thumb:SetScript("OnEnter", function() thumbTexture:SetVertexColor(1.25, 1.25, 1.25) end)
+    thumb:SetScript("OnLeave", function() thumbTexture:SetVertexColor(1, 1, 1) end)
+    bar.thumb = thumb
+    bar.offset, bar.maxOffset = 0, 0
+    bar:Hide()
+
+    local function Travel()
+        return math.max(1, (bar:GetHeight() or 0) - thumb:GetHeight())
+    end
+    local function CursorY()
+        local _, y = GetCursorPosition()
+        return y / bar:GetEffectiveScale()
+    end
+
+    function bar:Update(offset, maxOffset, visible, total)
+        bar.offset, bar.maxOffset = offset, maxOffset
+        bar:SetShown(maxOffset > 0)
+        if maxOffset <= 0 then return end
+        thumb:SetHeight(math.max(20, (bar:GetHeight() or 0) * visible / total))
+        thumb:SetPoint("TOP", bar, "TOP", 0, -(offset / maxOffset * Travel()))
+    end
+
+    -- Dragging: the list follows the thumb, so moving the mouse down scrolls down.
+    local dragStartY, dragStartOffset
+    thumb:SetScript("OnMouseDown", function()
+        dragStartY, dragStartOffset = CursorY(), bar.offset
+    end)
+    thumb:SetScript("OnUpdate", function()
+        if not dragStartY then return end
+        if not IsMouseButtonDown("LeftButton") then dragStartY = nil return end
+        local movedDown = dragStartY - CursorY()
+        bar.onScroll(math.floor(dragStartOffset + movedDown / Travel() * bar.maxOffset + 0.5))
+    end)
+    thumb:SetScript("OnMouseUp", function() dragStartY = nil end)
+    thumb:SetScript("OnHide", function() dragStartY = nil end)
+
+    -- Clicking the track (not the thumb) jumps there, centring the thumb on the click.
+    bar:EnableMouse(true)
+    bar:SetHitRectInsets(-4, -4, 0, 0)
+    bar:SetScript("OnMouseDown", function()
+        local top = bar:GetTop()
+        if not top then return end
+        local thumbTop = (top - CursorY()) - thumb:GetHeight() / 2
+        bar.onScroll(math.floor(thumbTop / Travel() * bar.maxOffset + 0.5))
+    end)
+    bar:EnableMouseWheel(true)
+    bar:SetScript("OnMouseWheel", function(_, delta) bar.onScroll(bar.offset - delta * 3) end)
+    return bar
+end
+
 local PICKER_ROWS, PICKER_ROW_HEIGHT, PICKER_WIDTH = 12, 24, 280
+local PICKER_LIST_TOP, PICKER_LIST_LEFT, PICKER_BAR_WIDTH = -68, 18, 8
 local picker = CreateFrame("Frame", "EverGearCosmeticPicker", setsFrame, "BackdropTemplate")
 picker:SetSize(PICKER_WIDTH, 96 + PICKER_ROWS * PICKER_ROW_HEIGHT)
 picker:SetPoint("TOPRIGHT", setsFrame, "TOPLEFT", -4, 0)
@@ -517,8 +591,10 @@ local function PickerLink(itemId) return H.BuildItemLink(itemId) end
 
 for i = 1, PICKER_ROWS do
     local row = CreateFrame("Button", "EverGearCosmeticPickerRow" .. i, picker)
-    row:SetSize(PICKER_WIDTH - 40, PICKER_ROW_HEIGHT - 2)
-    row:SetPoint("TOPLEFT", 20, -68 - (i - 1) * PICKER_ROW_HEIGHT)
+    -- The scroll bar's space on the left is always kept free, so nothing
+    -- moves when it comes and goes.
+    row:SetSize(PICKER_WIDTH - PICKER_LIST_LEFT - PICKER_BAR_WIDTH - 8 - 20, PICKER_ROW_HEIGHT - 2)
+    row:SetPoint("TOPLEFT", PICKER_LIST_LEFT + PICKER_BAR_WIDTH + 8, PICKER_LIST_TOP - (i - 1) * PICKER_ROW_HEIGHT)
     row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
     local icon = row:CreateTexture(nil, "ARTWORK")
     icon:SetSize(20, 20)
@@ -553,6 +629,10 @@ for i = 1, PICKER_ROWS do
     pickerRows[i] = row
 end
 
+local pickerBar = CreateRowScrollBar("EverGearCosmeticPickerScrollBar", picker, PICKER_BAR_WIDTH)
+pickerBar:SetPoint("TOPLEFT", PICKER_LIST_LEFT, PICKER_LIST_TOP)
+pickerBar:SetHeight(PICKER_ROWS * PICKER_ROW_HEIGHT - 2)
+
 local function DrawPickerRows()
     local list = pickerState.list
     local maxOffset = math.max(0, #list - PICKER_ROWS)
@@ -574,8 +654,9 @@ local function DrawPickerRows()
     if #list == 0 then
         pickerCount:SetText("Nothing matches.")
     else
-        pickerCount:SetText((pickerState.offset + 1) .. "-" .. math.min(#list, pickerState.offset + PICKER_ROWS) .. " of " .. #list .. "  (mouse wheel to scroll)")
+        pickerCount:SetText((pickerState.offset + 1) .. "-" .. math.min(#list, pickerState.offset + PICKER_ROWS) .. " of " .. #list)
     end
+    pickerBar:Update(pickerState.offset, maxOffset, PICKER_ROWS, math.max(#list, 1))
 end
 
 local function BuildPickerList()
@@ -599,10 +680,12 @@ local function BuildPickerList()
 end
 
 pickerSearch:SetScript("OnTextChanged", BuildPickerList)
-picker:SetScript("OnMouseWheel", function(_, delta)
-    pickerState.offset = pickerState.offset - delta * 3
+local function ScrollPicker(offset)
+    pickerState.offset = offset
     DrawPickerRows()
-end)
+end
+pickerBar.onScroll = ScrollPicker
+picker:SetScript("OnMouseWheel", function(_, delta) ScrollPicker(pickerState.offset - delta * 3) end)
 
 function EverGear:OpenCosmeticPicker(setIndex, slotToken)
     if not EverGear.COSMETIC_SLOTS[slotToken] then return end
