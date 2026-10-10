@@ -468,6 +468,98 @@ local function SetPicker_Initialize()
     end
 end
 
+-- ===== Set preview model =====
+-- The player's character wearing the set, between the two slot columns like
+-- the main window's model. A DressUpModel (the dressing room's model type),
+-- since a plain PlayerModel can't try items on. It wears only the set's
+-- items: slots the set leaves empty are bare, so a new set shows the
+-- character undressed. Drag it to turn it. The eye button above it turns it
+-- on/off. That's its own account-wide setting (EverGearDB.hideSetModel),
+-- separate from the main window's model, so each window's model can be on or
+-- off independently.
+local ALL_SET_SLOTS = {}
+for _, list in ipairs({ SET_LEFT, SET_RIGHT, SET_BOTTOM }) do
+    for _, slotToken in ipairs(list) do table.insert(ALL_SET_SLOTS, slotToken) end
+end
+-- TryOn's hand argument, so a one-hander in the off-hand slot isn't put in
+-- the main hand.
+local HAND_SLOT_NAMES = { MainHandSlot = "MAINHANDSLOT", SecondaryHandSlot = "SECONDARYHANDSLOT" }
+local SET_MODEL_GAP = 6
+
+local setModel
+do
+    local ok, model = pcall(CreateFrame, "DressUpModel", "EverGearSetModel", setsFrame)
+    if ok and model then setModel = model end
+end
+if setModel then
+    setModel:SetPoint("TOPLEFT", setsFrame, "TOPLEFT", 28 + SET_ICON_SIZE + SET_MODEL_GAP, SET_TOP_Y)
+    setModel:SetPoint("BOTTOMRIGHT", setsFrame, "TOPRIGHT", -(28 + SET_ICON_SIZE + SET_MODEL_GAP),
+        SET_TOP_Y - #SET_RIGHT * SET_ROW_SPACING - 4 + SET_MODEL_GAP)
+    setModel:EnableMouse(true)
+    H.MakeModelTurnable(setModel)
+    setModel:Hide()
+end
+
+-- Same look and place (top of the model) as the main window's button.
+local setModelToggle = CreateFrame("Button", "EverGearSetModelToggle", setsFrame)
+setModelToggle:SetSize(16, 16)
+setModelToggle:SetPoint("TOP", setsFrame, "TOP", 0, SET_TOP_Y - 2)
+if setModel then setModelToggle:SetFrameLevel(setModel:GetFrameLevel() + 2) end
+setModelToggle:SetNormalTexture("Interface\\Icons\\Spell_Holy_MindVision")
+setModelToggle:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+setModelToggle:Hide()
+setModelToggle:SetScript("OnClick", function(self)
+    EverGearDB.hideSetModel = not EverGearDB.hideSetModel
+    EverGear:OnSetModelSettingChanged()
+    if self:IsMouseOver() and self:GetScript("OnEnter") then self:GetScript("OnEnter")(self) end
+end)
+setModelToggle:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText(EverGearDB.hideSetModel and "Show character model" or "Hide character model")
+    GameTooltip:Show()
+end)
+setModelToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+-- The set (slot contents) the model was last dressed in, so refreshes that
+-- don't change the set don't reload the model; cleared to force a redress.
+local dressedSetKey
+
+local function RefreshSetModel(set)
+    local hidden = EverGearDB.hideSetModel == true
+    setModelToggle:SetShown(set ~= nil and setModel ~= nil)
+    setModelToggle:GetNormalTexture():SetDesaturated(hidden)
+    setModelToggle:SetAlpha(hidden and 0.5 or 1)
+    if not setModel then return end
+    if not set or hidden then
+        setModel:Hide()
+        if setModel.ClearModel then setModel:ClearModel() end
+        dressedSetKey = nil
+        return
+    end
+    setModel:Show()
+    local parts = {}
+    for i, slotToken in ipairs(ALL_SET_SLOTS) do parts[i] = tostring(set.slots[slotToken] or "") end
+    local key = table.concat(parts, ",")
+    if key == dressedSetKey then return end
+    dressedSetKey = key
+    setModel:SetUnit("player")
+    if setModel.Undress then setModel:Undress() end
+    for _, slotToken in ipairs(ALL_SET_SLOTS) do
+        local itemId = set.slots[slotToken]
+        if itemId then setModel:TryOn("item:" .. itemId, HAND_SLOT_NAMES[slotToken]) end
+    end
+end
+
+local function ActiveSetHasItem(itemId)
+    local index = EverGear:GetActiveSetIndex()
+    local set = index and EverGear:GetSets()[index]
+    if not (set and itemId) then return false end
+    for _, id in pairs(set.slots) do
+        if id == itemId then return true end
+    end
+    return false
+end
+
 -- Set up once: opening the picker re-runs SetPicker_Initialize by itself, so
 -- the list is always current. Re-initializing it on every refresh broke the
 -- refresh whenever it ran from inside a dropdown click (picking a set, or
@@ -514,9 +606,26 @@ local function RefreshSetsWindow()
             btn.check:Hide()
         end
     end
+
+    RefreshSetModel(set)
 end
 
 setsFrame:SetScript("OnShow", RefreshSetsWindow)
+setsFrame:HookScript("OnHide", function() dressedSetKey = nil end)
+
+-- The eye button above the model (defined before RefreshSetsWindow).
+function EverGear:OnSetModelSettingChanged()
+    if setsFrame:IsShown() then RefreshSetsWindow() end
+end
+
+-- Redress when the character's look changes (e.g. the barber).
+local setModelWatcher = CreateFrame("Frame")
+setModelWatcher:RegisterEvent("UNIT_MODEL_CHANGED")
+setModelWatcher:SetScript("OnEvent", function(_, _, unit)
+    if unit ~= "player" or not setsFrame:IsShown() then return end
+    dressedSetKey = nil
+    RefreshSetsWindow()
+end)
 
 -- ===== Refreshing =====
 -- Kept right after the windows (before the menu, Alt-click and tooltip code
@@ -549,9 +658,13 @@ end
 -- Icons and quality colors for items the client hadn't cached yet arrive later.
 local cacheWatcher = CreateFrame("Frame")
 cacheWatcher:RegisterEvent("GET_ITEM_INFO_RECEIVED")
-cacheWatcher:SetScript("OnEvent", function()
+cacheWatcher:SetScript("OnEvent", function(_, _, itemId)
     if wantedFrame:IsShown() then RefreshWantedWindow() end
-    if setsFrame:IsShown() then RefreshSetsWindow() end
+    if setsFrame:IsShown() then
+        -- An item the model couldn't put on before it was cached: redress.
+        if ActiveSetHasItem(itemId) then dressedSetKey = nil end
+        RefreshSetsWindow()
+    end
 end)
 
 -- ===== Popups for naming / deleting sets =====
