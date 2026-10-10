@@ -5,7 +5,9 @@
 -- Database.lua), so alts each have their own list and sets:
 --
 --   charDB.wanted   = { [itemId] = { added = <time()>, slot = "HandsSlot" }, ... }
---   charDB.sets     = { { name = "Tank set", slots = { [realSlotToken] = itemId } }, ... }
+--   charDB.sets     = { { name = "Tank set", slots = { [realSlotToken] = itemId },
+--                         enchants = { [realSlotToken] = { name, id, spellId } } }, ... }
+--                      (enchants: only from imported sets, kept for export)
 --   charDB.activeSet = <index into charDB.sets>  -- the one the Sets window shows
 --   charDB.acquired = { [itemId] = true, ... }
 --
@@ -206,10 +208,12 @@ function EverGear:SetSetSlot(index, slotToken, itemId)
         Print(set.name .. " has a two-handed weapon in the main hand -- remove it before adding an off-hand item.")
         return
     end
+    if set.enchants and set.slots[slotToken] ~= itemId then set.enchants[slotToken] = nil end
     set.slots[slotToken] = itemId
     local offHand = set.slots.SecondaryHandSlot
     if itemId and slotToken == "MainHandSlot" and offHand and self:IsTwoHandItem(itemId) then
         set.slots.SecondaryHandSlot = nil
+        if set.enchants then set.enchants.SecondaryHandSlot = nil end
         Print("Removed " .. self:GetWishlistItemName(offHand) .. " from " .. set.name .. "'s off hand -- a two-handed weapon needs both hands.")
     end
     self:NotifyWishlistChanged()
@@ -288,37 +292,87 @@ watcher:SetScript("OnEvent", function()
 end)
 
 -- ===== Export / import =====
--- A set travels as JSON text (addons can't read or write files, so it's copy
--- and paste, same as EP profile export):
---   { "evergear": "gearset", "version": 1, "name": "Tank", "class": "WARRIOR",
---     "slots": { "HeadSlot": 1234, ... }, "names": { "HeadSlot": "...", ... } }
--- "names" is only there so the text is readable; import goes by item id.
+-- A set travels as JSON text in sixtyupgrades.com's export format, so sets can
+-- go between EverGear and the site (addons can't read or write files, so it's
+-- copy and paste, same as EP profile export):
+--   { "name": "Tank", "phase": 1,
+--     "character": { "name", "level", "gameClass": "DRUID", "race": "NIGHTELF",
+--                    "faction": "ALLIANCE" },
+--     "items": [ { "name": "Living Crown", "id": 252561, "slot": "HEAD",
+--                  "enchant": { "name", "id", "spellId" } }, ... ],
+--     "consumables": [], "buffs": [], "talents": [], "points": [], "stats": {},
+--     "exportOptions": { "buffs": false, "talents": false } }
+-- Import only reads "name" and "items" (by item id and slot). EverGear doesn't
+-- use enchants, but keeps them with the set so they survive a round trip.
 
-local SET_EXPORT_VERSION = 1
--- Slots a set can hold (Shirt / Tabard included for when they're in use).
-local VALID_SET_SLOTS = {
-    HeadSlot = true, NeckSlot = true, ShoulderSlot = true, BackSlot = true, ChestSlot = true,
-    ShirtSlot = true, TabardSlot = true, WristSlot = true, HandsSlot = true, WaistSlot = true,
-    LegsSlot = true, FeetSlot = true, Finger0Slot = true, Finger1Slot = true,
-    Trinket0Slot = true, Trinket1Slot = true, MainHandSlot = true, SecondaryHandSlot = true,
-    RangedSlot = true,
+-- The site's slot names, in the order it lists them.
+local SITE_SLOTS = {
+    { "HEAD", "HeadSlot" }, { "NECK", "NeckSlot" }, { "SHOULDERS", "ShoulderSlot" },
+    { "SHIRT", "ShirtSlot" }, { "CHEST", "ChestSlot" }, { "WAIST", "WaistSlot" },
+    { "LEGS", "LegsSlot" }, { "FEET", "FeetSlot" }, { "WRISTS", "WristSlot" },
+    { "HANDS", "HandsSlot" }, { "FINGER_1", "Finger0Slot" }, { "FINGER_2", "Finger1Slot" },
+    { "TRINKET_1", "Trinket0Slot" }, { "TRINKET_2", "Trinket1Slot" }, { "BACK", "BackSlot" },
+    { "MAIN_HAND", "MainHandSlot" }, { "OFF_HAND", "SecondaryHandSlot" }, { "RANGED", "RangedSlot" },
+    { "TABARD", "TabardSlot" },
 }
+local SLOT_FROM_SITE = {}
+for _, pair in ipairs(SITE_SLOTS) do SLOT_FROM_SITE[pair[1]] = pair[2] end
+
+-- UnitRace's file token -> the site's race name, where they differ.
+local SITE_RACE = { Scourge = "UNDEAD", NightElf = "NIGHTELF" }
+
+local function SiteRace()
+    local _, raceToken = UnitRace("player")
+    if not raceToken then return nil end
+    return SITE_RACE[raceToken] or strupper(raceToken)
+end
+
+-- Only the fields the site's enchant objects have.
+local function CleanEnchant(enchant)
+    if type(enchant) ~= "table" then return nil end
+    local clean = {
+        name = type(enchant.name) == "string" and enchant.name or nil,
+        id = tonumber(enchant.id),
+        spellId = tonumber(enchant.spellId),
+    }
+    if not (clean.id or clean.spellId) then return nil end
+    return clean
+end
 
 function EverGear:SerializeSet(index)
     local set = CharDB().sets[index]
     if not set then return nil end
-    local slots, names = {}, {}
-    for slotToken, itemId in pairs(set.slots) do
-        slots[slotToken] = itemId
-        names[slotToken] = self:GetWishlistItemName(itemId)
+    local playerInfo = self:GetPlayerInfo()
+    local items = {}
+    for _, pair in ipairs(SITE_SLOTS) do
+        local itemId = set.slots[pair[2]]
+        if itemId then
+            table.insert(items, {
+                name = self:GetWishlistItemName(itemId),
+                id = itemId,
+                slot = pair[1],
+                enchant = set.enchants and set.enchants[pair[2]] or nil,
+            })
+        end
     end
+    local faction = UnitFactionGroup("player")
     return self.JSON.encode({
-        evergear = "gearset",
-        version = SET_EXPORT_VERSION,
         name = set.name,
-        class = self:GetPlayerInfo().classToken,
-        slots = slots,
-        names = names,
+        phase = 1,
+        character = {
+            name = UnitName("player"),
+            level = playerInfo.level,
+            gameClass = playerInfo.classToken,
+            race = SiteRace(),
+            faction = faction and strupper(faction) or nil,
+        },
+        items = #items > 0 and items or self.JSON.emptyArray(),
+        consumables = self.JSON.emptyArray(),
+        buffs = self.JSON.emptyArray(),
+        talents = self.JSON.emptyArray(),
+        points = self.JSON.emptyArray(),
+        stats = {},
+        exportOptions = { buffs = false, talents = false },
     })
 end
 
@@ -353,20 +407,22 @@ end
 function EverGear:ImportSet(text)
     local ok, decoded = pcall(self.JSON.decode, text or "")
     if not ok then return nil, "Couldn't read that as an exported gear set." end
-    if type(decoded) ~= "table" or type(decoded.slots) ~= "table" then
-        return nil, "That isn't an exported gear set (no \"slots\")."
+    if type(decoded) ~= "table" or type(decoded.items) ~= "table" then
+        return nil, "That isn't an exported gear set (no \"items\" list)."
     end
     if #CharDB().sets >= self.MAX_GEAR_SETS then
         return nil, "You already have " .. self.MAX_GEAR_SETS .. " gear sets, the most a character can have. Delete one first."
     end
 
-    local slots, skipped, unknownSlots = {}, 0, 0
-    for slotToken, itemId in pairs(decoded.slots) do
-        itemId = tonumber(itemId)
-        if not VALID_SET_SLOTS[slotToken] or not itemId or itemId <= 0 or itemId % 1 ~= 0 then
+    local slots, enchants, skipped, unknownSlots = {}, {}, 0, 0
+    for _, entry in ipairs(decoded.items) do
+        local slotToken = type(entry) == "table" and SLOT_FROM_SITE[entry.slot]
+        local itemId = type(entry) == "table" and tonumber(entry.id)
+        if not slotToken or not itemId or itemId <= 0 or itemId % 1 ~= 0 then
             unknownSlots = unknownSlots + 1
         elseif self:CanPlayerUseItem(itemId) then
             slots[slotToken] = itemId
+            enchants[slotToken] = CleanEnchant(entry.enchant)
         else
             skipped = skipped + 1
         end
@@ -374,6 +430,7 @@ function EverGear:ImportSet(text)
     local droppedOffHand = false
     if slots.MainHandSlot and slots.SecondaryHandSlot and self:IsTwoHandItem(slots.MainHandSlot) then
         slots.SecondaryHandSlot = nil
+        enchants.SecondaryHandSlot = nil
         droppedOffHand = true
     end
     if next(slots) == nil then
@@ -386,7 +443,7 @@ function EverGear:ImportSet(text)
     if not name then return nil, "Couldn't find a free name for the imported set." end
 
     local sets = CharDB().sets
-    table.insert(sets, { name = name, slots = slots })
+    table.insert(sets, { name = name, slots = slots, enchants = next(enchants) and enchants or nil })
     CharDB().activeSet = #sets
     self:NotifyWishlistChanged()
     self:ScanForAcquiredItems()
@@ -397,7 +454,7 @@ function EverGear:ImportSet(text)
         Print("Left the off-hand item out of \"" .. name .. "\" -- its main hand is a two-handed weapon.")
     end
     if unknownSlots > 0 then
-        Print("Ignored " .. unknownSlots .. " entr" .. (unknownSlots == 1 and "y" or "ies") .. " that weren't a valid slot and item.")
+        Print("Ignored " .. unknownSlots .. " entr" .. (unknownSlots == 1 and "y" or "ies") .. " without a slot and item EverGear knows.")
     end
     return #sets
 end

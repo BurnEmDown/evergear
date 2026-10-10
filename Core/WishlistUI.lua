@@ -629,8 +629,9 @@ end)
 
 -- ===== Export / import =====
 -- Two buttons at the bottom of the Sets window and one copy/paste popup for
--- both (addons can't read or write files). The text format is in
--- Wishlist.lua (SerializeSet / ImportSet).
+-- both (addons can't read or write files). The text is sixtyupgrades.com's
+-- export format (see SerializeSet / ImportSet in Wishlist.lua), so sets can
+-- be moved between EverGear and the site.
 
 local setTextPopup = CreateFrame("Frame", "EverGearSetTextPopup", UIParent, "BackdropTemplate")
 setTextPopup:SetSize(400, 300)
@@ -698,7 +699,7 @@ function EverGear:ShowSetExport(index)
     if not text then return end
     exportText = text
     setTextTitle:SetText("Export: " .. self:GetSets()[index].name)
-    setTextHint:SetText("Already selected -- press Ctrl+C to copy, then share it or keep it somewhere.")
+    setTextHint:SetText("Already selected -- press Ctrl+C to copy. It's in sixtyupgrades.com's format, so the site can import it too.")
     setTextError:SetText("")
     setTextBox:SetText(text)
     setTextAction:SetText("Done")
@@ -711,7 +712,7 @@ end
 function EverGear:ShowSetImport()
     exportText = nil
     setTextTitle:SetText("Import Gear Set")
-    setTextHint:SetText("Paste an exported gear set below, then click Import. It's added as a new set.")
+    setTextHint:SetText("Paste a gear set exported from EverGear or sixtyupgrades.com below, then click Import. It's added as a new set.")
     setTextError:SetText("")
     setTextBox:SetText("")
     setTextAction:SetText("Import")
