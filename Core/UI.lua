@@ -870,21 +870,26 @@ local function RefreshCharacterModel()
     characterModel:SetUnit("player")
 end
 
+-- Dragging a model left/right turns it. Shared with the Gear Sets window's
+-- model (WishlistUI.lua, through EverGear.UIHelpers).
 local MODEL_TURN_SPEED = 0.02  -- radians per pixel dragged
-local dragStartX, dragStartFacing
-characterModel:SetScript("OnMouseDown", function(self, button)
-    if button ~= "LeftButton" then return end
-    dragStartX = GetCursorPosition()
-    dragStartFacing = self:GetFacing() or 0
-end)
-characterModel:SetScript("OnMouseUp", function() dragStartX = nil end)
-characterModel:SetScript("OnHide", function() dragStartX = nil end)
-characterModel:SetScript("OnUpdate", function(self)
-    if not dragStartX then return end
-    if not IsMouseButtonDown("LeftButton") then dragStartX = nil return end
-    local x = GetCursorPosition()
-    self:SetFacing(dragStartFacing + (x - dragStartX) * MODEL_TURN_SPEED)
-end)
+local function MakeModelTurnable(model)
+    local dragStartX, dragStartFacing
+    model:SetScript("OnMouseDown", function(self, button)
+        if button ~= "LeftButton" then return end
+        dragStartX = GetCursorPosition()
+        dragStartFacing = self:GetFacing() or 0
+    end)
+    model:SetScript("OnMouseUp", function() dragStartX = nil end)
+    model:SetScript("OnHide", function() dragStartX = nil end)
+    model:SetScript("OnUpdate", function(self)
+        if not dragStartX then return end
+        if not IsMouseButtonDown("LeftButton") then dragStartX = nil return end
+        local x = GetCursorPosition()
+        self:SetFacing(dragStartFacing + (x - dragStartX) * MODEL_TURN_SPEED)
+    end)
+end
+MakeModelTurnable(characterModel)
 characterModel:SetScript("OnShow", RefreshCharacterModel)
 
 local modelWatcher = CreateFrame("Frame")
@@ -917,6 +922,8 @@ local function ApplyCharacterModelSetting()
         modelWatcher:RegisterEvent("UNIT_MODEL_CHANGED")
         RefreshCharacterModel()
     end
+    -- The Gear Sets window's model follows the same setting.
+    if EverGear.OnCharacterModelSettingChanged then EverGear:OnCharacterModelSettingChanged() end
 end
 
 modelToggle:SetScript("OnClick", function(self)
@@ -1163,6 +1170,7 @@ EverGear.UIHelpers = {
     SafeGetItemInfo = SafeGetItemInfo,
     SafeGetItemIcon = SafeGetItemIcon,
     BuildItemLink = BuildItemLink,
+    MakeModelTurnable = MakeModelTurnable,
 }
 
 local function UpdateStar(row)
