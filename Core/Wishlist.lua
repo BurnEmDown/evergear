@@ -286,3 +286,118 @@ watcher:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 watcher:SetScript("OnEvent", function()
     EverGear:ScanForAcquiredItems()
 end)
+
+-- ===== Export / import =====
+-- A set travels as JSON text (addons can't read or write files, so it's copy
+-- and paste, same as EP profile export):
+--   { "evergear": "gearset", "version": 1, "name": "Tank", "class": "WARRIOR",
+--     "slots": { "HeadSlot": 1234, ... }, "names": { "HeadSlot": "...", ... } }
+-- "names" is only there so the text is readable; import goes by item id.
+
+local SET_EXPORT_VERSION = 1
+-- Slots a set can hold (Shirt / Tabard included for when they're in use).
+local VALID_SET_SLOTS = {
+    HeadSlot = true, NeckSlot = true, ShoulderSlot = true, BackSlot = true, ChestSlot = true,
+    ShirtSlot = true, TabardSlot = true, WristSlot = true, HandsSlot = true, WaistSlot = true,
+    LegsSlot = true, FeetSlot = true, Finger0Slot = true, Finger1Slot = true,
+    Trinket0Slot = true, Trinket1Slot = true, MainHandSlot = true, SecondaryHandSlot = true,
+    RangedSlot = true,
+}
+
+function EverGear:SerializeSet(index)
+    local set = CharDB().sets[index]
+    if not set then return nil end
+    local slots, names = {}, {}
+    for slotToken, itemId in pairs(set.slots) do
+        slots[slotToken] = itemId
+        names[slotToken] = self:GetWishlistItemName(itemId)
+    end
+    return self.JSON.encode({
+        evergear = "gearset",
+        version = SET_EXPORT_VERSION,
+        name = set.name,
+        class = self:GetPlayerInfo().classToken,
+        slots = slots,
+        names = names,
+    })
+end
+
+-- Cuts a name to the set-name limit, whole characters only.
+local function TrimSetName(name)
+    local out, count = {}, 0
+    for char in name:gmatch("[%z\1-\127\194-\244][\128-\191]*") do
+        count = count + 1
+        if count > EverGear.MAX_SET_NAME_LENGTH then break end
+        out[#out + 1] = char
+    end
+    return strtrim(table.concat(out))
+end
+
+-- "Tank" -> "Tank" if free, else "Tank (2)", "Tank (3)", ...
+local function UniqueSetName(name)
+    if not EverGear:IsSetNameTaken(name) then return name end
+    for n = 2, 99 do
+        local suffix = " (" .. n .. ")"
+        local base = TrimSetName(name)
+        while NameLength(base .. suffix) > EverGear.MAX_SET_NAME_LENGTH do
+            base = strtrim((base:gsub("[%z\1-\127\194-\244][\128-\191]*$", "")))
+        end
+        if not EverGear:IsSetNameTaken(base .. suffix) then return base .. suffix end
+    end
+    return nil
+end
+
+-- JSON text -> new set's index, or nil + a message to show. Items this
+-- class can't use are left out (and counted in the chat message), as is an
+-- off-hand item next to a two-hander. The new set becomes the selected one.
+function EverGear:ImportSet(text)
+    local ok, decoded = pcall(self.JSON.decode, text or "")
+    if not ok then return nil, "Couldn't read that as an exported gear set." end
+    if type(decoded) ~= "table" or type(decoded.slots) ~= "table" then
+        return nil, "That isn't an exported gear set (no \"slots\")."
+    end
+    if #CharDB().sets >= self.MAX_GEAR_SETS then
+        return nil, "You already have " .. self.MAX_GEAR_SETS .. " gear sets, the most a character can have. Delete one first."
+    end
+
+    local slots, skipped, unknownSlots = {}, 0, 0
+    for slotToken, itemId in pairs(decoded.slots) do
+        itemId = tonumber(itemId)
+        if not VALID_SET_SLOTS[slotToken] or not itemId or itemId <= 0 or itemId % 1 ~= 0 then
+            unknownSlots = unknownSlots + 1
+        elseif self:CanPlayerUseItem(itemId) then
+            slots[slotToken] = itemId
+        else
+            skipped = skipped + 1
+        end
+    end
+    local droppedOffHand = false
+    if slots.MainHandSlot and slots.SecondaryHandSlot and self:IsTwoHandItem(slots.MainHandSlot) then
+        slots.SecondaryHandSlot = nil
+        droppedOffHand = true
+    end
+    if next(slots) == nil then
+        return nil, "Nothing in that set can be used by your class."
+    end
+
+    local name = TrimSetName(type(decoded.name) == "string" and decoded.name or "")
+    if name == "" then name = "Imported set" end
+    name = UniqueSetName(name)
+    if not name then return nil, "Couldn't find a free name for the imported set." end
+
+    local sets = CharDB().sets
+    table.insert(sets, { name = name, slots = slots })
+    CharDB().activeSet = #sets
+    self:NotifyWishlistChanged()
+    self:ScanForAcquiredItems()
+    if skipped > 0 then
+        Print("Imported \"" .. name .. "\" without " .. skipped .. " item" .. (skipped == 1 and "" or "s") .. " your class can't use.")
+    end
+    if droppedOffHand then
+        Print("Left the off-hand item out of \"" .. name .. "\" -- its main hand is a two-handed weapon.")
+    end
+    if unknownSlots > 0 then
+        Print("Ignored " .. unknownSlots .. " entr" .. (unknownSlots == 1 and "y" or "ies") .. " that weren't a valid slot and item.")
+    end
+    return #sets
+end

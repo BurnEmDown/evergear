@@ -14,7 +14,7 @@ local THEME = H.THEME
 
 local WANTED_WIDTH, WANTED_HEIGHT = 320, 400
 local WANTED_ROW_HEIGHT = 44
-local SETS_WIDTH, SETS_HEIGHT = 300, 484
+local SETS_WIDTH, SETS_HEIGHT = 300, 512
 local SET_ICON_SIZE = 32
 local SET_ROW_SPACING = 38
 
@@ -627,6 +627,128 @@ setModelWatcher:SetScript("OnEvent", function(_, _, unit)
     RefreshSetsWindow()
 end)
 
+-- ===== Export / import =====
+-- Two buttons at the bottom of the Sets window and one copy/paste popup for
+-- both (addons can't read or write files). The text format is in
+-- Wishlist.lua (SerializeSet / ImportSet).
+
+local setTextPopup = CreateFrame("Frame", "EverGearSetTextPopup", UIParent, "BackdropTemplate")
+setTextPopup:SetSize(400, 300)
+setTextPopup:SetPoint("CENTER")
+setTextPopup:SetFrameStrata("DIALOG")
+setTextPopup:EnableMouse(true)
+setTextPopup:SetBackdrop({
+    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+    tile = true, tileSize = 32, edgeSize = 32,
+    insets = { left = 11, right = 12, top = 12, bottom = 11 }
+})
+setTextPopup:Hide()
+tinsert(UISpecialFrames, "EverGearSetTextPopup")  -- Escape closes it
+
+local setTextTitle = setTextPopup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+setTextTitle:SetPoint("TOP", 0, -16)
+setTextTitle:SetTextColor(unpack(THEME.gold))
+local setTextClose = CreateFrame("Button", nil, setTextPopup, "UIPanelCloseButton")
+setTextClose:SetPoint("TOPRIGHT", -4, -4)
+
+local setTextHint = setTextPopup:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+setTextHint:SetPoint("TOP", setTextTitle, "BOTTOM", 0, -8)
+setTextHint:SetWidth(360)
+setTextHint:SetTextColor(unpack(THEME.parchment))
+
+local setTextPanel = CreateFrame("Frame", nil, setTextPopup, "BackdropTemplate")
+setTextPanel:SetSize(360, 170)
+setTextPanel:SetPoint("TOP", setTextHint, "BOTTOM", 0, -8)
+setTextPanel:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+setTextPanel:SetBackdropColor(0, 0, 0, 0.6)
+setTextPanel:SetBackdropBorderColor(0.6, 0.56, 0.42, 1)
+local setTextScroll = CreateFrame("ScrollFrame", "EverGearSetTextScroll", setTextPanel, "UIPanelScrollFrameTemplate")
+setTextScroll:SetPoint("TOPLEFT", 6, -6)
+setTextScroll:SetPoint("BOTTOMRIGHT", -26, 6)
+local setTextBox = CreateFrame("EditBox", "EverGearSetTextBox", setTextScroll)
+setTextBox:SetMultiLine(true)
+setTextBox:SetFontObject(ChatFontNormal)
+setTextBox:SetWidth(320)
+setTextBox:SetAutoFocus(false)
+setTextBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+setTextScroll:SetScrollChild(setTextBox)
+
+local setTextError = setTextPopup:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+setTextError:SetPoint("TOP", setTextPanel, "BOTTOM", 0, -6)
+setTextError:SetWidth(360)
+setTextError:SetTextColor(1, 0.3, 0.3)
+
+local setTextAction = CreateFrame("Button", "EverGearSetTextAction", setTextPopup, "UIPanelButtonTemplate")
+setTextAction:SetSize(100, 22)
+setTextAction:SetPoint("BOTTOM", 0, 16)
+
+-- Export: read-only in effect (an edit snaps back) but still selectable, so
+-- Ctrl+A / Ctrl+C work -- same as the EP profile export.
+local exportText
+setTextBox:SetScript("OnTextChanged", function(self, userInput)
+    if exportText and userInput and self:GetText() ~= exportText then
+        self:SetText(exportText)
+        self:HighlightText()
+    end
+end)
+
+function EverGear:ShowSetExport(index)
+    local text = self:SerializeSet(index)
+    if not text then return end
+    exportText = text
+    setTextTitle:SetText("Export: " .. self:GetSets()[index].name)
+    setTextHint:SetText("Already selected -- press Ctrl+C to copy, then share it or keep it somewhere.")
+    setTextError:SetText("")
+    setTextBox:SetText(text)
+    setTextAction:SetText("Done")
+    setTextAction:SetScript("OnClick", function() setTextPopup:Hide() end)
+    setTextPopup:Show()
+    setTextBox:SetFocus()
+    setTextBox:HighlightText()
+end
+
+function EverGear:ShowSetImport()
+    exportText = nil
+    setTextTitle:SetText("Import Gear Set")
+    setTextHint:SetText("Paste an exported gear set below, then click Import. It's added as a new set.")
+    setTextError:SetText("")
+    setTextBox:SetText("")
+    setTextAction:SetText("Import")
+    setTextAction:SetScript("OnClick", function()
+        local index, err = EverGear:ImportSet(setTextBox:GetText())
+        if not index then
+            setTextError:SetText(err)
+            return
+        end
+        setTextPopup:Hide()
+    end)
+    setTextPopup:Show()
+    setTextBox:SetFocus()
+end
+
+local exportSetButton = CreateSmallButton("Export...", 80, function()
+    local index = EverGear:GetActiveSetIndex()
+    if index then EverGear:ShowSetExport(index) end
+end)
+exportSetButton:SetPoint("BOTTOMRIGHT", setsFrame, "BOTTOM", -4, 16)
+local importSetButton = CreateSmallButton("Import...", 80, function() EverGear:ShowSetImport() end)
+importSetButton:SetPoint("BOTTOMLEFT", setsFrame, "BOTTOM", 4, 16)
+if importSetButton.SetMotionScriptsWhileDisabled then importSetButton:SetMotionScriptsWhileDisabled(true) end
+importSetButton:SetScript("OnEnter", function(self)
+    if self:IsEnabled() then return end
+    Tooltip(self, "Gear set limit reached", "A character can have up to " .. EverGear.MAX_GEAR_SETS .. " gear sets. Delete one to make room.")
+end)
+importSetButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+setsFrame:HookScript("OnHide", function() setTextPopup:Hide() end)
+
+local function RefreshSetTransferButtons()
+    exportSetButton:SetEnabled(EverGear:GetActiveSetIndex() ~= nil)
+    importSetButton:SetEnabled(#EverGear:GetSets() < EverGear.MAX_GEAR_SETS)
+end
+setsFrame:HookScript("OnShow", RefreshSetTransferButtons)
+
 -- ===== Refreshing =====
 -- Kept right after the windows (before the menu, Alt-click and tooltip code
 -- below), so a client that lacks one of those can't stop open windows from
@@ -641,7 +763,10 @@ local refreshQueued = false
 local function RefreshOpenWindows()
     refreshQueued = false
     if wantedFrame:IsShown() then RefreshWantedWindow() end
-    if setsFrame:IsShown() then RefreshSetsWindow() end
+    if setsFrame:IsShown() then
+        RefreshSetsWindow()
+        RefreshSetTransferButtons()
+    end
     if EverGear.RefreshDetailStars then EverGear:RefreshDetailStars() end
 end
 
