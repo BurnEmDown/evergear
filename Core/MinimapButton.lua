@@ -8,9 +8,10 @@
 
 EverGear = EverGear or {}
 
--- Distance past the Minimap's edge, in pixels: the button sits on the rim,
--- the same spot LibDBIcon-based buttons use (half the Minimap's width + 5).
-local EDGE_OFFSET = 5
+-- Distance past the Minimap's edge, in pixels: the button sits outside the
+-- rim, along the edge (half the Minimap's width + 17, tested in game -- 5,
+-- LibDBIcon's value, still left it too far inside on this client).
+local EDGE_OFFSET = 17
 
 local button = CreateFrame("Button", "EverGearMinimapButton", Minimap)
 button:SetSize(31, 31)
