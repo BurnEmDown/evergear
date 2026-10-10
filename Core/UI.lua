@@ -863,15 +863,27 @@ end
 -- The player's own character, in the space between the two slot columns and
 -- above the weapon row, like the real character sheet. Drag it to turn it.
 -- Redrawn whenever the window opens and when gear or appearance changes.
-local characterModel = CreateFrame("PlayerModel", "EverGearCharacterModel", content)
+-- A DressUpModel (the dressing room's model type) rather than a plain
+-- PlayerModel, so the "hold ranged weapon" button can put the ranged weapon
+-- in its hands; it shows the equipped gear the same way.
+local characterModel = CreateFrame("DressUpModel", "EverGearCharacterModel", content)
 characterModel:EnableMouse(true)
 -- Shown by ApplyCharacterModelSetting (below) once the saved setting can be
 -- read, so a model turned off is never drawn, not even for a moment.
 characterModel:Hide()
 
+-- The sheathe / melee / ranged buttons beside the eye button (created below
+-- with CreateModelWeaponButtons).
+local mainModelWeapons
+
+local INVSLOT_RANGED_ID = 18
+
 local function RefreshCharacterModel()
     if not characterModel:IsVisible() then return end
     characterModel:SetUnit("player")
+    if mainModelWeapons then
+        mainModelWeapons:Apply(characterModel, GetInventoryItemLink("player", INVSLOT_RANGED_ID))
+    end
 end
 
 -- Dragging a model left/right turns it. Shared with the Gear Sets window's
@@ -916,6 +928,7 @@ modelToggle:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD
 local function ApplyCharacterModelSetting()
     local hidden = EverGearDB.hideCharacterModel == true
     characterModel:SetShown(not hidden)
+    if mainModelWeapons then mainModelWeapons:SetShown(not hidden) end
     modelToggle:GetNormalTexture():SetDesaturated(hidden)
     modelToggle:SetAlpha(hidden and 0.5 or 1)
     if hidden then
@@ -943,6 +956,115 @@ modelToggle:SetScript("OnEnter", function(self)
     GameTooltip:Show()
 end)
 modelToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+-- ===== Model weapon buttons =====
+-- Three small buttons to the right of a model's eye button: sheathe / draw
+-- the weapons, hold the melee weapons, hold the ranged weapon. Holding the
+-- ranged weapon takes the melee weapons off the model and tries the ranged
+-- one on in their place. Picking melee or ranged also draws the weapons. The
+-- pose is kept per window for the session. Shared with the Gear Sets window
+-- (WishlistUI.lua, through EverGear.UIHelpers).
+local MODEL_BUTTON_SIZE, MODEL_BUTTON_GAP = 16, 4
+local INVSLOT_MAINHAND_ID, INVSLOT_OFFHAND_ID = 16, 17
+-- Ranged-slot items that are actually held: bows, guns, crossbows, wands and
+-- thrown weapons (not librams, idols or relics).
+local HOLDABLE_RANGED = { INVTYPE_RANGED = true, INVTYPE_RANGEDRIGHT = true, INVTYPE_THROWN = true }
+
+local function IsHoldableRanged(link)
+    if not link then return false end
+    local getInfo = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
+    local equipLoc = getInfo and select(4, getInfo(link))
+    if not equipLoc or equipLoc == "" then return true end
+    return HOLDABLE_RANGED[equipLoc] == true
+end
+
+-- onChange is called after a button changes the pose, to redraw the model.
+local function CreateModelWeaponButtons(namePrefix, parent, eyeButton, onChange)
+    local pose = { sheathed = false, ranged = false }
+    local controls = { pose = pose, rangedAvailable = true }
+    local sheatheButton, meleeButton, rangedButton
+
+    local function SetActive(button, active)
+        button:GetNormalTexture():SetDesaturated(not active)
+        button:SetAlpha(active and 1 or 0.55)
+    end
+
+    local function UpdateButtons()
+        SetActive(sheatheButton, not pose.sheathed)
+        -- Without a holdable ranged weapon the model holds melee even in the
+        -- ranged pose, so that's the one shown as active.
+        local holdingRanged = pose.ranged and controls.rangedAvailable
+        SetActive(meleeButton, not pose.sheathed and not holdingRanged)
+        SetActive(rangedButton, controls.rangedAvailable and not pose.sheathed and pose.ranged)
+    end
+
+    local function Make(suffix, texture, anchor, onClick, tooltip)
+        local b = CreateFrame("Button", namePrefix .. suffix, parent)
+        b:SetSize(MODEL_BUTTON_SIZE, MODEL_BUTTON_SIZE)
+        b:SetPoint("LEFT", anchor, "RIGHT", MODEL_BUTTON_GAP, 0)
+        b:SetFrameLevel(eyeButton:GetFrameLevel())
+        b:SetNormalTexture(texture)
+        b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+        b:SetScript("OnClick", function(self)
+            onClick()
+            UpdateButtons()
+            onChange()
+            if self:IsMouseOver() and self:GetScript("OnEnter") then self:GetScript("OnEnter")(self) end
+        end)
+        b:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            local title, line = tooltip()
+            GameTooltip:SetText(title)
+            if line then GameTooltip:AddLine(line, 0.8, 0.8, 0.8, true) end
+            GameTooltip:Show()
+        end)
+        b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        b:Hide()
+        return b
+    end
+
+    sheatheButton = Make("Sheathe", "Interface\\Icons\\Ability_Warrior_Disarm", eyeButton,
+        function() pose.sheathed = not pose.sheathed end,
+        function() return pose.sheathed and "Draw weapons" or "Sheathe weapons" end)
+    meleeButton = Make("Melee", "Interface\\Icons\\INV_Sword_04", sheatheButton,
+        function() pose.ranged = false; pose.sheathed = false end,
+        function() return "Hold melee weapons" end)
+    rangedButton = Make("Ranged", "Interface\\Icons\\Ability_Marksmanship", meleeButton,
+        function()
+            if not controls.rangedAvailable then return end
+            pose.ranged = true; pose.sheathed = false
+        end,
+        function()
+            if controls.rangedAvailable then return "Hold ranged weapon" end
+            return "Hold ranged weapon", "No bow, gun, crossbow, wand or thrown weapon to hold."
+        end)
+    UpdateButtons()
+
+    function controls:SetShown(shown)
+        sheatheButton:SetShown(shown)
+        meleeButton:SetShown(shown)
+        rangedButton:SetShown(shown)
+    end
+
+    -- Call right after the model is dressed. rangedLink is the ranged-slot
+    -- item it should hold in the ranged pose (nil if there isn't one).
+    function controls:Apply(model, rangedLink)
+        controls.rangedAvailable = IsHoldableRanged(rangedLink)
+        UpdateButtons()
+        if pose.ranged and controls.rangedAvailable and model.TryOn then
+            if model.UndressSlot then
+                model:UndressSlot(INVSLOT_MAINHAND_ID)
+                model:UndressSlot(INVSLOT_OFFHAND_ID)
+            end
+            model:TryOn(rangedLink)
+        end
+        if model.SetSheathed then model:SetSheathed(pose.sheathed) end
+    end
+
+    return controls
+end
+
+mainModelWeapons = CreateModelWeaponButtons("EverGearCharacterModel", content, modelToggle, RefreshCharacterModel)
 
 local function RepositionAll()
     local h = content:GetHeight()
@@ -1173,6 +1295,7 @@ EverGear.UIHelpers = {
     SafeGetItemIcon = SafeGetItemIcon,
     BuildItemLink = BuildItemLink,
     MakeModelTurnable = MakeModelTurnable,
+    CreateModelWeaponButtons = CreateModelWeaponButtons,
 }
 
 local function UpdateStar(row)
