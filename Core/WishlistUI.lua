@@ -370,8 +370,9 @@ setsEmpty:SetWordWrap(true)
 setsEmpty:SetTextColor(unpack(THEME.parchment))
 setsEmpty:SetText("No gear sets yet.\n\nClick New to create one, then Alt-click any item (in your bags, the character sheet, EverGear's own window...) to put it in the set.")
 
--- Paper-doll layout, same columns as the main window.
-local SET_LEFT = { "HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", "WristSlot" }
+-- Paper-doll layout, same columns as the main window. Shirt and Tabard sit
+-- where the game's own character sheet has them; they only change the look.
+local SET_LEFT = { "HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", "ShirtSlot", "TabardSlot", "WristSlot" }
 local SET_RIGHT = { "HandsSlot", "WaistSlot", "LegsSlot", "FeetSlot", "Finger0Slot", "Finger1Slot", "Trinket0Slot", "Trinket1Slot" }
 local SET_BOTTOM = { "MainHandSlot", "SecondaryHandSlot", "RangedSlot" }
 local SET_TOP_Y = -110
@@ -397,6 +398,14 @@ local function ShowSetSlotMenu(anchor, setIndex, slotToken, itemId)
             info.func = function() EverGear:SetAcquired(itemId, true) end
         end
         UIDropDownMenu_AddButton(info)
+
+        if EverGear.COSMETIC_SLOTS[slotToken] then
+            info = UIDropDownMenu_CreateInfo()
+            info.notCheckable = true
+            info.text = "Choose another " .. strlower(EverGear.FRIENDLY_SLOT_NAMES[slotToken]) .. "..."
+            info.func = function() EverGear:OpenCosmeticPicker(setIndex, slotToken) end
+            UIDropDownMenu_AddButton(info)
+        end
 
         info = UIDropDownMenu_CreateInfo()
         info.notCheckable = true
@@ -431,7 +440,12 @@ local function CreateSetSlotButton(slotToken)
             GameTooltip:AddLine("Click for options.", 0.8, 0.8, 0.8)
         else
             GameTooltip:SetText((EverGear.FRIENDLY_SLOT_NAMES[self.slotToken] or self.slotToken) .. " (empty)")
-            GameTooltip:AddLine("Alt-click any item that fits this slot to add one.", 0.8, 0.8, 0.8, true)
+            if EverGear.COSMETIC_SLOTS[self.slotToken] then
+                local kind = strlower(EverGear.FRIENDLY_SLOT_NAMES[self.slotToken])
+                GameTooltip:AddLine("Click to choose a " .. kind .. ", or Alt-click any " .. kind .. " to add it. Changes only the look.", 0.8, 0.8, 0.8, true)
+            else
+                GameTooltip:AddLine("Alt-click any item that fits this slot to add one.", 0.8, 0.8, 0.8, true)
+            end
         end
         GameTooltip:Show()
     end)
@@ -439,7 +453,12 @@ local function CreateSetSlotButton(slotToken)
     btn:SetScript("OnClick", function(self)
         if EverGear:HandleItemModifiedClick(self.itemId) then return end
         local index = EverGear:GetActiveSetIndex()
-        if index and self.itemId then ShowSetSlotMenu(self, index, self.slotToken, self.itemId) end
+        if not index then return end
+        if self.itemId then
+            ShowSetSlotMenu(self, index, self.slotToken, self.itemId)
+        elseif EverGear.COSMETIC_SLOTS[self.slotToken] then
+            EverGear:OpenCosmeticPicker(index, self.slotToken)
+        end
     end)
 
     setSlotButtons[slotToken] = btn
@@ -455,6 +474,227 @@ end
 for i, slotToken in ipairs(SET_BOTTOM) do
     local x = (i - 2) * (SET_ICON_SIZE + 12)
     CreateSetSlotButton(slotToken):SetPoint("TOP", setsFrame, "TOP", x, SET_TOP_Y - #SET_RIGHT * SET_ROW_SPACING - 4)
+end
+
+-- ===== Shirt / tabard picker =====
+-- Opens beside the Sets window from an empty Shirt or Tabard slot (or "Choose
+-- another..." on a filled one) and lists every shirt or tabard in the game
+-- (EverGear.Cosmetics), minus the other faction's. Type to search; the mouse
+-- wheel scrolls. Clicking one puts it in the set; Ctrl-click previews it.
+-- ===== Row-list scroll bar =====
+-- For lists drawn as a fixed set of rows over a scrolling offset (the picker
+-- below). Same look and feel as the Wanted list's bar: a thin track with a
+-- thumb sized to how much of the list is visible, shown only when it doesn't
+-- all fit. Drag the thumb, click the track to jump, or use the mouse wheel.
+-- onScroll(newOffset) is called with the wanted first row (0-based); the
+-- owner clamps it, redraws, and calls bar:Update(offset, maxOffset, visible,
+-- total) to move the thumb.
+local function CreateRowScrollBar(name, parent, width)
+    local bar = CreateFrame("Frame", name, parent)
+    bar:SetWidth(width)
+    local track = bar:CreateTexture(nil, "BACKGROUND")
+    track:SetAllPoints()
+    track:SetColorTexture(0, 0, 0, 0.5)
+
+    local thumb = CreateFrame("Button", name .. "Thumb", bar)
+    thumb:SetWidth(width)
+    thumb:SetHeight(40)
+    thumb:SetPoint("TOP", bar, "TOP", 0, 0)
+    local thumbTexture = thumb:CreateTexture(nil, "OVERLAY")
+    thumbTexture:SetAllPoints()
+    thumbTexture:SetColorTexture(THEME.goldDim[1], THEME.goldDim[2], THEME.goldDim[3], 0.9)
+    thumb:SetHitRectInsets(-4, -4, 0, 0)
+    thumb:SetScript("OnEnter", function() thumbTexture:SetVertexColor(1.25, 1.25, 1.25) end)
+    thumb:SetScript("OnLeave", function() thumbTexture:SetVertexColor(1, 1, 1) end)
+    bar.thumb = thumb
+    bar.offset, bar.maxOffset = 0, 0
+    bar:Hide()
+
+    local function Travel()
+        return math.max(1, (bar:GetHeight() or 0) - thumb:GetHeight())
+    end
+    local function CursorY()
+        local _, y = GetCursorPosition()
+        return y / bar:GetEffectiveScale()
+    end
+
+    function bar:Update(offset, maxOffset, visible, total)
+        bar.offset, bar.maxOffset = offset, maxOffset
+        bar:SetShown(maxOffset > 0)
+        if maxOffset <= 0 then return end
+        thumb:SetHeight(math.max(20, (bar:GetHeight() or 0) * visible / total))
+        thumb:SetPoint("TOP", bar, "TOP", 0, -(offset / maxOffset * Travel()))
+    end
+
+    -- Dragging: the list follows the thumb, so moving the mouse down scrolls down.
+    local dragStartY, dragStartOffset
+    thumb:SetScript("OnMouseDown", function()
+        dragStartY, dragStartOffset = CursorY(), bar.offset
+    end)
+    thumb:SetScript("OnUpdate", function()
+        if not dragStartY then return end
+        if not IsMouseButtonDown("LeftButton") then dragStartY = nil return end
+        local movedDown = dragStartY - CursorY()
+        bar.onScroll(math.floor(dragStartOffset + movedDown / Travel() * bar.maxOffset + 0.5))
+    end)
+    thumb:SetScript("OnMouseUp", function() dragStartY = nil end)
+    thumb:SetScript("OnHide", function() dragStartY = nil end)
+
+    -- Clicking the track (not the thumb) jumps there, centring the thumb on the click.
+    bar:EnableMouse(true)
+    bar:SetHitRectInsets(-4, -4, 0, 0)
+    bar:SetScript("OnMouseDown", function()
+        local top = bar:GetTop()
+        if not top then return end
+        local thumbTop = (top - CursorY()) - thumb:GetHeight() / 2
+        bar.onScroll(math.floor(thumbTop / Travel() * bar.maxOffset + 0.5))
+    end)
+    bar:EnableMouseWheel(true)
+    bar:SetScript("OnMouseWheel", function(_, delta) bar.onScroll(bar.offset - delta * 3) end)
+    return bar
+end
+
+local PICKER_ROWS, PICKER_ROW_HEIGHT, PICKER_WIDTH = 12, 24, 280
+local PICKER_LIST_TOP, PICKER_LIST_LEFT, PICKER_BAR_WIDTH = -68, 18, 8
+local picker = CreateFrame("Frame", "EverGearCosmeticPicker", setsFrame, "BackdropTemplate")
+picker:SetSize(PICKER_WIDTH, 96 + PICKER_ROWS * PICKER_ROW_HEIGHT)
+picker:SetPoint("TOPRIGHT", setsFrame, "TOPLEFT", -4, 0)
+picker:SetBackdrop({
+    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+    tile = true, tileSize = 32, edgeSize = 32,
+    insets = { left = 11, right = 12, top = 12, bottom = 11 }
+})
+picker:EnableMouse(true)
+picker:EnableMouseWheel(true)
+picker:Hide()
+
+local pickerTitle = picker:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+pickerTitle:SetPoint("TOP", 0, -16)
+pickerTitle:SetTextColor(unpack(THEME.gold))
+local pickerClose = CreateFrame("Button", nil, picker, "UIPanelCloseButton")
+pickerClose:SetPoint("TOPRIGHT", -4, -4)
+
+local pickerSearch = CreateFrame("EditBox", "EverGearCosmeticPickerSearch", picker, "InputBoxTemplate")
+pickerSearch:SetSize(PICKER_WIDTH - 48, 20)
+pickerSearch:SetPoint("TOP", 0, -42)
+pickerSearch:SetAutoFocus(false)
+pickerSearch:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+
+local pickerCount = picker:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+pickerCount:SetPoint("BOTTOM", 0, 18)
+
+local pickerState = { setIndex = nil, slotToken = nil, list = {}, offset = 0 }
+local pickerRows = {}
+
+local function PickerLink(itemId) return H.BuildItemLink(itemId) end
+
+for i = 1, PICKER_ROWS do
+    local row = CreateFrame("Button", "EverGearCosmeticPickerRow" .. i, picker)
+    -- The scroll bar's space on the left is always kept free, so nothing
+    -- moves when it comes and goes.
+    row:SetSize(PICKER_WIDTH - PICKER_LIST_LEFT - PICKER_BAR_WIDTH - 8 - 20, PICKER_ROW_HEIGHT - 2)
+    row:SetPoint("TOPLEFT", PICKER_LIST_LEFT + PICKER_BAR_WIDTH + 8, PICKER_LIST_TOP - (i - 1) * PICKER_ROW_HEIGHT)
+    row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+    local icon = row:CreateTexture(nil, "ARTWORK")
+    icon:SetSize(20, 20)
+    icon:SetPoint("LEFT", 0, 0)
+    row.icon = icon
+    local name = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    name:SetPoint("LEFT", icon, "RIGHT", 6, 0)
+    name:SetPoint("RIGHT", -64, 0)
+    name:SetJustifyH("LEFT")
+    name:SetWordWrap(false)
+    row.name = name
+    local source = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    source:SetPoint("RIGHT", 0, 0)
+    source:SetJustifyH("RIGHT")
+    row.source = source
+    row:SetScript("OnClick", function(self)
+        if not self.itemId then return end
+        if EverGear:HandleItemModifiedClick(self.itemId) then return end
+        EverGear:SetSetSlot(pickerState.setIndex, pickerState.slotToken, self.itemId)
+        picker:Hide()
+    end)
+    row:SetScript("OnEnter", function(self)
+        if not self.itemId then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetHyperlink(PickerLink(self.itemId))
+        local entry = EverGear:GetCosmetic(self.itemId)
+        if entry and entry.source then GameTooltip:AddLine("Source: " .. entry.source, 0.7, 0.7, 0.7) end
+        GameTooltip:AddLine("Click to put it in the set. Ctrl-click to preview.", 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    row:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    pickerRows[i] = row
+end
+
+local pickerBar = CreateRowScrollBar("EverGearCosmeticPickerScrollBar", picker, PICKER_BAR_WIDTH)
+pickerBar:SetPoint("TOPLEFT", PICKER_LIST_LEFT, PICKER_LIST_TOP)
+pickerBar:SetHeight(PICKER_ROWS * PICKER_ROW_HEIGHT - 2)
+
+local function DrawPickerRows()
+    local list = pickerState.list
+    local maxOffset = math.max(0, #list - PICKER_ROWS)
+    pickerState.offset = math.max(0, math.min(pickerState.offset, maxOffset))
+    local set = EverGear:GetSets()[pickerState.setIndex]
+    local current = set and set.slots[pickerState.slotToken]
+    for i, row in ipairs(pickerRows) do
+        local entry = list[pickerState.offset + i]
+        row.itemId = entry and entry.id
+        row:SetShown(entry ~= nil)
+        if entry then
+            H.SetIconTexture(row, H.SafeGetItemIcon(entry.id) or "Interface\\Icons\\INV_Misc_QuestionMark")
+            local r, g, b = H.GetQualityColor(entry.quality)
+            row.name:SetText((entry.id == current and "> " or "") .. entry.name)
+            row.name:SetTextColor(r, g, b)
+            row.source:SetText(entry.source or "")
+        end
+    end
+    if #list == 0 then
+        pickerCount:SetText("Nothing matches.")
+    else
+        pickerCount:SetText((pickerState.offset + 1) .. "-" .. math.min(#list, pickerState.offset + PICKER_ROWS) .. " of " .. #list)
+    end
+    pickerBar:Update(pickerState.offset, maxOffset, PICKER_ROWS, math.max(#list, 1))
+end
+
+local function BuildPickerList()
+    local faction = UnitFactionGroup and UnitFactionGroup("player")
+    local search = strlower(strtrim(pickerSearch:GetText() or ""))
+    local list = {}
+    for _, entry in pairs(EverGear.Cosmetics or {}) do
+        if entry.slot == pickerState.slotToken
+            and (not entry.faction or not faction or entry.faction == faction)
+            and (search == "" or strlower(entry.name):find(search, 1, true)) then
+            table.insert(list, entry)
+        end
+    end
+    table.sort(list, function(a, b)
+        if a.name ~= b.name then return a.name < b.name end
+        return a.id < b.id
+    end)
+    pickerState.list = list
+    pickerState.offset = 0
+    DrawPickerRows()
+end
+
+pickerSearch:SetScript("OnTextChanged", BuildPickerList)
+local function ScrollPicker(offset)
+    pickerState.offset = offset
+    DrawPickerRows()
+end
+pickerBar.onScroll = ScrollPicker
+picker:SetScript("OnMouseWheel", function(_, delta) ScrollPicker(pickerState.offset - delta * 3) end)
+
+function EverGear:OpenCosmeticPicker(setIndex, slotToken)
+    if not EverGear.COSMETIC_SLOTS[slotToken] then return end
+    pickerState.setIndex = setIndex
+    pickerState.slotToken = slotToken
+    pickerTitle:SetText("Choose a " .. strlower(EverGear.FRIENDLY_SLOT_NAMES[slotToken]))
+    pickerSearch:SetText("")
+    BuildPickerList()
+    picker:Show()
 end
 
 local function SetPicker_Initialize()
@@ -571,6 +811,11 @@ local function RefreshSetsWindow()
     local sets = EverGear:GetSets()
     local index = EverGear:GetActiveSetIndex()
     local set = index and sets[index]
+
+    -- The picker belongs to the set it was opened for.
+    if picker:IsShown() then
+        if pickerState.setIndex ~= index then picker:Hide() else DrawPickerRows() end
+    end
 
     UIDropDownMenu_SetText(setPicker, set and set.name or "No sets")
     newSetButton:SetEnabled(#EverGear:GetSets() < EverGear.MAX_GEAR_SETS)
@@ -770,6 +1015,7 @@ local SLOTS_FOR_EQUIP_LOC = {
     INVTYPE_HOLDABLE = { "SecondaryHandSlot" },
     INVTYPE_RANGED = { "RangedSlot" }, INVTYPE_RANGEDRIGHT = { "RangedSlot" },
     INVTYPE_THROWN = { "RangedSlot" }, INVTYPE_RELIC = { "RangedSlot" },
+    INVTYPE_BODY = { "ShirtSlot" }, INVTYPE_TABARD = { "TabardSlot" },
 }
 
 local GetItemInfoInstant = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant

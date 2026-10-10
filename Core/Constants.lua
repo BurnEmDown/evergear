@@ -81,7 +81,13 @@ EverGear.FRIENDLY_SLOT_NAMES = {
     Finger0Slot = "Ring 1", Finger1Slot = "Ring 2",
     Trinket0Slot = "Trinket 1", Trinket1Slot = "Trinket 2",
     MainHandSlot = "Main Hand", SecondaryHandSlot = "Off Hand", RangedSlot = "Ranged",
+    ShirtSlot = "Shirt", TabardSlot = "Tabard",
 }
+
+-- Slots that only change the character's look (no stats): never scored or
+-- suggested, but shown in the windows and usable in gear sets. Every shirt and
+-- tabard in the game is listed in EverGear.Cosmetics (Data/Cosmetics.lua).
+EverGear.COSMETIC_SLOTS = { ShirtSlot = true, TabardSlot = true }
 
 -- Blizzard's built-in "empty slot" placeholder icons, same set Leveling Gear
 -- Advisor uses. BackSlot's path is a best-effort guess (reuses the Chest
@@ -104,6 +110,8 @@ EverGear.EMPTY_SLOT_TEXTURES = {
     MainHandSlot      = "Interface\\PaperDollInfoFrame\\UI-PaperDoll-Slot-MainHand",
     SecondaryHandSlot = "Interface\\PaperDollInfoFrame\\UI-PaperDoll-Slot-SecondaryHand",
     RangedSlot        = "Interface\\PaperDollInfoFrame\\UI-PaperDoll-Slot-Ranged",
+    ShirtSlot         = "Interface\\PaperDollInfoFrame\\UI-PaperDoll-Slot-Shirt",
+    TabardSlot        = "Interface\\PaperDollInfoFrame\\UI-PaperDoll-Slot-Tabard",
 }
 
 -- Which known source.type values currently exist and how to label them in the
