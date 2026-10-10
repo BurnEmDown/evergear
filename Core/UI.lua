@@ -1044,6 +1044,18 @@ local function GetOrCreateDetailRow(index)
     local row = CreateFrame("Frame", nil, detailPanel)
     row:SetSize(DETAIL_WIDTH - 32, DETAIL_ROW_HEIGHT)
 
+    -- Clicking the item (its icon or its text, left or right button) opens
+    -- the "Add to..." menu: wanted list and every gear set (WishlistUI.lua).
+    local function ShowAddMenu(anchor)
+        if row.itemId and EverGear.ShowStarMenu then
+            EverGear:ShowStarMenu(anchor, row.itemId, row.slotToken)
+        end
+    end
+    row:EnableMouse(true)
+    row:SetScript("OnMouseUp", function(self, mouseButton)
+        if mouseButton == "LeftButton" or mouseButton == "RightButton" then ShowAddMenu(self) end
+    end)
+
     local icon = CreateItemIconFrame(nil, row, ICON_SIZE)
     icon:SetPoint("TOPLEFT", 0, 0)
     icon:SetScript("OnEnter", function(self)
@@ -1054,18 +1066,19 @@ local function GetOrCreateDetailRow(index)
         end
     end)
     icon:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    icon:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     icon:SetScript("OnClick", function(self)
         if IsAltKeyDown() and self.itemLink and EverGear.ShowItemMenu then
             EverGear:ShowItemMenu(self.itemLink)
             return
         end
-        EverGear:HandleItemModifiedClick(self.itemLink)
+        if EverGear:HandleItemModifiedClick(self.itemLink) then return end
+        ShowAddMenu(self)
     end)
     row.icon = icon
 
     -- Star: one click puts the item on the wanted list (and a second click
-    -- takes it off). Bright while it's wanted. Gear sets go through Alt-click
-    -- on the icon instead (menu in WishlistUI.lua).
+    -- takes it off). Bright while it's wanted.
     local star = CreateFrame("Button", nil, row)
     star:SetSize(16, 16)
     star:SetPoint("TOPRIGHT", 0, 0)
@@ -1078,7 +1091,7 @@ local function GetOrCreateDetailRow(index)
             GameTooltip:AddLine("Click to take it off.", 0.8, 0.8, 0.8, true)
         else
             GameTooltip:SetText("Want this")
-            GameTooltip:AddLine("Click to add it to your wanted list. Alt-click the icon to put it in a gear set.", 0.8, 0.8, 0.8, true)
+            GameTooltip:AddLine("Click to add it to your wanted list. Click the item itself for every option.", 0.8, 0.8, 0.8, true)
         end
         GameTooltip:Show()
     end)
@@ -1093,6 +1106,55 @@ local function GetOrCreateDetailRow(index)
         if GameTooltip:IsOwned(self) then self:GetScript("OnEnter")(self) end
     end)
     row.star = star
+
+    -- Below the star: put the item in the selected gear set (the one the
+    -- Gear Sets window shows), in this slot, replacing whatever is there; a
+    -- second click takes it out. Bright while it's in that slot of that set.
+    -- With no sets yet, it offers to create one with this item.
+    local setButton = CreateFrame("Button", nil, row)
+    setButton:SetSize(16, 16)
+    setButton:SetPoint("TOP", star, "BOTTOM", 0, -2)
+    setButton:SetNormalTexture("Interface\\Icons\\INV_Chest_Chain")
+    setButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+    setButton:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        local index = EverGear:GetActiveSetIndex()
+        local set = index and EverGear:GetSets()[index]
+        local slotName = EverGear.FRIENDLY_SLOT_NAMES[row.slotToken] or row.slotToken
+        if not set then
+            GameTooltip:SetText("Put in a gear set")
+            GameTooltip:AddLine("You have no gear sets yet. Click to create one with this item.", 0.8, 0.8, 0.8, true)
+        elseif row.itemId and set.slots[row.slotToken] == row.itemId then
+            GameTooltip:SetText("In " .. set.name .. " (" .. slotName .. ")")
+            GameTooltip:AddLine("Click to take it out of the set.", 0.8, 0.8, 0.8, true)
+        else
+            GameTooltip:SetText("Put in " .. set.name)
+            local current = set.slots[row.slotToken]
+            if current then
+                GameTooltip:AddLine("Replaces " .. EverGear:GetWishlistItemName(current) .. " in the " .. slotName .. " slot.", 0.8, 0.8, 0.8, true)
+            else
+                GameTooltip:AddLine("Goes in the " .. slotName .. " slot. The set shown in the Gear Sets window is the one used.", 0.8, 0.8, 0.8, true)
+            end
+        end
+        GameTooltip:Show()
+    end)
+    setButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    setButton:SetScript("OnClick", function(self)
+        if not row.itemId then return end
+        local index = EverGear:GetActiveSetIndex()
+        if not index then
+            StaticPopup_Show("EVERGEAR_NEW_SET", nil, nil, { itemId = row.itemId, slotToken = row.slotToken })
+            return
+        end
+        local set = EverGear:GetSets()[index]
+        if set.slots[row.slotToken] == row.itemId then
+            EverGear:SetSetSlot(index, row.slotToken, nil)
+        else
+            EverGear:SetSetSlot(index, row.slotToken, row.itemId)
+        end
+        if GameTooltip:IsOwned(self) then self:GetScript("OnEnter")(self) end
+    end)
+    row.setButton = setButton
 
     local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     nameText:SetPoint("TOPLEFT", icon, "TOPRIGHT", 8, -2)
@@ -1180,6 +1242,13 @@ local function UpdateStar(row)
     local texture = row.star:GetNormalTexture()
     texture:SetDesaturated(not tracked)
     texture:SetAlpha(tracked and 1 or 0.45)
+
+    local index = EverGear.GetActiveSetIndex and EverGear:GetActiveSetIndex()
+    local set = index and EverGear:GetSets()[index]
+    local inSet = set and row.itemId and set.slots[row.slotToken] == row.itemId
+    local setTexture = row.setButton:GetNormalTexture()
+    setTexture:SetDesaturated(not inSet)
+    setTexture:SetAlpha(inSet and 1 or 0.45)
 end
 
 -- Called by WishlistUI.lua whenever the wanted list or a set changes.
