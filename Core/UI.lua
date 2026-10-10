@@ -675,7 +675,12 @@ local slotButtons = {}
 -- The slot the mouse is resting on, and how long it has to rest there before
 -- the slot's suggested upgrades open by themselves.
 local hoveredSlot
-local HOVER_DETAIL_DELAY = 0.3
+local HOVER_DETAIL_DELAY = 0.5
+-- True while the Suggested Upgrades panel on screen was opened by a click:
+-- hovering other slots then leaves it alone until it's closed (see
+-- ShowUpgradeDetailOnHover). Only clicks and hovers set it, so a refresh
+-- that briefly hides and reopens the panel keeps it.
+local detailOpenedByClick = false
 local leftItems, rightItems, bottomItems = {}, {}, {}
 
 -- Hand-built item-icon button instead of Blizzard's "ItemButtonTemplate" XML
@@ -809,6 +814,7 @@ local function CreateSlotButton(slotToken)
             return
         end
         if EverGear:HandleItemModifiedClick(self.currentLink) then return end
+        detailOpenedByClick = true
         EverGear:ShowUpgradeDetail(self.slotToken)
     end)
 
@@ -1194,15 +1200,18 @@ end
 -- while a weapon, profession or zone filter panel is open, since showing the
 -- upgrades closes those and the mouse often crosses the slots on its way to
 -- a checkbox. The panel stays open when the mouse moves on, so its rows can
--- be used, and switches to whichever slot is hovered next.
+-- be used, and switches to whichever slot is hovered next. A panel opened by
+-- a click stays on its slot: hovering does nothing until it's closed.
 function EverGear:ShowUpgradeDetailOnHover(slotToken)
     local btn = slotButtons[slotToken]
     if not (btn and mainFrame:IsShown()) then return end
+    if detailOpenedByClick and detailPanel:IsShown() then return end
     if not btn.upgradeList or #btn.upgradeList == 0 then return end
     if detailPanel:IsShown() and currentDetailSlot == slotToken then return end
     for _, filterPanel in ipairs({ weaponFilterPanel, professionFilterPanel, zoneFilterPanel }) do
         if filterPanel and filterPanel:IsShown() then return end
     end
+    detailOpenedByClick = false
     self:ShowUpgradeDetail(slotToken)
 end
 
