@@ -524,11 +524,19 @@ setModelToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
 -- don't change the set don't reload the model; cleared to force a redress.
 local dressedSetKey
 
+-- Sheathe / hold melee / hold ranged, beside the eye button (same buttons as
+-- the main window's, with their own pose).
+local setModelWeapons = H.CreateModelWeaponButtons("EverGearSetModel", setsFrame, setModelToggle, function()
+    dressedSetKey = nil
+    EverGear:OnSetModelSettingChanged()
+end)
+
 local function RefreshSetModel(set)
     local hidden = EverGearDB.hideSetModel == true
     setModelToggle:SetShown(set ~= nil and setModel ~= nil)
     setModelToggle:GetNormalTexture():SetDesaturated(hidden)
     setModelToggle:SetAlpha(hidden and 0.5 or 1)
+    setModelWeapons:SetShown(set ~= nil and setModel ~= nil and not hidden)
     if not setModel then return end
     if not set or hidden then
         setModel:Hide()
@@ -544,10 +552,15 @@ local function RefreshSetModel(set)
     dressedSetKey = key
     setModel:SetUnit("player")
     if setModel.Undress then setModel:Undress() end
+    -- The ranged weapon goes on first, so the melee weapons are the ones in
+    -- hand if the model puts both there; the ranged pose swaps them below.
+    local rangedId = set.slots.RangedSlot
+    if rangedId then setModel:TryOn("item:" .. rangedId) end
     for _, slotToken in ipairs(ALL_SET_SLOTS) do
         local itemId = set.slots[slotToken]
-        if itemId then setModel:TryOn("item:" .. itemId, HAND_SLOT_NAMES[slotToken]) end
+        if itemId and slotToken ~= "RangedSlot" then setModel:TryOn("item:" .. itemId, HAND_SLOT_NAMES[slotToken]) end
     end
+    setModelWeapons:Apply(setModel, rangedId and ("item:" .. rangedId))
 end
 
 local function ActiveSetHasItem(itemId)
