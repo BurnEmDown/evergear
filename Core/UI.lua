@@ -930,9 +930,14 @@ local function ApplyCharacterModelSetting()
     if EverGear.OnCharacterModelSettingChanged then EverGear:OnCharacterModelSettingChanged() end
 end
 
-modelToggle:SetScript("OnClick", function(self)
-    EverGearDB.hideCharacterModel = not EverGearDB.hideCharacterModel
+-- Also used by the Gear Sets window's own eye button.
+function EverGear:SetCharacterModelHidden(hidden)
+    EverGearDB.hideCharacterModel = hidden
     ApplyCharacterModelSetting()
+end
+
+modelToggle:SetScript("OnClick", function(self)
+    EverGear:SetCharacterModelHidden(not EverGearDB.hideCharacterModel)
     if self:IsMouseOver() and self:GetScript("OnEnter") then self:GetScript("OnEnter")(self) end
 end)
 modelToggle:SetScript("OnEnter", function(self)

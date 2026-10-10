@@ -471,9 +471,11 @@ end
 -- ===== Set preview model =====
 -- The player's character wearing the set, between the two slot columns like
 -- the main window's model. A DressUpModel (the dressing room's model type),
--- since a plain PlayerModel can't try items on. Slots the set leaves empty
--- show what's equipped there now. Drag it to turn it. Follows the main
--- window's model on/off setting (EverGearDB.hideCharacterModel).
+-- since a plain PlayerModel can't try items on. It wears only the set's
+-- items: slots the set leaves empty are bare, so a new set shows the
+-- character undressed. Drag it to turn it. The eye button above it turns it
+-- on/off; that's the same account-wide setting as the main window's button
+-- (EverGearDB.hideCharacterModel), so both models go on and off together.
 local ALL_SET_SLOTS = {}
 for _, list in ipairs({ SET_LEFT, SET_RIGHT, SET_BOTTOM }) do
     for _, slotToken in ipairs(list) do table.insert(ALL_SET_SLOTS, slotToken) end
@@ -497,13 +499,36 @@ if setModel then
     setModel:Hide()
 end
 
+-- Same look and place (top of the model) as the main window's button.
+local setModelToggle = CreateFrame("Button", "EverGearSetModelToggle", setsFrame)
+setModelToggle:SetSize(16, 16)
+setModelToggle:SetPoint("TOP", setsFrame, "TOP", 0, SET_TOP_Y - 2)
+if setModel then setModelToggle:SetFrameLevel(setModel:GetFrameLevel() + 2) end
+setModelToggle:SetNormalTexture("Interface\\Icons\\Spell_Holy_MindVision")
+setModelToggle:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+setModelToggle:Hide()
+setModelToggle:SetScript("OnClick", function(self)
+    EverGear:SetCharacterModelHidden(not EverGearDB.hideCharacterModel)
+    if self:IsMouseOver() and self:GetScript("OnEnter") then self:GetScript("OnEnter")(self) end
+end)
+setModelToggle:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText(EverGearDB.hideCharacterModel and "Show character model" or "Hide character model")
+    GameTooltip:Show()
+end)
+setModelToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
 -- The set (slot contents) the model was last dressed in, so refreshes that
 -- don't change the set don't reload the model; cleared to force a redress.
 local dressedSetKey
 
 local function RefreshSetModel(set)
+    local hidden = EverGearDB.hideCharacterModel == true
+    setModelToggle:SetShown(set ~= nil and setModel ~= nil)
+    setModelToggle:GetNormalTexture():SetDesaturated(hidden)
+    setModelToggle:SetAlpha(hidden and 0.5 or 1)
     if not setModel then return end
-    if not set or EverGearDB.hideCharacterModel then
+    if not set or hidden then
         setModel:Hide()
         if setModel.ClearModel then setModel:ClearModel() end
         dressedSetKey = nil
@@ -516,6 +541,7 @@ local function RefreshSetModel(set)
     if key == dressedSetKey then return end
     dressedSetKey = key
     setModel:SetUnit("player")
+    if setModel.Undress then setModel:Undress() end
     for _, slotToken in ipairs(ALL_SET_SLOTS) do
         local itemId = set.slots[slotToken]
         if itemId then setModel:TryOn("item:" .. itemId, HAND_SLOT_NAMES[slotToken]) end
@@ -585,19 +611,16 @@ end
 setsFrame:SetScript("OnShow", RefreshSetsWindow)
 setsFrame:HookScript("OnHide", function() dressedSetKey = nil end)
 
--- Turning the model on/off in the main window applies here too.
+-- Turning the model on/off in either window applies to both.
 function EverGear:OnCharacterModelSettingChanged()
     if setsFrame:IsShown() then RefreshSetsWindow() end
 end
 
--- Slots the set leaves empty show the equipped item, so redress when gear or
--- the character's look changes.
+-- Redress when the character's look changes (e.g. the barber).
 local setModelWatcher = CreateFrame("Frame")
-setModelWatcher:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 setModelWatcher:RegisterEvent("UNIT_MODEL_CHANGED")
-setModelWatcher:SetScript("OnEvent", function(_, event, unit)
-    if event == "UNIT_MODEL_CHANGED" and unit ~= "player" then return end
-    if not setsFrame:IsShown() then return end
+setModelWatcher:SetScript("OnEvent", function(_, _, unit)
+    if unit ~= "player" or not setsFrame:IsShown() then return end
     dressedSetKey = nil
     RefreshSetsWindow()
 end)
