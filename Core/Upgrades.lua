@@ -1426,6 +1426,41 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     return candidates, currentScore
 end
 
+-- Every item in the addon's data this character could wear in a REAL slot,
+-- scored with the active EP profile, best first: { { item, score,
+-- requiredLevel }, ... }. Used by the Gear Sets item picker, which is for
+-- planning, so only class / armor type / weapon type / faction are checked:
+-- the look-ahead level, the filter panels and what's equipped are ignored.
+-- maxLevel (optional) leaves out items that need a higher level.
+function EverGear:GetWearableItemsForSlot(realSlotToken, maxLevel)
+    local playerInfo = self:GetPlayerInfo()
+    local profile = GetScoringProfile(playerInfo.classToken, self:GetCharDB().spec)
+    local isRangedSlot = (realSlotToken == "RangedSlot")
+    local results = {}
+    for _, item in ipairs(self:GetItemsForSlot(realSlotToken)) do
+        local itemFaction = item.source and item.source.faction
+        local requiredLevel = math.max(item.minLevel or 0, (item.source and item.source.minLevel) or 0)
+        -- Armor proficiencies (mail/plate) unlock with level, so check them at
+        -- the level the item needs, not the character's current one.
+        local proficiencyLevel = math.max(requiredLevel, playerInfo.level or 1)
+        if (not maxLevel or requiredLevel <= maxLevel)
+            and ((not itemFaction) or (not playerInfo.faction) or itemFaction == playerInfo.faction)
+            and IsArmorTypeAllowed(item, playerInfo.classToken, proficiencyLevel)
+            and IsWeaponTypeAllowed(item, playerInfo.classToken)
+            and IsClassAllowed(item, playerInfo.classToken)
+        then
+            local stats = item.stats
+            local score = ScoreItem(stats, profile, (stats and stats.ARMOR) or 0, (stats and stats.WEAPON_DPS) or 0, isRangedSlot)
+            table.insert(results, { item = item, score = score, requiredLevel = requiredLevel })
+        end
+    end
+    table.sort(results, function(a, b)
+        if a.score ~= b.score then return a.score > b.score end
+        return a.item.id < b.item.id
+    end)
+    return results
+end
+
 -- Human-readable one-liner for where an item comes from, used in the detail
 -- panel and in tooltips. Reads item.source (see Constants.lua for the shape).
 function EverGear:GetSourceSummary(item)
