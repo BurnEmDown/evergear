@@ -146,8 +146,12 @@ EverGear.ZONE_LEVEL_RANGES = {
     ["Stranglethorn Vale"] = { 30, 50 },
     ["Badlands"] = { 36, 45 },
     ["Swamp of Sorrows"] = { 36, 43 },
+    ["Dustwallow Marsh"] = { 36, 61 },
     ["Stormwind City"] = { 1, 60 },
     ["Ironforge"] = { 1, 60 },
+    ["Orgrimmar"] = { 1, 60 },
+    ["Thunder Bluff"] = { 1, 60 },
+    ["Undercity"] = { 1, 60 },
     -- Dungeons
     ["Hall of Thanes"] = { 9, 15 },                -- from its items
     ["Ragefire Chasm"] = { 15, 25 },
@@ -162,17 +166,19 @@ EverGear.ZONE_LEVEL_RANGES = {
     ["Gnomeregan"] = { 26, 36 },
     ["Scarlet Monastery: Graveyard"] = { 26, 36 }, -- Classic wing range
     ["Scarlet Monastery: Library"] = { 29, 39 },   -- Classic wing range
+    ["Scarlet Monastery: Armory"] = { 32, 42 },    -- Classic wing range
+    ["Scarlet Monastery: Cathedral"] = { 35, 45 }, -- Classic wing range
     ["Razorfen Kraul"] = { 32, 42 },
     ["Razorfen Downs"] = { 37, 47 },
 }
 
--- The other faction's starting zones and faction-specific dungeons, which the
--- zone filter's "Current Level" button always unticks.
+-- The other faction's starting zones, capitals and faction-specific
+-- dungeons, which the zone filter's "Current Level" button always unticks.
 EverGear.OTHER_FACTION_ZONES = {
     Alliance = { "Mulgore", "Durotar", "Tirisfal Glades", "The Barrens", "Silverpine Forest",
-                 "Ragefire Chasm" },
+                 "Ragefire Chasm", "Orgrimmar", "Thunder Bluff", "Undercity" },
     Horde = { "Elwynn Forest", "Dun Morogh", "Westfall", "Loch Modan", "Teldrassil", "Darkshore",
-              "The Stockade", "Hall of Thanes" },
+              "The Stockade", "Hall of Thanes", "Stormwind City", "Ironforge" },
 }
 
 EverGear.SOURCE_TYPE_FILTERS = {
