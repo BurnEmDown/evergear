@@ -1275,6 +1275,11 @@ end
 -- isn't held against it. Returns false plus the client's item subtype (e.g.
 -- "Wands") for the message, when it's known.
 function EverGear:CanPlayerUseItem(itemId)
+    -- Shirts and tabards: any class can wear them.
+    if self:GetCosmetic(itemId) then return true end
+    local getInstant = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
+    local equipLoc = getInstant and select(4, getInstant(itemId))
+    if equipLoc == "INVTYPE_BODY" or equipLoc == "INVTYPE_TABARD" then return true end
     local classToken = self:GetPlayerInfo().classToken
     local item = self:GetItem(itemId) or ItemFromClientInfo(itemId)
     if not (item and classToken) then return true end
