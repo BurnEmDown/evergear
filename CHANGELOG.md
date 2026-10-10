@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.1.0] - 2026-10-10
+
+### Added
+- About 1,000 new items:
+  - BoE green gear with fixed stats: world drops, vendor items, and
+    Blacksmithing, Leatherworking, Tailoring, Engineering and Enchanting
+    crafts. Random-enchant "of the ..." items are not included.
+  - Quest rewards from Orgrimmar, Thunder Bluff, Undercity and Dustwallow
+    Marsh, and more from Badlands, Stormwind City, Ironforge and Loch Modan.
+  - Scarlet Monastery Armory and Cathedral boss drops.
+  - Whirlwind Sword and Whirlwind Warhammer for Warriors, and more items
+    such as War Paint Shield, Dragonmaw Buckler, Enchanted Moonstalker
+    Cloak and Lucky Fishing Hat.
+- Zone filter: hide suggestions from the zones and dungeons you pick. Its
+  "Current Level" button keeps only the places that fit your level, and
+  always hides the other faction's starting zones, dungeons and capitals.
+- Your character model now shows in the main window, like the character
+  sheet. Drag it to turn it. The button above it turns the model off.
+- Hovering a gear slot in the main window shows its suggested upgrades,
+  the same as clicking it.
+- Ctrl-click an item icon in EverGear's windows to preview it on your
+  character. Shift-click links it in chat.
+- Each spec remembers the EP profile you last used with it. Switching
+  specs brings that profile back.
+
+### Changed
+- A new EP profile for your current spec becomes the active one right
+  away. This applies whether you create, duplicate, import or copy it.
+- The look-ahead slider looks like a game slider and shows the highest
+  level it can reach. It reads "Look Ahead: Off" or "Look Ahead: Lvl N",
+  and the mouse wheel moves it one level at a time.
+
+### Fixed
+- Updated many items' stats to match the game, including shield block
+  values and caster staves and daggers that now have spell power.
+
 ## [0.0.30] - 2026-10-10
 
 ### Added
