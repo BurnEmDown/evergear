@@ -1443,7 +1443,13 @@ end
 -- otherwise a detail panel left open from an earlier item click would sit at
 -- its old anchor, now directly under/behind the freshly-opened editor
 -- window instead of following it.
-function EverGear:HideUpgradeDetail()
+-- side (optional): only hide it if it's open on that side ("left" /
+-- "right"), for windows that open on one side of the main window.
+function EverGear:HideUpgradeDetail(side)
+    if side and detailPanel:IsShown() then
+        local btn = currentDetailSlot and slotButtons[currentDetailSlot]
+        if btn and btn.side ~= side then return end
+    end
     detailPanel:Hide()
 end
 
@@ -1564,9 +1570,24 @@ function EverGear:ShowUpgradeDetail(slotToken)
             detailPanel:SetPoint("TOPRIGHT", mainFrame, "TOPLEFT", -8, 0)
         end
     else
-        detailPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
+        -- The Upgrades by Zone window (ZoneUpgrades.lua) opens on this side,
+        -- so stack below it the same way, instead of on top of it.
+        local zonePanel = EverGearZoneUpgradesPanel
+        if zonePanel and zonePanel:IsShown() then
+            detailPanel:SetPoint("TOPLEFT", zonePanel, "BOTTOMLEFT", 0, -8)
+        else
+            detailPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
+        end
     end
     detailPanel:Show()
+end
+
+-- The weapon, profession and zone filter panels and the Upgrades by Zone
+-- window (ZoneUpgrades.lua) all open in the same spot, right of the main
+-- window: opening one closes the others (and Suggested Upgrades, which opens
+-- there too for right-hand slots).
+local function CloseZoneUpgradesWindow()
+    if EverGearZoneUpgradesPanel then EverGearZoneUpgradesPanel:Hide() end
 end
 
 -- ===== Weapon-type filter panel =====
@@ -1733,6 +1754,7 @@ weaponFilterButton:SetScript("OnClick", function()
     detailPanel:Hide()
     professionFilterPanel:Hide()
     zoneFilterPanel:Hide()
+    CloseZoneUpgradesWindow()
     weaponFilterPanel:ClearAllPoints()
     weaponFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
     weaponFilterPanel:Show()
@@ -1898,6 +1920,7 @@ professionFilterButton:SetScript("OnClick", function()
     detailPanel:Hide()
     weaponFilterPanel:Hide()
     zoneFilterPanel:Hide()
+    CloseZoneUpgradesWindow()
     professionFilterPanel:ClearAllPoints()
     professionFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
     professionFilterPanel:Show()
@@ -1976,6 +1999,8 @@ local function CollectZones()
     table.sort(zones, ByName)
     return dungeons, zones
 end
+-- Also used by the Upgrades by Zone window (ZoneUpgrades.lua).
+EverGear.CollectSourceZones = CollectZones
 
 local function AddZoneCheckbox(zone, x, y)
     local cb = CreateFrame("CheckButton", nil, zoneFilterPanel, "UICheckButtonTemplate")
@@ -2095,6 +2120,7 @@ zoneFilterButton:SetScript("OnClick", function()
     detailPanel:Hide()
     weaponFilterPanel:Hide()
     professionFilterPanel:Hide()
+    CloseZoneUpgradesWindow()
     zoneFilterPanel:ClearAllPoints()
     zoneFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
     zoneFilterPanel:Show()
@@ -2246,6 +2272,14 @@ function EverGear:RefreshUI()
     if self.RefreshSetItemPicker then self:RefreshSetItemPicker() end
 end
 
+-- The Upgrades by Zone window (ZoneUpgrades.lua) follows every refresh, so
+-- gear, level and filter changes show up there too.
+local BaseRefreshUI = EverGear.RefreshUI
+function EverGear:RefreshUI()
+    BaseRefreshUI(self)
+    if self.RefreshZoneUpgrades then self:RefreshZoneUpgrades() end
+end
+
 -- Re-applies every persisted filter value (source-type, weapon-type,
 -- profession) to its checkbox's visual checked state. The checkboxes are
 -- only ever created once at addon load and set their own SavedVariables on
@@ -2292,6 +2326,10 @@ SlashCmdList["EVERGEAR"] = function(msg)
         return
     end
     local command = strlower(strtrim(msg or ""))
+    if command == "zone" then
+        if EverGear.ToggleZoneUpgrades then EverGear:ToggleZoneUpgrades() end
+        return
+    end
     if command == "wanted" or command == "sets" then
         if not mainFrame:IsShown() then EverGear:ToggleUI() end
         EverGear:OpenWishlistWindow(command == "wanted" and "ToggleWantedWindow" or "ToggleSetsWindow")
