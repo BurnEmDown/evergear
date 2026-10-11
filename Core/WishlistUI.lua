@@ -872,7 +872,7 @@ setModelToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
 -- don't change the set don't reload the model; cleared to force a redress.
 local dressedSetKey
 
--- Sheathe / hold melee / hold ranged, beside the eye button (same buttons as
+-- Sheathe / hold melee / hold ranged / helm / cloak, beside the eye button (same buttons as
 -- the main window's, with their own pose).
 local setModelWeapons = H.CreateModelWeaponButtons("EverGearSetModel", setsFrame, setModelToggle, function()
     dressedSetKey = nil
@@ -908,7 +908,9 @@ local function RefreshSetModel(set)
         local itemId = set.slots[slotToken]
         if itemId and slotToken ~= "RangedSlot" then setModel:TryOn("item:" .. itemId, HAND_SLOT_NAMES[slotToken]) end
     end
-    setModelWeapons:Apply(setModel, rangedId and ("item:" .. rangedId))
+    local helmId, cloakId = set.slots.HeadSlot, set.slots.BackSlot
+    setModelWeapons:Apply(setModel, rangedId and ("item:" .. rangedId),
+        helmId and ("item:" .. helmId), cloakId and ("item:" .. cloakId))
 end
 
 local function ActiveSetHasItem(itemId)
