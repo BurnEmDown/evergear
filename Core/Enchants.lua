@@ -310,7 +310,7 @@ end
 
 -- The name to show: formulas without their "Enchant " prefix.
 function EverGear:GetEnchantDisplayName(enchant)
-    if not enchant then return "" end
+    if not (enchant and enchant.name) then return "Unknown enchant" end
     return (enchant.name:gsub("^Enchant ", ""))
 end
 

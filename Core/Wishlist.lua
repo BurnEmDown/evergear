@@ -220,6 +220,35 @@ function EverGear:SetSetSlot(index, slotToken, itemId)
     if itemId then self:ScanForAcquiredItems() end
 end
 
+-- The enchant on a set slot: (record, known enchant). record is the stored
+-- { name, id, spellId } (sixtyupgrades' shape, so it exports as is); the
+-- known enchant is EverGear.Enchants' entry for it, or nil for one the addon
+-- doesn't know (e.g. imported from another site).
+function EverGear:GetSetEnchant(index, slotToken)
+    local set = CharDB().sets[index]
+    local record = set and set.enchants and set.enchants[slotToken]
+    if not record then return nil, nil end
+    local known = self:GetEnchant(record.spellId)
+        or (record.id and self.GetEnchantByEnchantId and self:GetEnchantByEnchantId(record.id))
+    return record, known
+end
+
+-- Puts an enchant (EverGear.Enchants spell id) on a set slot, or takes it off
+-- with nil. Only for a slot with an item in it.
+function EverGear:SetSetEnchant(index, slotToken, spellId)
+    local set = CharDB().sets[index]
+    if not (set and set.slots[slotToken]) then return end
+    local enchant = spellId and self:GetEnchant(spellId)
+    if enchant then
+        set.enchants = set.enchants or {}
+        set.enchants[slotToken] = { name = enchant.name, id = enchant.enchantId, spellId = enchant.spellId }
+    elseif set.enchants then
+        set.enchants[slotToken] = nil
+        if next(set.enchants) == nil then set.enchants = nil end
+    end
+    self:NotifyWishlistChanged()
+end
+
 -- Number of filled slots and how many of those are acquired.
 function EverGear:GetSetProgress(index)
     local set = CharDB().sets[index]
@@ -302,8 +331,10 @@ end)
 --                  "enchant": { "name", "id", "spellId" } }, ... ],
 --     "consumables": [], "buffs": [], "talents": [], "points": [], "stats": {},
 --     "exportOptions": { "buffs": false, "talents": false } }
--- Import only reads "name" and "items" (by item id and slot). EverGear doesn't
--- use enchants, but keeps them with the set so they survive a round trip.
+-- Import only reads "name" and "items" (by item id, slot and enchant). An
+-- enchant EverGear knows (by spellId, else by id) gets its name and ids from
+-- the addon's data; one it doesn't know is kept as is, so it survives a round
+-- trip.
 
 -- The site's slot names, in the order it lists them.
 local SITE_SLOTS = {
@@ -336,6 +367,11 @@ local function CleanEnchant(enchant)
         spellId = tonumber(enchant.spellId),
     }
     if not (clean.id or clean.spellId) then return nil end
+    local known = EverGear:GetEnchant(clean.spellId)
+        or (clean.id and EverGear.GetEnchantByEnchantId and EverGear:GetEnchantByEnchantId(clean.id))
+    if known then
+        return { name = known.name, id = known.enchantId, spellId = known.spellId }
+    end
     return clean
 end
 
