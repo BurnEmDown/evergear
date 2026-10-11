@@ -478,7 +478,8 @@ local STEPS = {
             .. "you'll see the Bind on Equip items you can buy from other players, but not the rest."),
     FilterPanelStep("EverGearZoneFilterButton", "EverGearZoneFilterPanel", "Zones and dungeons",
         "Hide items from zones and dungeons you won't visit. "
-            .. "Current Level keeps just the places meant for your level.", "below"),
+            .. "Current Level keeps just the places meant for your level; click it again every few levels "
+            .. "to keep the list up to date. Or click Show All if you'd rather not filter by zone at all.", "below"),
     {
         title = "Upgrades by Zone",
         text = "Pick a zone or dungeon here to see every upgrade you can get there, for all your slots at once. "
