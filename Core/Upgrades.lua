@@ -1315,8 +1315,9 @@ end
 --   out rather than assumed BoE.
 -- * Zones (zoneFilter[zoneName] == false): hides everything sourced from that
 --   zone or dungeon. Items with no source.zone (crafted, world drops from all
---   over) are never hidden by it.
-local function PassesFilterPanels(self, item, charDB)
+--   over) are never hidden by it. ignoreZone skips this one, for the Upgrades
+--   by Zone window, where the zone is picked on purpose.
+local function PassesFilterPanels(self, item, charDB, ignoreZone)
     local filterKey = self:GetWeaponFilterKey(item)
     if filterKey and (charDB.weaponTypeFilter or {})[filterKey] == false then return false end
     local profession = item.source and item.source.type == "craft" and item.source.profession
@@ -1325,7 +1326,7 @@ local function PassesFilterPanels(self, item, charDB)
         if (charDB.professionBoEOnly or {})[profession] and item.bindType ~= "BoE" then return false end
     end
     local zone = item.source and item.source.zone
-    if zone and (charDB.zoneFilter or {})[zone] == false then return false end
+    if zone and not ignoreZone and (charDB.zoneFilter or {})[zone] == false then return false end
     return true
 end
 
@@ -1335,7 +1336,9 @@ end
 --                  weapon types, and only items that beat currentScore.
 --   currentScore = the score of whatever is currently equipped in that slot
 --                  (0 if the slot is empty).
-function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
+-- options (optional): { ignoreZoneFilter = true } for the Upgrades by Zone
+-- view, where the zone is picked on purpose even if the zone filter hides it.
+function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink, options)
     local playerInfo = self:GetPlayerInfo()
     local charDB = self:GetCharDB()
     local profile = GetScoringProfile(playerInfo.classToken, charDB.spec)
@@ -1402,7 +1405,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
             and IsWeaponTypeAllowed(item, playerInfo.classToken)
             and IsClassAllowed(item, playerInfo.classToken)
             and factionAllowed
-            and PassesFilterPanels(self, item, charDB)
+            and PassesFilterPanels(self, item, charDB, options and options.ignoreZoneFilter)
             and not (tankShieldOnly and item.weaponType and item.weaponType ~= "shield" and item.weaponType ~= "offhand")
         then
             local armorValue = (item.stats and item.stats.ARMOR) or 0
@@ -1477,6 +1480,36 @@ function EverGear:ScoreItemForSlot(itemIdOrLink, realSlotToken)
         stats, armor, dps = NormalizeLiveStats(link)
     end
     return ScoreItem(stats, profile, armor or 0, dps or 0, realSlotToken == "RangedSlot")
+end
+
+-- Every upgrade from one zone or dungeon, across all slots, best gain first:
+-- { { item, slotToken, gain }, ... }. Uses the same rules as the main
+-- window's Suggested Upgrades (level / look-ahead, class, faction, source /
+-- weapon / profession filters) except the zone filter. An item that fits two
+-- slots (rings, trinkets) is listed once, for the slot where it gains most.
+function EverGear:GetUpgradesForZone(zoneName)
+    local sourceFilters = self:GetCharDB().filters or {}
+    local best = {}
+    for _, slotToken in ipairs(self.EQUIP_SLOTS) do
+        local candidates, currentScore = self:GetUpgradesForSlot(slotToken, self:GetEquippedItemLink(slotToken), { ignoreZoneFilter = true })
+        for _, candidate in ipairs(candidates) do
+            local item = candidate.item
+            local sourceType = item.source and item.source.type
+            if item.source and item.source.zone == zoneName and sourceFilters[sourceType] ~= false then
+                local gain = candidate.score - (currentScore or 0)
+                if not best[item.id] or gain > best[item.id].gain then
+                    best[item.id] = { item = item, slotToken = slotToken, gain = gain }
+                end
+            end
+        end
+    end
+    local list = {}
+    for _, entry in pairs(best) do table.insert(list, entry) end
+    table.sort(list, function(a, b)
+        if a.gain ~= b.gain then return a.gain > b.gain end
+        return a.item.id < b.item.id
+    end)
+    return list
 end
 
 -- Human-readable one-liner for where an item comes from, used in the detail
