@@ -473,8 +473,9 @@ local STEPS = {
     FilterPanelStep("EverGearWeaponFilterButton", "EverGearWeaponFilterPanel", "Weapon types",
         "Hide weapon types you don't want suggested. Usable Only keeps just the ones your class can use."),
     FilterPanelStep("EverGearProfessionFilterButton", "EverGearProfessionFilterPanel", "Professions",
-        "Untick professions you don't have to hide their crafted items. "
-            .. "BoE Only still shows the ones you could buy from other players."),
+        "Tick each profession whose crafted items you want to see. Bind on Pickup items can only be used "
+            .. "by whoever crafts them, so for a profession you don't have, also tick BoE Only: "
+            .. "you'll see the Bind on Equip items you can buy from other players, but not the rest."),
     FilterPanelStep("EverGearZoneFilterButton", "EverGearZoneFilterPanel", "Zones and dungeons",
         "Hide items from zones and dungeons you won't visit. "
             .. "Current Level keeps just the places meant for your level.", "below"),
