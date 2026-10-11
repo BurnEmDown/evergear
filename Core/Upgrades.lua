@@ -1426,6 +1426,61 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     return candidates, currentScore
 end
 
+-- Every item in the addon's data this character could wear in a REAL slot,
+-- scored with the active EP profile, best first: { { item, score,
+-- requiredLevel }, ... }. Used by the Gear Sets item picker, which is for
+-- planning, so only class / armor type / weapon type / faction are checked:
+-- the look-ahead level, the filter panels and what's equipped are ignored.
+-- maxLevel (optional) leaves out items that need a higher level.
+function EverGear:GetWearableItemsForSlot(realSlotToken, maxLevel)
+    local playerInfo = self:GetPlayerInfo()
+    local profile = GetScoringProfile(playerInfo.classToken, self:GetCharDB().spec)
+    local isRangedSlot = (realSlotToken == "RangedSlot")
+    local results = {}
+    for _, item in ipairs(self:GetItemsForSlot(realSlotToken)) do
+        local itemFaction = item.source and item.source.faction
+        local requiredLevel = math.max(item.minLevel or 0, (item.source and item.source.minLevel) or 0)
+        -- Armor proficiencies (mail/plate) unlock with level, so check them at
+        -- the level the item needs, not the character's current one.
+        local proficiencyLevel = math.max(requiredLevel, playerInfo.level or 1)
+        if (not maxLevel or requiredLevel <= maxLevel)
+            and ((not itemFaction) or (not playerInfo.faction) or itemFaction == playerInfo.faction)
+            and IsArmorTypeAllowed(item, playerInfo.classToken, proficiencyLevel)
+            and IsWeaponTypeAllowed(item, playerInfo.classToken)
+            and IsClassAllowed(item, playerInfo.classToken)
+        then
+            local stats = item.stats
+            local score = ScoreItem(stats, profile, (stats and stats.ARMOR) or 0, (stats and stats.WEAPON_DPS) or 0, isRangedSlot)
+            table.insert(results, { item = item, score = score, requiredLevel = requiredLevel })
+        end
+    end
+    table.sort(results, function(a, b)
+        if a.score ~= b.score then return a.score > b.score end
+        return a.item.id < b.item.id
+    end)
+    return results
+end
+
+-- EP score of one item (id or link) in a REAL slot, with the active profile:
+-- the addon's own data when it has the item, the item's live stats
+-- otherwise. 0 for no item. Used by the Gear Sets picker for its gain column.
+function EverGear:ScoreItemForSlot(itemIdOrLink, realSlotToken)
+    if not itemIdOrLink then return 0 end
+    local playerInfo = self:GetPlayerInfo()
+    local profile = GetScoringProfile(playerInfo.classToken, self:GetCharDB().spec)
+    local itemId = type(itemIdOrLink) == "number" and itemIdOrLink or self:GetItemIDFromLink(itemIdOrLink)
+    local data = itemId and self:GetItem(itemId)
+    local stats, armor, dps
+    if data then
+        stats = data.stats
+        armor, dps = (stats and stats.ARMOR) or 0, (stats and stats.WEAPON_DPS) or 0
+    else
+        local link = type(itemIdOrLink) == "string" and itemIdOrLink or ("item:" .. itemId)
+        stats, armor, dps = NormalizeLiveStats(link)
+    end
+    return ScoreItem(stats, profile, armor or 0, dps or 0, realSlotToken == "RangedSlot")
+end
+
 -- Human-readable one-liner for where an item comes from, used in the detail
 -- panel and in tooltips. Reads item.source (see Constants.lua for the shape).
 function EverGear:GetSourceSummary(item)
