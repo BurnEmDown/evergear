@@ -2004,6 +2004,10 @@ function EverGear:RefreshUI()
             btn:SetBackdropBorderColor(1, 1, 1, 1)
         end
     end
+
+    -- The Gear Sets item picker follows the same filters, so a filter change
+    -- shows up there too while it's open.
+    if self.RefreshSetItemPicker then self:RefreshSetItemPicker() end
 end
 
 -- Re-applies every persisted filter value (source-type, weapon-type,

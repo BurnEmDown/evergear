@@ -1294,6 +1294,41 @@ end
 
 -- ===== Public interface =====
 
+-- The main window's filter panels, shared by Suggested Upgrades and the Gear
+-- Sets item picker (GetWearableItemsForSlot below) so both hide the same
+-- things. The source-type checkboxes (Quest / Vendor / ...) aren't in here:
+-- Suggested Upgrades applies those in UI.lua, after this, so a slot whose
+-- upgrades are all hidden by them can show "--" instead of "BIS".
+--
+-- * Weapon types (EverGearDB.weaponTypeFilter[key] == false hides that type,
+--   UI.lua's weapon-type filter panel): player-chosen opt-outs, e.g. a tank
+--   who never wants two-handers suggested even though their class/spec can
+--   use them. Off by default; a key missing from the table (never touched,
+--   or a type this class/spec hasn't seen before) means "shown".
+-- * Professions (professionFilter[profName] == false): hides that
+--   profession's crafted items (only source.type == "craft" items that name
+--   a profession -- drops, quests and vendor items are never touched).
+-- * "BoE only" per profession (professionBoEOnly[profName] == true, same
+--   panel): for browsing a profession the player doesn't have, so only pieces
+--   they could buy or trade for show. item.bindType == "BoE" is required
+--   exactly -- an unconfirmed item (bindType nil, see Constants.lua) is left
+--   out rather than assumed BoE.
+-- * Zones (zoneFilter[zoneName] == false): hides everything sourced from that
+--   zone or dungeon. Items with no source.zone (crafted, world drops from all
+--   over) are never hidden by it.
+local function PassesFilterPanels(self, item, charDB)
+    local filterKey = self:GetWeaponFilterKey(item)
+    if filterKey and (charDB.weaponTypeFilter or {})[filterKey] == false then return false end
+    local profession = item.source and item.source.type == "craft" and item.source.profession
+    if profession then
+        if (charDB.professionFilter or {})[profession] == false then return false end
+        if (charDB.professionBoEOnly or {})[profession] and item.bindType ~= "BoE" then return false end
+    end
+    local zone = item.source and item.source.zone
+    if zone and (charDB.zoneFilter or {})[zone] == false then return false end
+    return true
+end
+
 -- Returns (candidates, currentScore) for a REAL slot token:
 --   candidates   = a list of { item = <item>, score = <number> }, best first,
 --                  restricted to the player's level, class-usable armor/
@@ -1330,37 +1365,6 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
     local isRangedSlot = (realSlotToken == "RangedSlot")
     local currentScore = ScoreItem(equippedStats, profile, equippedArmor, equippedDPS, isRangedSlot)
 
-    -- Player-chosen weapon-type opt-outs (e.g. a tank who never wants
-    -- two-handers suggested even though their class/spec can technically use
-    -- them) -- set via UI.lua's weapon-type filter panel. Off by default for
-    -- everyone; a class-usable weapon type only ever gets hidden if the
-    -- player explicitly unchecked it. Missing from the table (never touched
-    -- by the player, or a class/spec that's never seen this weapon type
-    -- before) means "shown" -- only an explicit false hides it.
-    local weaponTypeFilter = charDB.weaponTypeFilter or {}
-
-    -- Same idea for crafted items: EverGearDB.professionFilter[profName] ==
-    -- false hides that profession's items specifically (e.g. only
-    -- Blacksmithing checked hides Leatherworking/Tailoring/etc crafted
-    -- suggestions), set via UI.lua's profession filter panel. Only ever
-    -- checked for source.type == "craft" items that actually name a
-    -- profession -- everything else (dungeon drops, quests, vendor items)
-    -- is untouched by this filter regardless of its state.
-    local professionFilter = charDB.professionFilter or {}
-    -- EverGearDB.zoneFilter[zoneName] == false hides everything sourced from
-    -- that zone or dungeon (UI.lua's zone filter panel). Items with no
-    -- source.zone (crafted, world drops from all over) are never hidden by it.
-    local zoneFilter = charDB.zoneFilter or {}
-
-    -- "BoE only" per profession (EverGearDB.professionBoEOnly[profName] ==
-    -- true, set via the same profession filter panel) -- for browsing a
-    -- profession's crafted items when the player doesn't actually have that
-    -- profession, so only pieces they could actually acquire (buy/trade for)
-    -- get suggested. Off by default for everyone. item.bindType == "BoE" is
-    -- required exactly, not "~= BoP" -- an unconfirmed item (bindType nil,
-    -- see Constants.lua) is deliberately excluded rather than assumed BoE.
-    local professionBoEOnly = charDB.professionBoEOnly or {}
-
     -- A Tank spec whose class can wield a shield (Protection Warrior/Paladin) is
     -- meant to hold a shield in the off-hand. Off-hand-only WEAPONS (e.g. Shoni's
     -- Disarming Tool) share SecondaryHandSlot with shields, and their raw stats can
@@ -1387,15 +1391,6 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
         -- the first place -- nothing extra to do here for that case.
         local factionAllowed = (not itemFaction) or (not playerInfo.faction) or itemFaction == playerInfo.faction
 
-        local filterKey = self:GetWeaponFilterKey(item)
-        local weaponTypeAllowed = (not filterKey) or (weaponTypeFilter[filterKey] ~= false)
-
-        local itemProfession = item.source and item.source.type == "craft" and item.source.profession
-        local professionAllowed = (not itemProfession) or (professionFilter[itemProfession] ~= false)
-        local boeAllowed = (not itemProfession) or (not professionBoEOnly[itemProfession]) or item.bindType == "BoE"
-        local itemZone = item.source and item.source.zone
-        local zoneAllowed = (not itemZone) or (zoneFilter[itemZone] ~= false)
-
         -- A quest reward can't be had before the quest can be picked up, even
         -- when the item itself has no level requirement (most rewards don't):
         -- source.minLevel is the quest's required level.
@@ -1407,10 +1402,7 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink)
             and IsWeaponTypeAllowed(item, playerInfo.classToken)
             and IsClassAllowed(item, playerInfo.classToken)
             and factionAllowed
-            and weaponTypeAllowed
-            and professionAllowed
-            and boeAllowed
-            and zoneAllowed
+            and PassesFilterPanels(self, item, charDB)
             and not (tankShieldOnly and item.weaponType and item.weaponType ~= "shield" and item.weaponType ~= "offhand")
         then
             local armorValue = (item.stats and item.stats.ARMOR) or 0
@@ -1428,13 +1420,17 @@ end
 
 -- Every item in the addon's data this character could wear in a REAL slot,
 -- scored with the active EP profile, best first: { { item, score,
--- requiredLevel }, ... }. Used by the Gear Sets item picker, which is for
--- planning, so only class / armor type / weapon type / faction are checked:
--- the look-ahead level, the filter panels and what's equipped are ignored.
--- maxLevel (optional) leaves out items that need a higher level.
+-- requiredLevel }, ... }. Used by the Gear Sets item picker. It follows the
+-- same filters as Suggested Upgrades (class / armor type / weapon type /
+-- faction, the source-type checkboxes and the weapon, profession and zone
+-- filter panels), but not the look-ahead level or what's equipped, since sets
+-- are for planning. maxLevel (optional) leaves out items that need a higher
+-- level.
 function EverGear:GetWearableItemsForSlot(realSlotToken, maxLevel)
     local playerInfo = self:GetPlayerInfo()
-    local profile = GetScoringProfile(playerInfo.classToken, self:GetCharDB().spec)
+    local charDB = self:GetCharDB()
+    local profile = GetScoringProfile(playerInfo.classToken, charDB.spec)
+    local sourceFilters = charDB.filters or {}
     local isRangedSlot = (realSlotToken == "RangedSlot")
     local results = {}
     for _, item in ipairs(self:GetItemsForSlot(realSlotToken)) do
@@ -1448,6 +1444,8 @@ function EverGear:GetWearableItemsForSlot(realSlotToken, maxLevel)
             and IsArmorTypeAllowed(item, playerInfo.classToken, proficiencyLevel)
             and IsWeaponTypeAllowed(item, playerInfo.classToken)
             and IsClassAllowed(item, playerInfo.classToken)
+            and sourceFilters[item.source and item.source.type] ~= false
+            and PassesFilterPanels(self, item, charDB)
         then
             local stats = item.stats
             local score = ScoreItem(stats, profile, (stats and stats.ARMOR) or 0, (stats and stats.WEAPON_DPS) or 0, isRangedSlot)
