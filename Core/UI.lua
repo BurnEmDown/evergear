@@ -1740,6 +1740,8 @@ local function CollectZones()
     table.sort(zones, ByName)
     return dungeons, zones
 end
+-- Also used by the Upgrades by Zone window (ZoneUpgrades.lua).
+EverGear.CollectSourceZones = CollectZones
 
 local function AddZoneCheckbox(zone, x, y)
     local cb = CreateFrame("CheckButton", nil, zoneFilterPanel, "UICheckButtonTemplate")
@@ -2006,6 +2008,14 @@ function EverGear:RefreshUI()
     end
 end
 
+-- The Upgrades by Zone window (ZoneUpgrades.lua) follows every refresh, so
+-- gear, level and filter changes show up there too.
+local BaseRefreshUI = EverGear.RefreshUI
+function EverGear:RefreshUI()
+    BaseRefreshUI(self)
+    if self.RefreshZoneUpgrades then self:RefreshZoneUpgrades() end
+end
+
 -- Re-applies every persisted filter value (source-type, weapon-type,
 -- profession) to its checkbox's visual checked state. The checkboxes are
 -- only ever created once at addon load and set their own SavedVariables on
@@ -2052,6 +2062,10 @@ SlashCmdList["EVERGEAR"] = function(msg)
         return
     end
     local command = strlower(strtrim(msg or ""))
+    if command == "zone" then
+        if EverGear.ToggleZoneUpgrades then EverGear:ToggleZoneUpgrades() end
+        return
+    end
     if command == "wanted" or command == "sets" then
         if not mainFrame:IsShown() then EverGear:ToggleUI() end
         EverGear:OpenWishlistWindow(command == "wanted" and "ToggleWantedWindow" or "ToggleSetsWindow")

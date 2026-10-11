@@ -19,6 +19,7 @@ Core\EPProfiles.lua
 Core\ProfileEditor.lua
 Core\UI.lua
 Core\WishlistUI.lua
+Core\ZoneUpgrades.lua
 Core\Debug.lua
 Core\ItemBrowser.lua
 Core\MinimapButton.lua
