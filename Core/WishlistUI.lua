@@ -546,7 +546,9 @@ end
 -- Clicking any slot in the Sets window opens this beside it, listing what
 -- can go in that slot:
 --   * gear slots: every item in the addon's data this character can wear
---     there (class, armor / weapon type, faction), best EP score first, with
+--     there (class, armor / weapon type, faction) that the main window's
+--     filters let through (source types, weapon / profession / zone filter
+--     panels -- see GetWearableItemsForSlot), best EP score first, with
 --     its gain over what the set has in that slot (or, for an empty set slot,
 --     what's equipped there): green +N, red -N. "Up to your level" (on by
 --     default; the look-ahead level when the main window's slider is past the
@@ -766,6 +768,16 @@ local function BuildPickerList()
 end
 
 pickerSearch:SetScript("OnTextChanged", BuildPickerList)
+
+-- Called after every main window refresh (filters, spec, gear changes),
+-- keeping the scroll position.
+function EverGear:RefreshSetItemPicker()
+    if not picker:IsShown() or EverGear.COSMETIC_SLOTS[pickerState.slotToken] then return end
+    local offset = pickerState.offset
+    BuildPickerList()
+    pickerState.offset = offset
+    DrawPickerRows()
+end
 pickerLevelCheck:SetScript("OnClick", BuildPickerList)
 local function ScrollPicker(offset)
     pickerState.offset = offset
