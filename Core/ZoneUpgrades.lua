@@ -294,6 +294,10 @@ function EverGear:ToggleZoneUpgrades()
     -- close them, as the left-hand side windows do on their side. (Opened
     -- while this window is open, they stack below it instead.)
     if EverGear.HideUpgradeDetail then EverGear:HideUpgradeDetail("right") end
+    -- The weapon, profession and zone filter panels open in this spot too.
+    for _, filterPanel in ipairs({ EverGearWeaponFilterPanel, EverGearProfessionFilterPanel, EverGearZoneFilterPanel }) do
+        if filterPanel then filterPanel:Hide() end
+    end
     panel:Show()
     Rebuild()
 end

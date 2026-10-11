@@ -1582,6 +1582,14 @@ function EverGear:ShowUpgradeDetail(slotToken)
     detailPanel:Show()
 end
 
+-- The weapon, profession and zone filter panels and the Upgrades by Zone
+-- window (ZoneUpgrades.lua) all open in the same spot, right of the main
+-- window: opening one closes the others (and Suggested Upgrades, which opens
+-- there too for right-hand slots).
+local function CloseZoneUpgradesWindow()
+    if EverGearZoneUpgradesPanel then EverGearZoneUpgradesPanel:Hide() end
+end
+
 -- ===== Weapon-type filter panel =====
 -- One flat checklist, one row per weapon type -- for the few types the data
 -- can tell 1H from 2H apart on (Axe/Mace/Sword; see Constants.lua's
@@ -1746,6 +1754,7 @@ weaponFilterButton:SetScript("OnClick", function()
     detailPanel:Hide()
     professionFilterPanel:Hide()
     zoneFilterPanel:Hide()
+    CloseZoneUpgradesWindow()
     weaponFilterPanel:ClearAllPoints()
     weaponFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
     weaponFilterPanel:Show()
@@ -1911,6 +1920,7 @@ professionFilterButton:SetScript("OnClick", function()
     detailPanel:Hide()
     weaponFilterPanel:Hide()
     zoneFilterPanel:Hide()
+    CloseZoneUpgradesWindow()
     professionFilterPanel:ClearAllPoints()
     professionFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
     professionFilterPanel:Show()
@@ -2110,6 +2120,7 @@ zoneFilterButton:SetScript("OnClick", function()
     detailPanel:Hide()
     weaponFilterPanel:Hide()
     professionFilterPanel:Hide()
+    CloseZoneUpgradesWindow()
     zoneFilterPanel:ClearAllPoints()
     zoneFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
     zoneFilterPanel:Show()
