@@ -1280,6 +1280,24 @@ end
 
 local starMenu = CreateFrame("Frame", "EverGearStarMenu", UIParent, "UIDropDownMenuTemplate")
 
+-- Clicking the same item again while its menu is open closes the menu
+-- instead of opening it again. The game closes an open dropdown as soon as
+-- the mouse is pressed anywhere outside it -- before the item's own click
+-- (on release) runs -- so "it was open" also counts a menu for that item that
+-- closed a moment ago (STAR_MENU_RECLICK_WINDOW seconds).
+local STAR_MENU_RECLICK_WINDOW = 0.3
+local starMenuItemId      -- item the menu was last opened for
+local starMenuOpen = false
+local starMenuClosedAt = 0
+if DropDownList1 and DropDownList1.HookScript then
+    DropDownList1:HookScript("OnHide", function()
+        if starMenuOpen then
+            starMenuOpen = false
+            starMenuClosedAt = GetTime()
+        end
+    end)
+end
+
 -- Only these classes can dual wield, so only they get an off-hand entry for
 -- one-handed weapons that fit either hand.
 local CLASS_CAN_DUAL_WIELD = { WARRIOR = true, ROGUE = true, HUNTER = true }
@@ -1292,6 +1310,15 @@ end
 
 -- slotTokens: one real slot (a Suggested Upgrades row) or a list of them.
 function EverGear:ShowStarMenu(anchor, itemId, slotTokens)
+    if itemId == starMenuItemId then
+        local stillOpen = starMenuOpen and DropDownList1 and DropDownList1:IsShown()
+        if stillOpen or (GetTime() - starMenuClosedAt) < STAR_MENU_RECLICK_WINDOW then
+            CloseDropDownMenus()
+            starMenuOpen = false
+            starMenuClosedAt = 0  -- a third click opens it again
+            return
+        end
+    end
     if type(slotTokens) ~= "table" then slotTokens = { slotTokens } end
     slotTokens = DropOffHandIfNoDualWield(slotTokens)
     local multiSlot = #slotTokens > 1
@@ -1386,6 +1413,8 @@ function EverGear:ShowStarMenu(anchor, itemId, slotTokens)
         UIDropDownMenu_AddButton(info)
     end, "MENU")
     ToggleDropDownMenu(1, nil, starMenu, anchor, 0, 0)
+    starMenuItemId = itemId
+    starMenuOpen = true
 end
 
 -- Menu for any item link (Alt-click), opened at the cursor.
