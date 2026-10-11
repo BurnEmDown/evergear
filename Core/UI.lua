@@ -1363,6 +1363,119 @@ local function BuildItemLink(itemID)
     return "item:" .. itemID .. ":0:0:0:0:0:0:0:0:0:0:0"
 end
 
+-- ===== Enchant section =====
+-- Below the suggested items: the best enchant for the item in this slot
+-- (Enchants.lua), or a note that it already has the best one. Hidden when
+-- nothing useful can go on the item. The tooltip shows what it does, what it
+-- needs and a few other choices.
+local ENCHANT_SECTION_TOP_GAP = 6
+
+local enchantSection = CreateFrame("Frame", "EverGearDetailEnchant", detailPanel)
+enchantSection:SetSize(DETAIL_WIDTH - 32, 60)
+enchantSection:Hide()
+
+local enchantDivider = enchantSection:CreateTexture(nil, "ARTWORK")
+enchantDivider:SetHeight(1)
+enchantDivider:SetPoint("TOPLEFT", 0, 0)
+enchantDivider:SetPoint("TOPRIGHT", 0, 0)
+enchantDivider:SetTexture("Interface\\Buttons\\WHITE8X8")
+enchantDivider:SetVertexColor(unpack(THEME.panelBorder))
+
+local enchantHeader = enchantSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+enchantHeader:SetPoint("TOPLEFT", 0, -8)
+enchantHeader:SetText("Enchant")
+enchantHeader:SetTextColor(unpack(THEME.gold))
+
+local enchantIcon = CreateItemIconFrame("EverGearDetailEnchantIcon", enchantSection, ICON_SIZE)
+enchantIcon:SetPoint("TOPLEFT", 0, -24)
+
+local enchantName = enchantSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+enchantName:SetPoint("TOPLEFT", enchantIcon, "TOPRIGHT", 8, -2)
+enchantName:SetPoint("RIGHT", 0, 0)
+enchantName:SetJustifyH("LEFT")
+enchantName:SetWordWrap(true)
+
+local enchantSource = enchantSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+enchantSource:SetPoint("TOPLEFT", enchantName, "BOTTOMLEFT", 0, -4)
+enchantSource:SetPoint("RIGHT", 0, 0)
+enchantSource:SetJustifyH("LEFT")
+enchantSource:SetWordWrap(true)
+enchantSource:SetTextColor(0.7, 0.7, 0.7)
+
+local function AddEnchantRequirements(enchant)
+    if enchant.effect then GameTooltip:AddLine(enchant.effect, 1, 1, 1, true) end
+    GameTooltip:AddLine(EverGear:GetEnchantSourceSummary(enchant), 0.8, 0.8, 0.8, true)
+    if (enchant.minItemLevel or 0) > 0 then
+        GameTooltip:AddLine("Goes on items of level " .. enchant.minItemLevel .. " and up.", 0.8, 0.8, 0.8, true)
+    end
+    if enchant.reqLevel then
+        GameTooltip:AddLine("Requires level " .. enchant.reqLevel .. ".", 0.8, 0.8, 0.8, true)
+    end
+    if enchant.useProfession then
+        GameTooltip:AddLine("Only usable with " .. enchant.useProfession .. ".", 0.8, 0.8, 0.8, true)
+    end
+end
+
+enchantIcon:SetScript("OnEnter", function(self)
+    local suggestion = self.suggestion
+    if not suggestion then return end
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    local shown = suggestion.best and suggestion.best.enchant or suggestion.current
+    GameTooltip:SetText(EverGear:GetEnchantDisplayName(shown))
+    AddEnchantRequirements(shown)
+    if suggestion.best then
+        if suggestion.current then
+            GameTooltip:AddLine("Now: " .. EverGear:GetEnchantDisplayName(suggestion.current), 0.8, 0.8, 0.8, true)
+        elseif suggestion.currentEnchantId then
+            GameTooltip:AddLine("Replaces the item's current enchant.", 0.8, 0.8, 0.8, true)
+        end
+        if #suggestion.others > 0 then
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine("Also good:", 1, 0.82, 0)
+            for _, entry in ipairs(suggestion.others) do
+                local gain = math.floor(entry.score - suggestion.currentScore + 0.5)
+                GameTooltip:AddLine(EverGear:GetEnchantDisplayName(entry.enchant) .. "  |cff20e626(+" .. gain .. ")|r", 1, 1, 1, true)
+            end
+        end
+    end
+    GameTooltip:Show()
+end)
+enchantIcon:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+-- Fills and places the enchant section at yOffset (negative, from the
+-- panel's top); returns the new yOffset below it, or yOffset unchanged when
+-- there's nothing to show.
+local function LayoutEnchantSection(slotToken, yOffset)
+    local suggestion = EverGear.GetEnchantSuggestion
+        and EverGear:GetEnchantSuggestion(slotToken, EverGear:GetEquippedItemLink(slotToken))
+    enchantIcon.suggestion = suggestion
+    if not suggestion then
+        enchantSection:Hide()
+        return yOffset
+    end
+    yOffset = yOffset + 16 - ENCHANT_SECTION_TOP_GAP  -- the row gap above is already there
+    enchantSection:ClearAllPoints()
+    enchantSection:SetPoint("TOPLEFT", 16, yOffset)
+    if suggestion.best then
+        local enchant = suggestion.best.enchant
+        SetIconTexture(enchantIcon, EverGear:GetEnchantIcon(enchant))
+        local gain = math.floor(suggestion.best.score - suggestion.currentScore + 0.5)
+        enchantName:SetText(EverGear:GetEnchantDisplayName(enchant) .. "  |cff20e626(+" .. gain .. ")|r")
+        enchantName:SetTextColor(1, 1, 1)
+        enchantSource:SetText(EverGear:GetEnchantSourceSummary(enchant))
+    else
+        SetIconTexture(enchantIcon, EverGear:GetEnchantIcon(suggestion.current))
+        enchantName:SetText(EverGear:GetEnchantDisplayName(suggestion.current))
+        enchantName:SetTextColor(1, 1, 1)
+        enchantSource:SetText("Already the best enchant you can get for it.")
+    end
+    local textHeight = enchantName:GetStringHeight() + 4 + enchantSource:GetStringHeight()
+    local height = 24 + math.max(ICON_SIZE, textHeight)
+    enchantSection:SetHeight(height)
+    enchantSection:Show()
+    return yOffset - height - 16
+end
+
 -- This client build doesn't expose the old bare GetItemInfo/GetItemIcon
 -- globals (confirmed via a live "attempt to call a nil value" error) --
 -- it's on the modern C_Item namespace instead. These wrappers try C_Item
@@ -1502,7 +1615,13 @@ function EverGear:ShowUpgradeDetail(slotToken)
             detailEmptyMessage:SetText("No upgrade shown.\n\nAn upgrade may exist but is hidden by your source-type filters.")
         end
 
-        detailPanel:SetHeight(150)
+        local belowMessage = -40 - detailEmptyMessage:GetStringHeight() - 16
+        local belowEnchant = LayoutEnchantSection(slotToken, belowMessage)
+        if belowEnchant ~= belowMessage then
+            detailPanel:SetHeight(math.max(150, -belowEnchant + 16))
+        else
+            detailPanel:SetHeight(150)
+        end
     else
         detailEmptyMessage:Hide()
 
@@ -1551,6 +1670,7 @@ function EverGear:ShowUpgradeDetail(slotToken)
             detailRows[i]:Hide()
         end
 
+        yOffset = LayoutEnchantSection(slotToken, yOffset)
         detailPanel:SetHeight(-yOffset + 16)
     end
 
