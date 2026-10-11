@@ -1280,6 +1280,54 @@ end
 
 local starMenu = CreateFrame("Frame", "EverGearStarMenu", UIParent, "UIDropDownMenuTemplate")
 
+-- Clicking the same item again while its menu is open closes the menu
+-- instead of opening it again. Whether the game closes the open menu on that
+-- mouse press (before the item's own click, on release) differs between
+-- clients, so the decision is made on the press itself: GLOBAL_MOUSE_DOWN
+-- fires for every press, and if the menu is open (or closed in that same
+-- frame) and the mouse is over the item it was opened from, the click that
+-- follows only closes it. Clients without that event fall back to "the menu
+-- closed less than STAR_MENU_RECLICK_WINDOW seconds ago".
+local STAR_MENU_RECLICK_WINDOW = 0.3
+local starMenuItemId      -- item the menu was last opened for
+local starMenuAnchor      -- the frame it was opened from (or "cursor")
+local starMenuOpen = false
+local starMenuClosedAt = 0
+local reclickCloses = false
+local reclickAt = 0
+
+-- Whether the mouse is over the item the menu was opened from: the frame it
+-- was anchored to, or the row holding it when that row is for the same item
+-- (a Suggested Upgrades icon and its row's text count as one item).
+local function MouseOverMenuItem(anchor)
+    if type(anchor) ~= "table" or not anchor.IsMouseOver then return false end
+    if anchor:IsMouseOver() then return true end
+    local parent = anchor.GetParent and anchor:GetParent()
+    return parent ~= nil and parent.itemId == starMenuItemId and parent.IsMouseOver ~= nil and parent:IsMouseOver()
+end
+if DropDownList1 and DropDownList1.HookScript then
+    DropDownList1:HookScript("OnHide", function()
+        if starMenuOpen then
+            starMenuOpen = false
+            starMenuClosedAt = GetTime()
+        end
+    end)
+end
+
+local starMenuMouseWatcher = CreateFrame("Frame", "EverGearStarMenuMouseWatcher")
+local watchingPresses = pcall(starMenuMouseWatcher.RegisterEvent, starMenuMouseWatcher, "GLOBAL_MOUSE_DOWN")
+starMenuMouseWatcher:SetScript("OnEvent", function()
+    local wasOpen = starMenuOpen or starMenuClosedAt == GetTime()
+    reclickCloses = wasOpen and MouseOverMenuItem(starMenuAnchor) or false
+    reclickAt = GetTime()
+    -- Any press closes the menu (outside it the game closes it; inside it, an
+    -- entry was picked), so stop counting it as open.
+    if starMenuOpen then
+        starMenuOpen = false
+        starMenuClosedAt = GetTime()
+    end
+end)
+
 -- Only these classes can dual wield, so only they get an off-hand entry for
 -- one-handed weapons that fit either hand.
 local CLASS_CAN_DUAL_WIELD = { WARRIOR = true, ROGUE = true, HUNTER = true }
@@ -1292,6 +1340,25 @@ end
 
 -- slotTokens: one real slot (a Suggested Upgrades row) or a list of them.
 function EverGear:ShowStarMenu(anchor, itemId, slotTokens)
+    if itemId == starMenuItemId then
+        local closeOnly
+        if watchingPresses then
+            -- Only for the click that goes with that press (a press on, say,
+            -- the row's star doesn't open the menu, so its mark expires).
+            closeOnly = reclickCloses and (GetTime() - reclickAt) < 1
+        else
+            local stillOpen = starMenuOpen and DropDownList1 and DropDownList1:IsShown()
+            closeOnly = stillOpen or (GetTime() - starMenuClosedAt) < STAR_MENU_RECLICK_WINDOW
+        end
+        if closeOnly then
+            reclickCloses = false
+            CloseDropDownMenus()
+            starMenuOpen = false
+            starMenuClosedAt = 0  -- a third click opens it again
+            return
+        end
+    end
+    reclickCloses = false
     if type(slotTokens) ~= "table" then slotTokens = { slotTokens } end
     slotTokens = DropOffHandIfNoDualWield(slotTokens)
     local multiSlot = #slotTokens > 1
@@ -1386,6 +1453,9 @@ function EverGear:ShowStarMenu(anchor, itemId, slotTokens)
         UIDropDownMenu_AddButton(info)
     end, "MENU")
     ToggleDropDownMenu(1, nil, starMenu, anchor, 0, 0)
+    starMenuItemId = itemId
+    starMenuAnchor = anchor
+    starMenuOpen = true
 end
 
 -- Menu for any item link (Alt-click), opened at the cursor.
