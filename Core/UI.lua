@@ -2340,6 +2340,11 @@ SlashCmdList["EVERGEAR"] = function(msg)
         EverGear:OpenWishlistWindow(command == "wanted" and "ToggleWantedWindow" or "ToggleSetsWindow")
         return
     end
+    -- "/eg tutorial" (or "tour" / "help"): the guided tour (Core/Tutorial.lua).
+    if (command == "tutorial" or command == "tour" or command == "help") and EverGear.StartTutorial then
+        EverGear:StartTutorial()
+        return
+    end
     EverGear:ToggleUI()
 end
 
