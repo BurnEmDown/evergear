@@ -290,6 +290,10 @@ function EverGear:ToggleZoneUpgrades()
     for _, z in ipairs(zones) do known[z] = true end
     local saved = EverGear:GetCharDB().zoneUpgradesZone
     state.zone = (here and known[here] and here) or (saved and known[saved] and saved) or nil
+    -- Suggested Upgrades for a right-hand slot sit where this window opens;
+    -- close them, as the left-hand side windows do on their side. (Opened
+    -- while this window is open, they stack below it instead.)
+    if EverGear.HideUpgradeDetail then EverGear:HideUpgradeDetail("right") end
     panel:Show()
     Rebuild()
 end

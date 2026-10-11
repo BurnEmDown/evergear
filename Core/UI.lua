@@ -1443,7 +1443,13 @@ end
 -- otherwise a detail panel left open from an earlier item click would sit at
 -- its old anchor, now directly under/behind the freshly-opened editor
 -- window instead of following it.
-function EverGear:HideUpgradeDetail()
+-- side (optional): only hide it if it's open on that side ("left" /
+-- "right"), for windows that open on one side of the main window.
+function EverGear:HideUpgradeDetail(side)
+    if side and detailPanel:IsShown() then
+        local btn = currentDetailSlot and slotButtons[currentDetailSlot]
+        if btn and btn.side ~= side then return end
+    end
     detailPanel:Hide()
 end
 
@@ -1564,7 +1570,14 @@ function EverGear:ShowUpgradeDetail(slotToken)
             detailPanel:SetPoint("TOPRIGHT", mainFrame, "TOPLEFT", -8, 0)
         end
     else
-        detailPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
+        -- The Upgrades by Zone window (ZoneUpgrades.lua) opens on this side,
+        -- so stack below it the same way, instead of on top of it.
+        local zonePanel = EverGearZoneUpgradesPanel
+        if zonePanel and zonePanel:IsShown() then
+            detailPanel:SetPoint("TOPLEFT", zonePanel, "BOTTOMLEFT", 0, -8)
+        else
+            detailPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
+        end
     end
     detailPanel:Show()
 end
