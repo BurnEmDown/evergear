@@ -1173,7 +1173,10 @@ end)
 -- listing the top candidates for the clicked slot: real item icon (hoverable
 -- for its actual tooltip), name, source, and score gain over what's equipped.
 
-local DETAIL_WIDTH = 220
+-- 20 px wider than the rows' text needs, so the star / gear set buttons in
+-- each row's top-right corner get a column of their own (see sourceText).
+local DETAIL_WIDTH = 240
+local DETAIL_BUTTON_COLUMN = 20  -- the buttons (16 px) and a gap
 local DETAIL_ROW_HEIGHT = 46
 local MAX_DETAIL_CANDIDATES = 5
 
@@ -1344,7 +1347,9 @@ local function GetOrCreateDetailRow(index)
 
     local sourceText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     sourceText:SetPoint("TOPLEFT", nameText, "BOTTOMLEFT", 0, -4)
-    sourceText:SetPoint("RIGHT", 0, 0)
+    -- Stops short of the button column, so a long source (two quest names,
+    -- a long zone and boss) wraps instead of running under the buttons.
+    sourceText:SetPoint("RIGHT", -DETAIL_BUTTON_COLUMN, 0)
     sourceText:SetJustifyH("LEFT")
     sourceText:SetWordWrap(true)
     sourceText:SetTextColor(0.7, 0.7, 0.7)
