@@ -872,7 +872,7 @@ setModelToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
 -- don't change the set don't reload the model; cleared to force a redress.
 local dressedSetKey
 
--- Sheathe / hold melee / hold ranged / helm / cloak, beside the eye button (same buttons as
+-- Weapons drawn / sheathed, ranged on / off, helm, cloak, beside the eye button (same buttons as
 -- the main window's, with their own pose).
 local setModelWeapons = H.CreateModelWeaponButtons("EverGearSetModel", setsFrame, setModelToggle, function()
     dressedSetKey = nil

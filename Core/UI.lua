@@ -972,18 +972,18 @@ end)
 modelToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 -- ===== Model weapon buttons =====
--- Five small buttons to the right of a model's eye button: sheathe / draw
--- the weapons, hold the melee weapons, hold the ranged weapon, show / hide
--- the helm, show / hide the cloak. Holding the ranged weapon takes the melee
--- weapons off the model and tries the ranged one on in their place. Picking
--- melee or ranged also draws the weapons. Hiding the helm or cloak takes it
+-- Four small buttons to the right of a model's eye button: draw / sheathe
+-- the weapons, hold the ranged weapon (on / off), show / hide the helm, show /
+-- hide the cloak. Holding the ranged weapon takes the melee weapons off the
+-- model and tries the ranged one on in their place; turning it on also draws
+-- the weapons. Hiding the helm or cloak takes it
 -- off the model; showing it tries it on, so it shows even when the game's
 -- own "show helm / cloak" option hides it. The eye button and these are
 -- centred over the model as one row. The choices are kept per window for
 -- the session. Shared with the Gear Sets window (WishlistUI.lua, through
 -- EverGear.UIHelpers).
 local MODEL_BUTTON_SIZE, MODEL_BUTTON_GAP = 16, 4
-local MODEL_ROW_BUTTONS = 6  -- the eye button and the five below
+local MODEL_ROW_BUTTONS = 5  -- the eye button and the four below
 local INVSLOT_HEAD_ID, INVSLOT_BACK_ID = 1, 15
 local INVSLOT_MAINHAND_ID, INVSLOT_OFFHAND_ID = 16, 17
 -- Ranged-slot items that are actually held: bows, guns, crossbows, wands and
@@ -1008,7 +1008,7 @@ local function CreateModelWeaponButtons(namePrefix, parent, eyeButton, onChange,
     -- Read on the first draw, not now: the game's options may not be loaded
     -- yet while the addon's files load.
     local syncWithGame = followGameHelmCloak
-    local sheatheButton, meleeButton, rangedButton, helmButton, cloakButton
+    local weaponsButton, rangedButton, helmButton, cloakButton
 
     -- The eye button sits at the top centre of the model; move it left so
     -- the whole row is centred instead.
@@ -1024,12 +1024,10 @@ local function CreateModelWeaponButtons(namePrefix, parent, eyeButton, onChange,
     end
 
     local function UpdateButtons()
-        SetActive(sheatheButton, not pose.sheathed)
-        -- Without a holdable ranged weapon the model holds melee even in the
-        -- ranged pose, so that's the one shown as active.
-        local holdingRanged = pose.ranged and controls.rangedAvailable
-        SetActive(meleeButton, not pose.sheathed and not holdingRanged)
-        SetActive(rangedButton, controls.rangedAvailable and not pose.sheathed and pose.ranged)
+        SetActive(weaponsButton, not pose.sheathed)
+        -- Without a holdable ranged weapon the model holds melee even with
+        -- the ranged button on, so it shows as off then.
+        SetActive(rangedButton, controls.rangedAvailable and pose.ranged)
         SetActive(helmButton, pose.showHelm)
         SetActive(cloakButton, pose.showCloak)
     end
@@ -1059,20 +1057,21 @@ local function CreateModelWeaponButtons(namePrefix, parent, eyeButton, onChange,
         return b
     end
 
-    sheatheButton = Make("Sheathe", "Interface\\Icons\\Ability_Warrior_Disarm", eyeButton,
+    weaponsButton = Make("Weapons", "Interface\\Icons\\INV_Sword_04", eyeButton,
         function() pose.sheathed = not pose.sheathed end,
         function() return pose.sheathed and "Draw weapons" or "Sheathe weapons" end)
-    meleeButton = Make("Melee", "Interface\\Icons\\INV_Sword_04", sheatheButton,
-        function() pose.ranged = false; pose.sheathed = false end,
-        function() return "Hold melee weapons" end)
-    rangedButton = Make("Ranged", "Interface\\Icons\\Ability_Marksmanship", meleeButton,
+    rangedButton = Make("Ranged", "Interface\\Icons\\Ability_Marksmanship", weaponsButton,
         function()
             if not controls.rangedAvailable then return end
-            pose.ranged = true; pose.sheathed = false
+            pose.ranged = not pose.ranged
+            if pose.ranged then pose.sheathed = false end
         end,
         function()
-            if controls.rangedAvailable then return "Hold ranged weapon" end
-            return "Hold ranged weapon", "No bow, gun, crossbow, wand or thrown weapon to hold."
+            if not controls.rangedAvailable then
+                return "Hold ranged weapon", "No bow, gun, crossbow, wand or thrown weapon to hold."
+            end
+            if pose.ranged then return "Hold melee weapons", "Puts the melee weapons back in hand." end
+            return "Hold ranged weapon", "Holds the ranged weapon instead of the melee ones."
         end)
     helmButton = Make("Helm", "Interface\\Icons\\INV_Helmet_01", rangedButton,
         function() pose.showHelm = not pose.showHelm end,
@@ -1083,8 +1082,7 @@ local function CreateModelWeaponButtons(namePrefix, parent, eyeButton, onChange,
     UpdateButtons()
 
     function controls:SetShown(shown)
-        sheatheButton:SetShown(shown)
-        meleeButton:SetShown(shown)
+        weaponsButton:SetShown(shown)
         rangedButton:SetShown(shown)
         helmButton:SetShown(shown)
         cloakButton:SetShown(shown)
