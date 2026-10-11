@@ -46,6 +46,12 @@ function EverGear:GetItem(itemId)
     return self.Items[itemId]
 end
 
+-- A shirt or tabard from Data/Cosmetics.lua ({ id, name, slot, quality,
+-- faction, source }), or nil.
+function EverGear:GetCosmetic(itemId)
+    return self.Cosmetics and self.Cosmetics[itemId]
+end
+
 -- Returns every known item whose data-slot matches the REAL inventory slot
 -- token requested, going through GENERIC_SLOT_FOR_REAL_SLOT for rings/trinkets
 -- (an item tagged slot="FingerSlot" is a candidate for both Finger0Slot and

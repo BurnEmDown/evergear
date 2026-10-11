@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.2.0] - 2026-10-11
+
+### Added
+- A guided tour of EverGear. Click the new "?" button in the window's top
+  left corner, or type /eg tutorial. New players see a small hint pointing
+  to it the first time they open EverGear.
+- Upgrades by Zone: pick a zone or dungeon to see every upgrade you can get
+  there, for all your slots at once. Open it with the spyglass button in
+  the main window or /eg zone. It starts on the zone you're in.
+- Gear sets:
+  - Click any slot in a set to pick an item for it from a list of what you
+    could wear there. The list follows the main window's filters and shows
+    how much better or worse each item is than what you have.
+  - Export a set as text to share it, and import sets from text. Sets
+    exported from sixtyupgrades.com can be imported too.
+  - Shirt and Tabard slots, with a list of shirts and tabards to pick from.
+  - The Gear Sets window shows your character wearing the set.
+- Shirt and Tabard slots in the main window.
+- Buttons under your character model to draw or sheathe your weapons, hold
+  your ranged weapon, and show or hide your helm and cloak.
+- Suggested Upgrades: click an item to add it to your Wanted list or a gear
+  set. The new button under the star puts the item in the gear set you
+  have open, or takes it out.
+- New items: Prowler's Leather Belt, Ladimore Heirloom Ring and Staff of
+  Protection.
+
+### Changed
+- Escape closes the EverGear window.
+- The minimap button sits on the minimap's edge instead of inside it.
+- Hovering a gear slot waits half a second before showing its upgrades,
+  and doesn't replace a panel you opened by clicking.
+- The Suggested Upgrades panel is a little wider, so the item locations no
+  longer run into the star and gear set buttons.
+- Upgrades by Zone, Suggested Upgrades and the filter windows no longer
+  open on top of each other. Suggested Upgrades opens below Upgrades by
+  Zone when both are open.
+
+### Fixed
+- Corrected the level ranges of 14 dungeons and 4 zones in the zone
+  filter, so "Current Level" picks the right places.
+
 ## [0.1.0] - 2026-10-10
 
 ### Added
