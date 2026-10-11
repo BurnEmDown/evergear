@@ -388,7 +388,8 @@ local STEPS = {
     {
         title = "Want it? Star it",
         text = "Click the star on a suggestion to put that item on your Wanted list. "
-            .. "Click it again to take it off.",
+            .. "Click it again to take it off. The button under the star puts the item in the gear set "
+            .. "you have open (and takes it out again), and clicking the item itself shows both choices.",
         target = function() return Named("EverGearDetailPanel") end,
         noHighlight = true,
         open = OpenUpgradePanel,
@@ -408,6 +409,16 @@ local STEPS = {
             local model = Named("EverGearCharacterModel")
             if IsShownFrame(model) then return model end
             return Named("EverGearCharacterModelToggle")
+        end,
+        side = "right",
+    },
+    {
+        title = "Dress the model",
+        text = "These buttons change how your character is shown: draw or sheathe your weapons, "
+            .. "hold your ranged weapon, and show or hide your helm and cloak.",
+        target = function()
+            local button = Named("EverGearCharacterModelWeapons")
+            return IsShownFrame(button) and button or nil
         end,
         side = "right",
     },
@@ -467,12 +478,33 @@ local STEPS = {
     FilterPanelStep("EverGearZoneFilterButton", "EverGearZoneFilterPanel", "Zones and dungeons",
         "Hide items from zones and dungeons you won't visit. "
             .. "Current Level keeps just the places meant for your level.", "below"),
+    {
+        title = "Upgrades by Zone",
+        text = "Pick a zone or dungeon here to see every upgrade you can get there, for all your slots at once. "
+            .. "It starts on the zone you're in. You can also type /eg zone.",
+        target = function() return Named("EverGearZoneUpgradesPanel") and Named("EverGearZoneUpgradesButton") end,
+        open = function(step)
+            OpenForStep(step, Named("EverGearZoneUpgradesPanel"), function() EverGear:ToggleZoneUpgrades() end)
+        end,
+        place = function(step, target)
+            local panel = Named("EverGearZoneUpgradesPanel")
+            if IsShownFrame(panel) then
+                PlaceBesideFrame(panel, "right")
+            else
+                PlaceBesideMain("right", target)
+            end
+        end,
+    },
     SideWindowStep("EverGearWantedButton", "EverGearWantedFrame", "ToggleWantedWindow", "Wanted list",
         "Items you're hunting for on this character, ticked off once you have them. "
             .. "This button opens it any time."),
     SideWindowStep("EverGearSetsButton", "EverGearSetsFrame", "ToggleSetsWindow", "Gear sets",
         "Build gear sets, such as one for tanking and one for dealing damage, and see which pieces you already have. "
-            .. "Click a slot in a set to choose an item for it."),
+            .. "Click a slot in a set to choose from the items you could wear there, "
+            .. "and use the buttons under its model just like on your own character."),
+    SideWindowStep("EverGearSetsButton", "EverGearSetsFrame", "ToggleSetsWindow", "Share your sets",
+        "Export gives you text you can copy to share a set, and Import adds a set from text someone shared. "
+            .. "Sets from sixtyupgrades.com work too."),
     {
         title = "Alt-click any item",
         text = "Alt-click an item anywhere, in your bags, on your character sheet, in chat or in EverGear, "
