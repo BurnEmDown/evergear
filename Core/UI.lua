@@ -51,17 +51,23 @@ local TOP_INSET = 216
 -- panel ends -- the plain window background left below it.
 local BOTTOM_INSET = 7
 
--- Left column, top to bottom
-local leftColumn = { "HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", "WristSlot" }
+-- Left column, top to bottom. Shirt and Tabard sit where the game's own
+-- character sheet has them; they only change the look, so they show what's
+-- equipped but are never scored (see EverGear.COSMETIC_SLOTS).
+local leftColumn = { "HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", "ShirtSlot", "TabardSlot", "WristSlot" }
 -- Right column, top to bottom
 local rightColumn = { "HandsSlot", "WaistSlot", "LegsSlot", "FeetSlot", "Finger0Slot", "Finger1Slot", "Trinket0Slot", "Trinket1Slot" }
 -- Bottom row, centered
 local bottomRow = { "MainHandSlot", "SecondaryHandSlot", "RangedSlot" }
 
-local slotOrder = {}
-for _, s in ipairs(leftColumn) do table.insert(slotOrder, s) end
-for _, s in ipairs(rightColumn) do table.insert(slotOrder, s) end
-for _, s in ipairs(bottomRow) do table.insert(slotOrder, s) end
+-- slotOrder: the slots that get upgrade suggestions; cosmeticSlotOrder: the
+-- look-only ones (Shirt, Tabard).
+local slotOrder, cosmeticSlotOrder = {}, {}
+for _, column in ipairs({ leftColumn, rightColumn, bottomRow }) do
+    for _, s in ipairs(column) do
+        table.insert(EverGear.COSMETIC_SLOTS[s] and cosmeticSlotOrder or slotOrder, s)
+    end
+end
 
 -- ===== Theme =====
 -- One shared palette so the gold/bronze fantasy look reads as one system
@@ -679,7 +685,12 @@ local slotButtons = {}
 -- The slot the mouse is resting on, and how long it has to rest there before
 -- the slot's suggested upgrades open by themselves.
 local hoveredSlot
-local HOVER_DETAIL_DELAY = 0.3
+local HOVER_DETAIL_DELAY = 0.5
+-- True while the Suggested Upgrades panel on screen was opened by a click:
+-- hovering other slots then leaves it alone until it's closed (see
+-- ShowUpgradeDetailOnHover). Only clicks and hovers set it, so a refresh
+-- that briefly hides and reopens the panel keeps it.
+local detailOpenedByClick = false
 local leftItems, rightItems, bottomItems = {}, {}, {}
 
 -- Hand-built item-icon button instead of Blizzard's "ItemButtonTemplate" XML
@@ -813,6 +824,8 @@ local function CreateSlotButton(slotToken)
             return
         end
         if EverGear:HandleItemModifiedClick(self.currentLink) then return end
+        if EverGear.COSMETIC_SLOTS[self.slotToken] then return end  -- nothing to suggest
+        detailOpenedByClick = true
         EverGear:ShowUpgradeDetail(self.slotToken)
     end)
 
@@ -863,15 +876,28 @@ end
 -- The player's own character, in the space between the two slot columns and
 -- above the weapon row, like the real character sheet. Drag it to turn it.
 -- Redrawn whenever the window opens and when gear or appearance changes.
-local characterModel = CreateFrame("PlayerModel", "EverGearCharacterModel", content)
+-- A DressUpModel (the dressing room's model type) rather than a plain
+-- PlayerModel, so the "hold ranged weapon" button can put the ranged weapon
+-- in its hands; it shows the equipped gear the same way.
+local characterModel = CreateFrame("DressUpModel", "EverGearCharacterModel", content)
 characterModel:EnableMouse(true)
 -- Shown by ApplyCharacterModelSetting (below) once the saved setting can be
 -- read, so a model turned off is never drawn, not even for a moment.
 characterModel:Hide()
 
+-- The sheathe / melee / ranged buttons beside the eye button (created below
+-- with CreateModelWeaponButtons).
+local mainModelWeapons
+
+local INVSLOT_RANGED_ID = 18
+
 local function RefreshCharacterModel()
     if not characterModel:IsVisible() then return end
     characterModel:SetUnit("player")
+    if mainModelWeapons then
+        mainModelWeapons:Apply(characterModel, GetInventoryItemLink("player", INVSLOT_RANGED_ID),
+            GetInventoryItemLink("player", 1), GetInventoryItemLink("player", 15))
+    end
 end
 
 -- Dragging a model left/right turns it. Shared with the Gear Sets window's
@@ -916,6 +942,7 @@ modelToggle:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD
 local function ApplyCharacterModelSetting()
     local hidden = EverGearDB.hideCharacterModel == true
     characterModel:SetShown(not hidden)
+    if mainModelWeapons then mainModelWeapons:SetShown(not hidden) end
     modelToggle:GetNormalTexture():SetDesaturated(hidden)
     modelToggle:SetAlpha(hidden and 0.5 or 1)
     if hidden then
@@ -943,6 +970,158 @@ modelToggle:SetScript("OnEnter", function(self)
     GameTooltip:Show()
 end)
 modelToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+-- ===== Model weapon buttons =====
+-- Four small buttons to the right of a model's eye button: draw / sheathe
+-- the weapons, hold the ranged weapon (on / off), show / hide the helm, show /
+-- hide the cloak. Holding the ranged weapon takes the melee weapons off the
+-- model and tries the ranged one on in their place; turning it on also draws
+-- the weapons. Hiding the helm or cloak takes it
+-- off the model; showing it tries it on, so it shows even when the game's
+-- own "show helm / cloak" option hides it. The eye button and these are
+-- centred over the model as one row. The choices are kept per window for
+-- the session. Shared with the Gear Sets window (WishlistUI.lua, through
+-- EverGear.UIHelpers).
+local MODEL_BUTTON_SIZE, MODEL_BUTTON_GAP = 16, 4
+local MODEL_ROW_BUTTONS = 5  -- the eye button and the four below
+local INVSLOT_HEAD_ID, INVSLOT_BACK_ID = 1, 15
+local INVSLOT_MAINHAND_ID, INVSLOT_OFFHAND_ID = 16, 17
+-- Ranged-slot items that are actually held: bows, guns, crossbows, wands and
+-- thrown weapons (not librams, idols or relics).
+local HOLDABLE_RANGED = { INVTYPE_RANGED = true, INVTYPE_RANGEDRIGHT = true, INVTYPE_THROWN = true }
+
+local function IsHoldableRanged(link)
+    if not link then return false end
+    local getInfo = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
+    local equipLoc = getInfo and select(4, getInfo(link))
+    if not equipLoc or equipLoc == "" then return true end
+    return HOLDABLE_RANGED[equipLoc] == true
+end
+
+-- onChange is called after a button changes the pose, to redraw the model.
+-- followGameHelmCloak: start the helm / cloak buttons the way the game's own
+-- "show helm / show cloak" options are set (the main window, which shows the
+-- character as it is); otherwise both start shown (gear sets).
+local function CreateModelWeaponButtons(namePrefix, parent, eyeButton, onChange, followGameHelmCloak)
+    local pose = { sheathed = false, ranged = false, showHelm = true, showCloak = true }
+    local controls = { pose = pose, rangedAvailable = true }
+    -- Read on the first draw, not now: the game's options may not be loaded
+    -- yet while the addon's files load.
+    local syncWithGame = followGameHelmCloak
+    local weaponsButton, rangedButton, helmButton, cloakButton
+
+    -- The eye button sits at the top centre of the model; move it left so
+    -- the whole row is centred instead.
+    local point, relativeTo, relativePoint, x, y = eyeButton:GetPoint(1)
+    if point then
+        local shift = ((MODEL_ROW_BUTTONS - 1) * (MODEL_BUTTON_SIZE + MODEL_BUTTON_GAP)) / 2
+        eyeButton:SetPoint(point, relativeTo, relativePoint, (x or 0) - shift, y or 0)
+    end
+
+    local function SetActive(button, active)
+        button:GetNormalTexture():SetDesaturated(not active)
+        button:SetAlpha(active and 1 or 0.55)
+    end
+
+    local function UpdateButtons()
+        SetActive(weaponsButton, not pose.sheathed)
+        -- Without a holdable ranged weapon the model holds melee even with
+        -- the ranged button on, so it shows as off then.
+        SetActive(rangedButton, controls.rangedAvailable and pose.ranged)
+        SetActive(helmButton, pose.showHelm)
+        SetActive(cloakButton, pose.showCloak)
+    end
+
+    local function Make(suffix, texture, anchor, onClick, tooltip)
+        local b = CreateFrame("Button", namePrefix .. suffix, parent)
+        b:SetSize(MODEL_BUTTON_SIZE, MODEL_BUTTON_SIZE)
+        b:SetPoint("LEFT", anchor, "RIGHT", MODEL_BUTTON_GAP, 0)
+        b:SetFrameLevel(eyeButton:GetFrameLevel())
+        b:SetNormalTexture(texture)
+        b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+        b:SetScript("OnClick", function(self)
+            onClick()
+            UpdateButtons()
+            onChange()
+            if self:IsMouseOver() and self:GetScript("OnEnter") then self:GetScript("OnEnter")(self) end
+        end)
+        b:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            local title, line = tooltip()
+            GameTooltip:SetText(title)
+            if line then GameTooltip:AddLine(line, 0.8, 0.8, 0.8, true) end
+            GameTooltip:Show()
+        end)
+        b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        b:Hide()
+        return b
+    end
+
+    weaponsButton = Make("Weapons", "Interface\\Icons\\INV_Sword_04", eyeButton,
+        function() pose.sheathed = not pose.sheathed end,
+        function() return pose.sheathed and "Draw weapons" or "Sheathe weapons" end)
+    rangedButton = Make("Ranged", "Interface\\Icons\\Ability_Marksmanship", weaponsButton,
+        function()
+            if not controls.rangedAvailable then return end
+            pose.ranged = not pose.ranged
+            if pose.ranged then pose.sheathed = false end
+        end,
+        function()
+            if not controls.rangedAvailable then
+                return "Hold ranged weapon", "No bow, gun, crossbow, wand or thrown weapon to hold."
+            end
+            if pose.ranged then return "Hold melee weapons", "Puts the melee weapons back in hand." end
+            return "Hold ranged weapon", "Holds the ranged weapon instead of the melee ones."
+        end)
+    helmButton = Make("Helm", "Interface\\Icons\\INV_Helmet_01", rangedButton,
+        function() pose.showHelm = not pose.showHelm end,
+        function() return pose.showHelm and "Hide helm" or "Show helm" end)
+    cloakButton = Make("Cloak", "Interface\\Icons\\INV_Misc_Cape_01", helmButton,
+        function() pose.showCloak = not pose.showCloak end,
+        function() return pose.showCloak and "Hide cloak" or "Show cloak" end)
+    UpdateButtons()
+
+    function controls:SetShown(shown)
+        weaponsButton:SetShown(shown)
+        rangedButton:SetShown(shown)
+        helmButton:SetShown(shown)
+        cloakButton:SetShown(shown)
+    end
+
+    -- Call right after the model is dressed. rangedLink is the ranged-slot
+    -- item it should hold in the ranged pose (nil if there isn't one);
+    -- helmLink / cloakLink are what it wears there (nil if nothing), tried on
+    -- again when shown so the game's own hide option doesn't hide them.
+    function controls:Apply(model, rangedLink, helmLink, cloakLink)
+        if syncWithGame then
+            syncWithGame = false
+            if ShowingHelm then pose.showHelm = ShowingHelm() and true or false end
+            if ShowingCloak then pose.showCloak = ShowingCloak() and true or false end
+        end
+        controls.rangedAvailable = IsHoldableRanged(rangedLink)
+        UpdateButtons()
+        if pose.ranged and controls.rangedAvailable and model.TryOn then
+            if model.UndressSlot then
+                model:UndressSlot(INVSLOT_MAINHAND_ID)
+                model:UndressSlot(INVSLOT_OFFHAND_ID)
+            end
+            model:TryOn(rangedLink)
+        end
+        for _, piece in ipairs({ { pose.showHelm, INVSLOT_HEAD_ID, helmLink }, { pose.showCloak, INVSLOT_BACK_ID, cloakLink } }) do
+            local shown, slotId, link = piece[1], piece[2], piece[3]
+            if not shown then
+                if model.UndressSlot then model:UndressSlot(slotId) end
+            elseif link and model.TryOn then
+                model:TryOn(link)
+            end
+        end
+        if model.SetSheathed then model:SetSheathed(pose.sheathed) end
+    end
+
+    return controls
+end
+
+mainModelWeapons = CreateModelWeaponButtons("EverGearCharacterModel", content, modelToggle, RefreshCharacterModel, true)
 
 local function RepositionAll()
     local h = content:GetHeight()
@@ -1173,6 +1352,7 @@ EverGear.UIHelpers = {
     SafeGetItemIcon = SafeGetItemIcon,
     BuildItemLink = BuildItemLink,
     MakeModelTurnable = MakeModelTurnable,
+    CreateModelWeaponButtons = CreateModelWeaponButtons,
 }
 
 local function UpdateStar(row)
@@ -1204,15 +1384,18 @@ end
 -- while a weapon, profession or zone filter panel is open, since showing the
 -- upgrades closes those and the mouse often crosses the slots on its way to
 -- a checkbox. The panel stays open when the mouse moves on, so its rows can
--- be used, and switches to whichever slot is hovered next.
+-- be used, and switches to whichever slot is hovered next. A panel opened by
+-- a click stays on its slot: hovering does nothing until it's closed.
 function EverGear:ShowUpgradeDetailOnHover(slotToken)
     local btn = slotButtons[slotToken]
     if not (btn and mainFrame:IsShown()) then return end
+    if detailOpenedByClick and detailPanel:IsShown() then return end
     if not btn.upgradeList or #btn.upgradeList == 0 then return end
     if detailPanel:IsShown() and currentDetailSlot == slotToken then return end
     for _, filterPanel in ipairs({ weaponFilterPanel, professionFilterPanel, zoneFilterPanel }) do
         if filterPanel and filterPanel:IsShown() then return end
     end
+    detailOpenedByClick = false
     self:ShowUpgradeDetail(slotToken)
 end
 
@@ -1968,6 +2151,30 @@ function EverGear:RefreshUI()
         btn.badgeBG:SetBackdropBorderColor(unpack(statusColor))
         UpdateBadgePill(btn, showArrow)
     end
+
+    -- Shirt / Tabard: just what's equipped, with its rarity border; no badge
+    -- and no upgrades (hover and click leave them alone too).
+    for _, slotToken in ipairs(cosmeticSlotOrder) do
+        local btn = slotButtons[slotToken]
+        local itemLink = self:GetEquippedItemLink(slotToken)
+        btn.currentLink = itemLink
+        btn.currentScore = 0
+        btn.upgradeList = {}
+        btn.isBIS = false
+        btn.badgeBG:Hide()
+        if itemLink then
+            local _, _, quality, _, _, _, _, _, _, itemTexture = SafeGetItemInfo(itemLink)
+            SetIconTexture(btn, itemTexture or SafeGetItemIcon(itemLink) or EverGear.EMPTY_SLOT_TEXTURES[slotToken])
+            btn:SetBackdropBorderColor(GetQualityColor(quality))
+        else
+            SetIconTexture(btn, EverGear.EMPTY_SLOT_TEXTURES[slotToken])
+            btn:SetBackdropBorderColor(1, 1, 1, 1)
+        end
+    end
+
+    -- The Gear Sets item picker follows the same filters, so a filter change
+    -- shows up there too while it's open.
+    if self.RefreshSetItemPicker then self:RefreshSetItemPicker() end
 end
 
 -- Re-applies every persisted filter value (source-type, weapon-type,
