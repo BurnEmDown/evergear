@@ -1677,7 +1677,7 @@ for index, entry in ipairs(weaponFilterEntries) do
     local cb = CreateFrame("CheckButton", name, weaponFilterPanel, "UICheckButtonTemplate")
     local col = (index - 1) % WEAPON_COLS
     local row = math.floor((index - 1) / WEAPON_COLS)
-    cb:SetPoint("TOPLEFT", 12 + col * WEAPON_COL_WIDTH, -38 - row * WEAPON_ROW_HEIGHT)
+    cb:SetPoint("TOPLEFT", 12 + col * WEAPON_COL_WIDTH, -32 - row * WEAPON_ROW_HEIGHT)
     _G[name .. "Text"]:SetText(entry.label)
     cb:SetChecked(GetWeaponFilters()[entry.key] ~= false)
     cb:SetScript("OnClick", function(self)
@@ -1715,7 +1715,7 @@ end)
 
 local weaponFilterAllButton = CreateFrame("Button", nil, weaponFilterPanel, "UIPanelButtonTemplate")
 weaponFilterAllButton:SetSize(70, 20)
-weaponFilterAllButton:SetPoint("BOTTOMLEFT", 10, 8)
+weaponFilterAllButton:SetPoint("BOTTOMLEFT", 10, 11)
 weaponFilterAllButton:SetText("All")
 weaponFilterAllButton:SetScript("OnClick", function()
     for _, entry in ipairs(weaponFilterEntries) do GetWeaponFilters()[entry.key] = true end
@@ -1725,7 +1725,7 @@ end)
 
 local weaponFilterNoneButton = CreateFrame("Button", nil, weaponFilterPanel, "UIPanelButtonTemplate")
 weaponFilterNoneButton:SetSize(70, 20)
-weaponFilterNoneButton:SetPoint("BOTTOMRIGHT", -10, 8)
+weaponFilterNoneButton:SetPoint("BOTTOMRIGHT", -10, 11)
 weaponFilterNoneButton:SetText("None")
 weaponFilterNoneButton:SetScript("OnClick", function()
     for _, entry in ipairs(weaponFilterEntries) do GetWeaponFilters()[entry.key] = false end
@@ -1815,7 +1815,7 @@ local professionFilterCloseButton = CreateFrame("Button", nil, professionFilterP
 professionFilterCloseButton:SetPoint("TOPRIGHT", -2, -2)
 
 local professionFilterHeader = professionFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-professionFilterHeader:SetPoint("TOP", 0, -4)
+professionFilterHeader:SetPoint("TOP", 0, -10)
 professionFilterHeader:SetText("Professions")
 professionFilterHeader:SetTextColor(unpack(THEME.gold))
 
