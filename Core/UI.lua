@@ -51,17 +51,23 @@ local TOP_INSET = 216
 -- panel ends -- the plain window background left below it.
 local BOTTOM_INSET = 7
 
--- Left column, top to bottom
-local leftColumn = { "HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", "WristSlot" }
+-- Left column, top to bottom. Shirt and Tabard sit where the game's own
+-- character sheet has them; they only change the look, so they show what's
+-- equipped but are never scored (see EverGear.COSMETIC_SLOTS).
+local leftColumn = { "HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", "ShirtSlot", "TabardSlot", "WristSlot" }
 -- Right column, top to bottom
 local rightColumn = { "HandsSlot", "WaistSlot", "LegsSlot", "FeetSlot", "Finger0Slot", "Finger1Slot", "Trinket0Slot", "Trinket1Slot" }
 -- Bottom row, centered
 local bottomRow = { "MainHandSlot", "SecondaryHandSlot", "RangedSlot" }
 
-local slotOrder = {}
-for _, s in ipairs(leftColumn) do table.insert(slotOrder, s) end
-for _, s in ipairs(rightColumn) do table.insert(slotOrder, s) end
-for _, s in ipairs(bottomRow) do table.insert(slotOrder, s) end
+-- slotOrder: the slots that get upgrade suggestions; cosmeticSlotOrder: the
+-- look-only ones (Shirt, Tabard).
+local slotOrder, cosmeticSlotOrder = {}, {}
+for _, column in ipairs({ leftColumn, rightColumn, bottomRow }) do
+    for _, s in ipairs(column) do
+        table.insert(EverGear.COSMETIC_SLOTS[s] and cosmeticSlotOrder or slotOrder, s)
+    end
+end
 
 -- ===== Theme =====
 -- One shared palette so the gold/bronze fantasy look reads as one system
@@ -818,6 +824,7 @@ local function CreateSlotButton(slotToken)
             return
         end
         if EverGear:HandleItemModifiedClick(self.currentLink) then return end
+        if EverGear.COSMETIC_SLOTS[self.slotToken] then return end  -- nothing to suggest
         detailOpenedByClick = true
         EverGear:ShowUpgradeDetail(self.slotToken)
     end)
@@ -880,21 +887,26 @@ local function RefreshCharacterModel()
     characterModel:SetUnit("player")
 end
 
+-- Dragging a model left/right turns it. Shared with the Gear Sets window's
+-- model (WishlistUI.lua, through EverGear.UIHelpers).
 local MODEL_TURN_SPEED = 0.02  -- radians per pixel dragged
-local dragStartX, dragStartFacing
-characterModel:SetScript("OnMouseDown", function(self, button)
-    if button ~= "LeftButton" then return end
-    dragStartX = GetCursorPosition()
-    dragStartFacing = self:GetFacing() or 0
-end)
-characterModel:SetScript("OnMouseUp", function() dragStartX = nil end)
-characterModel:SetScript("OnHide", function() dragStartX = nil end)
-characterModel:SetScript("OnUpdate", function(self)
-    if not dragStartX then return end
-    if not IsMouseButtonDown("LeftButton") then dragStartX = nil return end
-    local x = GetCursorPosition()
-    self:SetFacing(dragStartFacing + (x - dragStartX) * MODEL_TURN_SPEED)
-end)
+local function MakeModelTurnable(model)
+    local dragStartX, dragStartFacing
+    model:SetScript("OnMouseDown", function(self, button)
+        if button ~= "LeftButton" then return end
+        dragStartX = GetCursorPosition()
+        dragStartFacing = self:GetFacing() or 0
+    end)
+    model:SetScript("OnMouseUp", function() dragStartX = nil end)
+    model:SetScript("OnHide", function() dragStartX = nil end)
+    model:SetScript("OnUpdate", function(self)
+        if not dragStartX then return end
+        if not IsMouseButtonDown("LeftButton") then dragStartX = nil return end
+        local x = GetCursorPosition()
+        self:SetFacing(dragStartFacing + (x - dragStartX) * MODEL_TURN_SPEED)
+    end)
+end
+MakeModelTurnable(characterModel)
 characterModel:SetScript("OnShow", RefreshCharacterModel)
 
 local modelWatcher = CreateFrame("Frame")
@@ -1173,6 +1185,7 @@ EverGear.UIHelpers = {
     SafeGetItemInfo = SafeGetItemInfo,
     SafeGetItemIcon = SafeGetItemIcon,
     BuildItemLink = BuildItemLink,
+    MakeModelTurnable = MakeModelTurnable,
 }
 
 local function UpdateStar(row)
@@ -1970,6 +1983,26 @@ function EverGear:RefreshUI()
         btn.badge:SetTextColor(1, 1, 1)
         btn.badgeBG:SetBackdropBorderColor(unpack(statusColor))
         UpdateBadgePill(btn, showArrow)
+    end
+
+    -- Shirt / Tabard: just what's equipped, with its rarity border; no badge
+    -- and no upgrades (hover and click leave them alone too).
+    for _, slotToken in ipairs(cosmeticSlotOrder) do
+        local btn = slotButtons[slotToken]
+        local itemLink = self:GetEquippedItemLink(slotToken)
+        btn.currentLink = itemLink
+        btn.currentScore = 0
+        btn.upgradeList = {}
+        btn.isBIS = false
+        btn.badgeBG:Hide()
+        if itemLink then
+            local _, _, quality, _, _, _, _, _, _, itemTexture = SafeGetItemInfo(itemLink)
+            SetIconTexture(btn, itemTexture or SafeGetItemIcon(itemLink) or EverGear.EMPTY_SLOT_TEXTURES[slotToken])
+            btn:SetBackdropBorderColor(GetQualityColor(quality))
+        else
+            SetIconTexture(btn, EverGear.EMPTY_SLOT_TEXTURES[slotToken])
+            btn:SetBackdropBorderColor(1, 1, 1, 1)
+        end
     end
 end
 
