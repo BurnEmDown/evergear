@@ -125,7 +125,11 @@ EverGear.EMPTY_SLOT_TEXTURES = {
 -- there as 1-56, 10-30 and 6-35, which don't match where their quests are,
 -- so they use the Classic ranges. Wowhead has no range for WoW Forever's own
 -- dungeons, or for each Scarlet Monastery wing: those come from the levels
--- of their items (and the Classic wing ranges). A place missing from here is
+-- of their items (and the Classic wing ranges). The dungeons (Hall of Thanes
+-- through Razorfen Downs) and Westfall, Loch Modan, The Barrens and Darkshore
+-- were then corrected by hand to the levels players actually do them at --
+-- wowhead's ranges started too high, so "Current Level" hid places (and
+-- their gear) the character was already doing. A place missing from here is
 -- left shown by the button.
 EverGear.ZONE_LEVEL_RANGES = {
     -- Zones
@@ -136,11 +140,11 @@ EverGear.ZONE_LEVEL_RANGES = {
     ["Teldrassil"] = { 1, 11 },
     ["Tirisfal Glades"] = { 1, 12 },
     ["Zephras Isle"] = { 1, 12 },
-    ["Westfall"] = { 9, 18 },
-    ["Loch Modan"] = { 10, 18 },
+    ["Westfall"] = { 11, 20 },
+    ["Loch Modan"] = { 11, 20 },
     ["Silverpine Forest"] = { 10, 20 },
-    ["The Barrens"] = { 10, 33 },
-    ["Darkshore"] = { 11, 19 },
+    ["The Barrens"] = { 10, 29 },
+    ["Darkshore"] = { 11, 20 },
     ["Redridge Mountains"] = { 15, 25 },
     ["Stonetalon Mountains"] = { 15, 25 },
     ["Duskwood"] = { 18, 30 },             -- wowhead: 10-30
@@ -161,23 +165,23 @@ EverGear.ZONE_LEVEL_RANGES = {
     ["Thunder Bluff"] = { 1, 60 },
     ["Undercity"] = { 1, 60 },
     -- Dungeons
-    ["Hall of Thanes"] = { 9, 15 },                -- from its items
-    ["Ragefire Chasm"] = { 15, 25 },
-    ["The Deadmines"] = { 15, 25 },
+    ["Hall of Thanes"] = { 12, 16 },
+    ["Ragefire Chasm"] = { 13, 17 },
+    ["The Deadmines"] = { 17, 21 },
     ["Ruins of Lordaeron"] = { 15, 22 },           -- from its items
-    ["Wailing Caverns"] = { 17, 27 },
-    ["Blackfathom Deeps"] = { 22, 32 },
-    ["Shadowfang Keep"] = { 22, 30 },
-    ["The Stockade"] = { 22, 32 },
+    ["Wailing Caverns"] = { 17, 22 },
+    ["Blackfathom Deeps"] = { 19, 27 },
+    ["Shadowfang Keep"] = { 18, 24 },
+    ["The Stockade"] = { 22, 28 },
     ["Excavation Site: Wetlands"] = { 22, 28 },    -- from its items
     ["City of Dalaran"] = { 24, 30 },              -- from its items
-    ["Gnomeregan"] = { 26, 36 },
-    ["Scarlet Monastery: Graveyard"] = { 26, 36 }, -- Classic wing range
-    ["Scarlet Monastery: Library"] = { 29, 39 },   -- Classic wing range
-    ["Scarlet Monastery: Armory"] = { 32, 42 },    -- Classic wing range
-    ["Scarlet Monastery: Cathedral"] = { 35, 45 }, -- Classic wing range
-    ["Razorfen Kraul"] = { 32, 42 },
-    ["Razorfen Downs"] = { 37, 47 },
+    ["Gnomeregan"] = { 26, 32 },
+    ["Scarlet Monastery: Graveyard"] = { 26, 31 },
+    ["Scarlet Monastery: Library"] = { 29, 33 },
+    ["Scarlet Monastery: Armory"] = { 33, 38 },
+    ["Scarlet Monastery: Cathedral"] = { 36, 42 },
+    ["Razorfen Kraul"] = { 25, 30 },
+    ["Razorfen Downs"] = { 36, 42 },
 }
 
 -- The other faction's starting zones, capitals and faction-specific
