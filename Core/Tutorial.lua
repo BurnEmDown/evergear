@@ -9,7 +9,9 @@
 -- Suggested Upgrades panel, a filter panel, the EP profile editor, the
 -- Wanted / Gear Sets windows). A step opens it when it starts, and closes it
 -- again when the tour moves on or ends -- but only if the step was the one
--- that opened it, so a window the player already had open stays open.
+-- that opened it, so a window the player opens during the tour stays open.
+-- Starting the tour closes every side window first, so the steps start from
+-- a clear screen.
 --
 -- Every step looks up what it points at when it's shown, by global frame
 -- name, and is skipped if that isn't there (a file that didn't load in some
@@ -629,10 +631,28 @@ local function Go(direction)
     end
 end
 
+-- Everything that opens beside the main window (or over it). The tour closes
+-- them all when it starts, so each step opens just what it explains.
+local SIDE_WINDOWS = {
+    "EverGearDetailPanel", "EverGearZoneUpgradesPanel",
+    "EverGearWeaponFilterPanel", "EverGearProfessionFilterPanel", "EverGearZoneFilterPanel",
+    "EverGearWantedFrame", "EverGearSetsFrame", "EverGearSetTextPopup",
+    "EverGearProfileEditor", "EverGearCopyProfilePopup", "EverGearExportProfilePopup", "EverGearImportProfilePopup",
+}
+
+local function CloseSideWindows()
+    if CloseDropDownMenus then CloseDropDownMenus() end
+    for _, name in ipairs(SIDE_WINDOWS) do
+        local frame = Named(name)
+        if frame and frame:IsShown() then frame:Hide() end
+    end
+end
+
 function EverGear:StartTutorial()
     DismissHint()
     if running then LeaveStep() end
     if not mainFrame:IsShown() then self:ToggleUI() end
+    CloseSideWindows()
 
     activeSteps = {}
     for _, step in ipairs(STEPS) do
