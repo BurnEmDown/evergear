@@ -51,17 +51,23 @@ local TOP_INSET = 216
 -- panel ends -- the plain window background left below it.
 local BOTTOM_INSET = 7
 
--- Left column, top to bottom
-local leftColumn = { "HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", "WristSlot" }
+-- Left column, top to bottom. Shirt and Tabard sit where the game's own
+-- character sheet has them; they only change the look, so they show what's
+-- equipped but are never scored (see EverGear.COSMETIC_SLOTS).
+local leftColumn = { "HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", "ShirtSlot", "TabardSlot", "WristSlot" }
 -- Right column, top to bottom
 local rightColumn = { "HandsSlot", "WaistSlot", "LegsSlot", "FeetSlot", "Finger0Slot", "Finger1Slot", "Trinket0Slot", "Trinket1Slot" }
 -- Bottom row, centered
 local bottomRow = { "MainHandSlot", "SecondaryHandSlot", "RangedSlot" }
 
-local slotOrder = {}
-for _, s in ipairs(leftColumn) do table.insert(slotOrder, s) end
-for _, s in ipairs(rightColumn) do table.insert(slotOrder, s) end
-for _, s in ipairs(bottomRow) do table.insert(slotOrder, s) end
+-- slotOrder: the slots that get upgrade suggestions; cosmeticSlotOrder: the
+-- look-only ones (Shirt, Tabard).
+local slotOrder, cosmeticSlotOrder = {}, {}
+for _, column in ipairs({ leftColumn, rightColumn, bottomRow }) do
+    for _, s in ipairs(column) do
+        table.insert(EverGear.COSMETIC_SLOTS[s] and cosmeticSlotOrder or slotOrder, s)
+    end
+end
 
 -- ===== Theme =====
 -- One shared palette so the gold/bronze fantasy look reads as one system
@@ -679,7 +685,12 @@ local slotButtons = {}
 -- The slot the mouse is resting on, and how long it has to rest there before
 -- the slot's suggested upgrades open by themselves.
 local hoveredSlot
-local HOVER_DETAIL_DELAY = 0.3
+local HOVER_DETAIL_DELAY = 0.5
+-- True while the Suggested Upgrades panel on screen was opened by a click:
+-- hovering other slots then leaves it alone until it's closed (see
+-- ShowUpgradeDetailOnHover). Only clicks and hovers set it, so a refresh
+-- that briefly hides and reopens the panel keeps it.
+local detailOpenedByClick = false
 local leftItems, rightItems, bottomItems = {}, {}, {}
 
 -- Hand-built item-icon button instead of Blizzard's "ItemButtonTemplate" XML
@@ -813,6 +824,8 @@ local function CreateSlotButton(slotToken)
             return
         end
         if EverGear:HandleItemModifiedClick(self.currentLink) then return end
+        if EverGear.COSMETIC_SLOTS[self.slotToken] then return end  -- nothing to suggest
+        detailOpenedByClick = true
         EverGear:ShowUpgradeDetail(self.slotToken)
     end)
 
@@ -1327,15 +1340,18 @@ end
 -- while a weapon, profession or zone filter panel is open, since showing the
 -- upgrades closes those and the mouse often crosses the slots on its way to
 -- a checkbox. The panel stays open when the mouse moves on, so its rows can
--- be used, and switches to whichever slot is hovered next.
+-- be used, and switches to whichever slot is hovered next. A panel opened by
+-- a click stays on its slot: hovering does nothing until it's closed.
 function EverGear:ShowUpgradeDetailOnHover(slotToken)
     local btn = slotButtons[slotToken]
     if not (btn and mainFrame:IsShown()) then return end
+    if detailOpenedByClick and detailPanel:IsShown() then return end
     if not btn.upgradeList or #btn.upgradeList == 0 then return end
     if detailPanel:IsShown() and currentDetailSlot == slotToken then return end
     for _, filterPanel in ipairs({ weaponFilterPanel, professionFilterPanel, zoneFilterPanel }) do
         if filterPanel and filterPanel:IsShown() then return end
     end
+    detailOpenedByClick = false
     self:ShowUpgradeDetail(slotToken)
 end
 
@@ -2091,6 +2107,30 @@ function EverGear:RefreshUI()
         btn.badgeBG:SetBackdropBorderColor(unpack(statusColor))
         UpdateBadgePill(btn, showArrow)
     end
+
+    -- Shirt / Tabard: just what's equipped, with its rarity border; no badge
+    -- and no upgrades (hover and click leave them alone too).
+    for _, slotToken in ipairs(cosmeticSlotOrder) do
+        local btn = slotButtons[slotToken]
+        local itemLink = self:GetEquippedItemLink(slotToken)
+        btn.currentLink = itemLink
+        btn.currentScore = 0
+        btn.upgradeList = {}
+        btn.isBIS = false
+        btn.badgeBG:Hide()
+        if itemLink then
+            local _, _, quality, _, _, _, _, _, _, itemTexture = SafeGetItemInfo(itemLink)
+            SetIconTexture(btn, itemTexture or SafeGetItemIcon(itemLink) or EverGear.EMPTY_SLOT_TEXTURES[slotToken])
+            btn:SetBackdropBorderColor(GetQualityColor(quality))
+        else
+            SetIconTexture(btn, EverGear.EMPTY_SLOT_TEXTURES[slotToken])
+            btn:SetBackdropBorderColor(1, 1, 1, 1)
+        end
+    end
+
+    -- The Gear Sets item picker follows the same filters, so a filter change
+    -- shows up there too while it's open.
+    if self.RefreshSetItemPicker then self:RefreshSetItemPicker() end
 end
 
 -- Re-applies every persisted filter value (source-type, weapon-type,
