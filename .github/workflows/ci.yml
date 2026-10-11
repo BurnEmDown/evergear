@@ -1,7 +1,9 @@
 name: CI
 
-# build   Every PR update and every push to master: package the addon with
-#         BigWigsMods/packager (no upload) and attach the zip to the run.
+# build   Every PR update and every push to master or development: package the
+#         addon with BigWigsMods/packager (no upload) and attach the zip to the
+#         run. A merge into development gives a test build of what's coming
+#         next; it's never tagged or uploaded anywhere.
 #
 # tag     Push to master only. Reads EverGear.VERSION from Core/Constants.lua.
 #         If tag v<version> does not exist yet: create an annotated tag, push
@@ -18,7 +20,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [master]
+    branches: [master, development]
 
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
@@ -56,7 +58,12 @@ jobs:
           if-no-files-found: error
 
       - name: Summary
-        run: echo "### ${{ steps.zip.outputs.name }}" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/development" ]; then
+            echo "### ${{ steps.zip.outputs.name }} (development build, not released)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### ${{ steps.zip.outputs.name }}" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
   tag:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
