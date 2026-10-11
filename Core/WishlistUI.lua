@@ -14,7 +14,7 @@ local THEME = H.THEME
 
 local WANTED_WIDTH, WANTED_HEIGHT = 320, 400
 local WANTED_ROW_HEIGHT = 44
-local SETS_WIDTH, SETS_HEIGHT = 300, 484
+local SETS_WIDTH, SETS_HEIGHT = 300, 512
 local SET_ICON_SIZE = 32
 local SET_ROW_SPACING = 38
 
@@ -546,7 +546,9 @@ end
 -- Clicking any slot in the Sets window opens this beside it, listing what
 -- can go in that slot:
 --   * gear slots: every item in the addon's data this character can wear
---     there (class, armor / weapon type, faction), best EP score first, with
+--     there (class, armor / weapon type, faction) that the main window's
+--     filters let through (source types, weapon / profession / zone filter
+--     panels -- see GetWearableItemsForSlot), best EP score first, with
 --     its gain over what the set has in that slot (or, for an empty set slot,
 --     what's equipped there): green +N, red -N. "Up to your level" (on by
 --     default; the look-ahead level when the main window's slider is past the
@@ -766,6 +768,16 @@ local function BuildPickerList()
 end
 
 pickerSearch:SetScript("OnTextChanged", BuildPickerList)
+
+-- Called after every main window refresh (filters, spec, gear changes),
+-- keeping the scroll position.
+function EverGear:RefreshSetItemPicker()
+    if not picker:IsShown() or EverGear.COSMETIC_SLOTS[pickerState.slotToken] then return end
+    local offset = pickerState.offset
+    BuildPickerList()
+    pickerState.offset = offset
+    DrawPickerRows()
+end
 pickerLevelCheck:SetScript("OnClick", BuildPickerList)
 local function ScrollPicker(offset)
     pickerState.offset = offset
@@ -860,11 +872,19 @@ setModelToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
 -- don't change the set don't reload the model; cleared to force a redress.
 local dressedSetKey
 
+-- Weapons drawn / sheathed, ranged on / off, helm, cloak, beside the eye button (same buttons as
+-- the main window's, with their own pose).
+local setModelWeapons = H.CreateModelWeaponButtons("EverGearSetModel", setsFrame, setModelToggle, function()
+    dressedSetKey = nil
+    EverGear:OnSetModelSettingChanged()
+end)
+
 local function RefreshSetModel(set)
     local hidden = EverGearDB.hideSetModel == true
     setModelToggle:SetShown(set ~= nil and setModel ~= nil)
     setModelToggle:GetNormalTexture():SetDesaturated(hidden)
     setModelToggle:SetAlpha(hidden and 0.5 or 1)
+    setModelWeapons:SetShown(set ~= nil and setModel ~= nil and not hidden)
     if not setModel then return end
     if not set or hidden then
         setModel:Hide()
@@ -880,10 +900,17 @@ local function RefreshSetModel(set)
     dressedSetKey = key
     setModel:SetUnit("player")
     if setModel.Undress then setModel:Undress() end
+    -- The ranged weapon goes on first, so the melee weapons are the ones in
+    -- hand if the model puts both there; the ranged pose swaps them below.
+    local rangedId = set.slots.RangedSlot
+    if rangedId then setModel:TryOn("item:" .. rangedId) end
     for _, slotToken in ipairs(ALL_SET_SLOTS) do
         local itemId = set.slots[slotToken]
-        if itemId then setModel:TryOn("item:" .. itemId, HAND_SLOT_NAMES[slotToken]) end
+        if itemId and slotToken ~= "RangedSlot" then setModel:TryOn("item:" .. itemId, HAND_SLOT_NAMES[slotToken]) end
     end
+    -- No helm / cloak links: the model is dressed from scratch above, so they
+    -- only need taking off when hidden.
+    setModelWeapons:Apply(setModel, rangedId and ("item:" .. rangedId))
 end
 
 local function ActiveSetHasItem(itemId)
@@ -968,6 +995,129 @@ setModelWatcher:SetScript("OnEvent", function(_, _, unit)
     RefreshSetsWindow()
 end)
 
+-- ===== Export / import =====
+-- Two buttons at the bottom of the Sets window and one copy/paste popup for
+-- both (addons can't read or write files). The text is sixtyupgrades.com's
+-- export format (see SerializeSet / ImportSet in Wishlist.lua), so sets can
+-- be moved between EverGear and the site.
+
+local setTextPopup = CreateFrame("Frame", "EverGearSetTextPopup", UIParent, "BackdropTemplate")
+setTextPopup:SetSize(400, 300)
+setTextPopup:SetPoint("CENTER")
+setTextPopup:SetFrameStrata("DIALOG")
+setTextPopup:EnableMouse(true)
+setTextPopup:SetBackdrop({
+    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+    tile = true, tileSize = 32, edgeSize = 32,
+    insets = { left = 11, right = 12, top = 12, bottom = 11 }
+})
+setTextPopup:Hide()
+tinsert(UISpecialFrames, "EverGearSetTextPopup")  -- Escape closes it
+
+local setTextTitle = setTextPopup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+setTextTitle:SetPoint("TOP", 0, -16)
+setTextTitle:SetTextColor(unpack(THEME.gold))
+local setTextClose = CreateFrame("Button", nil, setTextPopup, "UIPanelCloseButton")
+setTextClose:SetPoint("TOPRIGHT", -4, -4)
+
+local setTextHint = setTextPopup:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+setTextHint:SetPoint("TOP", setTextTitle, "BOTTOM", 0, -8)
+setTextHint:SetWidth(360)
+setTextHint:SetTextColor(unpack(THEME.parchment))
+
+local setTextPanel = CreateFrame("Frame", nil, setTextPopup, "BackdropTemplate")
+setTextPanel:SetSize(360, 170)
+setTextPanel:SetPoint("TOP", setTextHint, "BOTTOM", 0, -8)
+setTextPanel:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+setTextPanel:SetBackdropColor(0, 0, 0, 0.6)
+setTextPanel:SetBackdropBorderColor(0.6, 0.56, 0.42, 1)
+local setTextScroll = CreateFrame("ScrollFrame", "EverGearSetTextScroll", setTextPanel, "UIPanelScrollFrameTemplate")
+setTextScroll:SetPoint("TOPLEFT", 6, -6)
+setTextScroll:SetPoint("BOTTOMRIGHT", -26, 6)
+local setTextBox = CreateFrame("EditBox", "EverGearSetTextBox", setTextScroll)
+setTextBox:SetMultiLine(true)
+setTextBox:SetFontObject(ChatFontNormal)
+setTextBox:SetWidth(320)
+setTextBox:SetAutoFocus(false)
+setTextBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+setTextScroll:SetScrollChild(setTextBox)
+
+local setTextError = setTextPopup:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+setTextError:SetPoint("TOP", setTextPanel, "BOTTOM", 0, -6)
+setTextError:SetWidth(360)
+setTextError:SetTextColor(1, 0.3, 0.3)
+
+local setTextAction = CreateFrame("Button", "EverGearSetTextAction", setTextPopup, "UIPanelButtonTemplate")
+setTextAction:SetSize(100, 22)
+setTextAction:SetPoint("BOTTOM", 0, 16)
+
+-- Export: read-only in effect (an edit snaps back) but still selectable, so
+-- Ctrl+A / Ctrl+C work -- same as the EP profile export.
+local exportText
+setTextBox:SetScript("OnTextChanged", function(self, userInput)
+    if exportText and userInput and self:GetText() ~= exportText then
+        self:SetText(exportText)
+        self:HighlightText()
+    end
+end)
+
+function EverGear:ShowSetExport(index)
+    local text = self:SerializeSet(index)
+    if not text then return end
+    exportText = text
+    setTextTitle:SetText("Export: " .. self:GetSets()[index].name)
+    setTextHint:SetText("Already selected -- press Ctrl+C to copy. It's in sixtyupgrades.com's format, so the site can import it too.")
+    setTextError:SetText("")
+    setTextBox:SetText(text)
+    setTextAction:SetText("Done")
+    setTextAction:SetScript("OnClick", function() setTextPopup:Hide() end)
+    setTextPopup:Show()
+    setTextBox:SetFocus()
+    setTextBox:HighlightText()
+end
+
+function EverGear:ShowSetImport()
+    exportText = nil
+    setTextTitle:SetText("Import Gear Set")
+    setTextHint:SetText("Paste a gear set exported from EverGear or sixtyupgrades.com below, then click Import. It's added as a new set.")
+    setTextError:SetText("")
+    setTextBox:SetText("")
+    setTextAction:SetText("Import")
+    setTextAction:SetScript("OnClick", function()
+        local index, err = EverGear:ImportSet(setTextBox:GetText())
+        if not index then
+            setTextError:SetText(err)
+            return
+        end
+        setTextPopup:Hide()
+    end)
+    setTextPopup:Show()
+    setTextBox:SetFocus()
+end
+
+local exportSetButton = CreateSmallButton("Export...", 80, function()
+    local index = EverGear:GetActiveSetIndex()
+    if index then EverGear:ShowSetExport(index) end
+end)
+exportSetButton:SetPoint("BOTTOMRIGHT", setsFrame, "BOTTOM", -4, 16)
+local importSetButton = CreateSmallButton("Import...", 80, function() EverGear:ShowSetImport() end)
+importSetButton:SetPoint("BOTTOMLEFT", setsFrame, "BOTTOM", 4, 16)
+if importSetButton.SetMotionScriptsWhileDisabled then importSetButton:SetMotionScriptsWhileDisabled(true) end
+importSetButton:SetScript("OnEnter", function(self)
+    if self:IsEnabled() then return end
+    Tooltip(self, "Gear set limit reached", "A character can have up to " .. EverGear.MAX_GEAR_SETS .. " gear sets. Delete one to make room.")
+end)
+importSetButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+setsFrame:HookScript("OnHide", function() setTextPopup:Hide() end)
+
+local function RefreshSetTransferButtons()
+    exportSetButton:SetEnabled(EverGear:GetActiveSetIndex() ~= nil)
+    importSetButton:SetEnabled(#EverGear:GetSets() < EverGear.MAX_GEAR_SETS)
+end
+setsFrame:HookScript("OnShow", RefreshSetTransferButtons)
+
 -- ===== Refreshing =====
 -- Kept right after the windows (before the menu, Alt-click and tooltip code
 -- below), so a client that lacks one of those can't stop open windows from
@@ -982,7 +1132,10 @@ local refreshQueued = false
 local function RefreshOpenWindows()
     refreshQueued = false
     if wantedFrame:IsShown() then RefreshWantedWindow() end
-    if setsFrame:IsShown() then RefreshSetsWindow() end
+    if setsFrame:IsShown() then
+        RefreshSetsWindow()
+        RefreshSetTransferButtons()
+    end
     if EverGear.RefreshDetailStars then EverGear:RefreshDetailStars() end
 end
 
@@ -1127,6 +1280,54 @@ end
 
 local starMenu = CreateFrame("Frame", "EverGearStarMenu", UIParent, "UIDropDownMenuTemplate")
 
+-- Clicking the same item again while its menu is open closes the menu
+-- instead of opening it again. Whether the game closes the open menu on that
+-- mouse press (before the item's own click, on release) differs between
+-- clients, so the decision is made on the press itself: GLOBAL_MOUSE_DOWN
+-- fires for every press, and if the menu is open (or closed in that same
+-- frame) and the mouse is over the item it was opened from, the click that
+-- follows only closes it. Clients without that event fall back to "the menu
+-- closed less than STAR_MENU_RECLICK_WINDOW seconds ago".
+local STAR_MENU_RECLICK_WINDOW = 0.3
+local starMenuItemId      -- item the menu was last opened for
+local starMenuAnchor      -- the frame it was opened from (or "cursor")
+local starMenuOpen = false
+local starMenuClosedAt = 0
+local reclickCloses = false
+local reclickAt = 0
+
+-- Whether the mouse is over the item the menu was opened from: the frame it
+-- was anchored to, or the row holding it when that row is for the same item
+-- (a Suggested Upgrades icon and its row's text count as one item).
+local function MouseOverMenuItem(anchor)
+    if type(anchor) ~= "table" or not anchor.IsMouseOver then return false end
+    if anchor:IsMouseOver() then return true end
+    local parent = anchor.GetParent and anchor:GetParent()
+    return parent ~= nil and parent.itemId == starMenuItemId and parent.IsMouseOver ~= nil and parent:IsMouseOver()
+end
+if DropDownList1 and DropDownList1.HookScript then
+    DropDownList1:HookScript("OnHide", function()
+        if starMenuOpen then
+            starMenuOpen = false
+            starMenuClosedAt = GetTime()
+        end
+    end)
+end
+
+local starMenuMouseWatcher = CreateFrame("Frame", "EverGearStarMenuMouseWatcher")
+local watchingPresses = pcall(starMenuMouseWatcher.RegisterEvent, starMenuMouseWatcher, "GLOBAL_MOUSE_DOWN")
+starMenuMouseWatcher:SetScript("OnEvent", function()
+    local wasOpen = starMenuOpen or starMenuClosedAt == GetTime()
+    reclickCloses = wasOpen and MouseOverMenuItem(starMenuAnchor) or false
+    reclickAt = GetTime()
+    -- Any press closes the menu (outside it the game closes it; inside it, an
+    -- entry was picked), so stop counting it as open.
+    if starMenuOpen then
+        starMenuOpen = false
+        starMenuClosedAt = GetTime()
+    end
+end)
+
 -- Only these classes can dual wield, so only they get an off-hand entry for
 -- one-handed weapons that fit either hand.
 local CLASS_CAN_DUAL_WIELD = { WARRIOR = true, ROGUE = true, HUNTER = true }
@@ -1139,6 +1340,25 @@ end
 
 -- slotTokens: one real slot (a Suggested Upgrades row) or a list of them.
 function EverGear:ShowStarMenu(anchor, itemId, slotTokens)
+    if itemId == starMenuItemId then
+        local closeOnly
+        if watchingPresses then
+            -- Only for the click that goes with that press (a press on, say,
+            -- the row's star doesn't open the menu, so its mark expires).
+            closeOnly = reclickCloses and (GetTime() - reclickAt) < 1
+        else
+            local stillOpen = starMenuOpen and DropDownList1 and DropDownList1:IsShown()
+            closeOnly = stillOpen or (GetTime() - starMenuClosedAt) < STAR_MENU_RECLICK_WINDOW
+        end
+        if closeOnly then
+            reclickCloses = false
+            CloseDropDownMenus()
+            starMenuOpen = false
+            starMenuClosedAt = 0  -- a third click opens it again
+            return
+        end
+    end
+    reclickCloses = false
     if type(slotTokens) ~= "table" then slotTokens = { slotTokens } end
     slotTokens = DropOffHandIfNoDualWield(slotTokens)
     local multiSlot = #slotTokens > 1
@@ -1233,6 +1453,9 @@ function EverGear:ShowStarMenu(anchor, itemId, slotTokens)
         UIDropDownMenu_AddButton(info)
     end, "MENU")
     ToggleDropDownMenu(1, nil, starMenu, anchor, 0, 0)
+    starMenuItemId = itemId
+    starMenuAnchor = anchor
+    starMenuOpen = true
 end
 
 -- Menu for any item link (Alt-click), opened at the cursor.
