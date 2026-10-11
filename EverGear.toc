@@ -85,3 +85,4 @@ Data\Items_Orgrimmar.lua
 Data\Items_ThunderBluff.lua
 Data\Items_Undercity.lua
 Data\Items_DustwallowMarsh.lua
+Data\Cosmetics.lua

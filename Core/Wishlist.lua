@@ -31,7 +31,7 @@ end
 -- Item name for messages and rows: the addon's own data first, then the
 -- client's item cache, then whatever name was stored when it was added.
 function EverGear:GetWishlistItemName(itemId, fallback)
-    local item = self:GetItem(itemId)
+    local item = self:GetItem(itemId) or self:GetCosmetic(itemId)
     if item then return item.name end
     local getInfo = (C_Item and C_Item.GetItemInfo) or GetItemInfo
     local name = getInfo and getInfo(itemId)
