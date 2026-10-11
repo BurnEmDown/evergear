@@ -1461,6 +1461,26 @@ function EverGear:GetWearableItemsForSlot(realSlotToken, maxLevel)
     return results
 end
 
+-- EP score of one item (id or link) in a REAL slot, with the active profile:
+-- the addon's own data when it has the item, the item's live stats
+-- otherwise. 0 for no item. Used by the Gear Sets picker for its gain column.
+function EverGear:ScoreItemForSlot(itemIdOrLink, realSlotToken)
+    if not itemIdOrLink then return 0 end
+    local playerInfo = self:GetPlayerInfo()
+    local profile = GetScoringProfile(playerInfo.classToken, self:GetCharDB().spec)
+    local itemId = type(itemIdOrLink) == "number" and itemIdOrLink or self:GetItemIDFromLink(itemIdOrLink)
+    local data = itemId and self:GetItem(itemId)
+    local stats, armor, dps
+    if data then
+        stats = data.stats
+        armor, dps = (stats and stats.ARMOR) or 0, (stats and stats.WEAPON_DPS) or 0
+    else
+        local link = type(itemIdOrLink) == "string" and itemIdOrLink or ("item:" .. itemId)
+        stats, armor, dps = NormalizeLiveStats(link)
+    end
+    return ScoreItem(stats, profile, armor or 0, dps or 0, realSlotToken == "RangedSlot")
+end
+
 -- Human-readable one-liner for where an item comes from, used in the detail
 -- panel and in tooltips. Reads item.source (see Constants.lua for the shape).
 function EverGear:GetSourceSummary(item)

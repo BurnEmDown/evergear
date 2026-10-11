@@ -547,8 +547,10 @@ end
 -- can go in that slot:
 --   * gear slots: every item in the addon's data this character can wear
 --     there (class, armor / weapon type, faction), best EP score first, with
---     the level it needs. "Up to level N" (on by default, N = the main
---     window's look-ahead level) leaves out items for later.
+--     its gain over what the set has in that slot (or, for an empty set slot,
+--     what's equipped there): green +N, red -N. "Up to your level" (on by
+--     default; the look-ahead level when the main window's slider is past the
+--     character's level) leaves out items for later.
 --   * Shirt / Tabard: every shirt or tabard in the game (EverGear.Cosmetics),
 --     minus the other faction's, by name.
 -- Type to search. Clicking a row puts it in the set (replacing what's there);
@@ -639,6 +641,7 @@ for i = 1, PICKER_ROWS do
         if entry and entry.source then GameTooltip:AddLine("Source: " .. entry.source, 0.7, 0.7, 0.7) end
         local item = EverGear:GetItem(self.itemId)
         if item then GameTooltip:AddLine(EverGear:GetSourceSummary(item), 0.7, 0.7, 0.7, true) end
+        if self.gainLine then GameTooltip:AddLine(self.gainLine, 0.8, 0.8, 0.8, true) end
         GameTooltip:AddLine("Click to put it in the set. Ctrl-click to preview.", 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
@@ -659,6 +662,7 @@ local function DrawPickerRows()
     for i, row in ipairs(pickerRows) do
         local entry = list[pickerState.offset + i]
         row.itemId = entry and entry.id
+        row.gainLine = entry and entry.gainLine
         row:SetShown(entry ~= nil)
         if entry then
             H.SetIconTexture(row, H.SafeGetItemIcon(entry.id) or "Interface\\Icons\\INV_Misc_QuestionMark")
@@ -710,14 +714,43 @@ local function GearPickerList(search)
             return a.item.id < b.item.id
         end)
     end
+    -- The gain column compares with what the set already has in this slot,
+    -- or, if that's empty, with what's equipped there.
+    local set = EverGear:GetSets()[pickerState.setIndex]
+    local setItemId = set and set.slots[slotToken]
+    local baseline, baselineWhere
+    if setItemId then
+        baseline, baselineWhere = setItemId, "in this set"
+    else
+        baseline, baselineWhere = EverGear:GetEquippedItemLink(slotToken), "equipped"
+    end
+    local baselineScore = EverGear:ScoreItemForSlot(baseline, slotToken)
+    local versus
+    if baseline then
+        local baselineId = type(baseline) == "number" and baseline or EverGear:GetItemIDFromLink(baseline)
+        versus = "compared with " .. EverGear:GetWishlistItemName(baselineId) .. " (" .. baselineWhere .. ")"
+    else
+        versus = "compared with an empty slot (nothing in the set or equipped there)"
+    end
+
     local list = {}
     for _, entry in ipairs(found) do
         local item = entry.item
         if search == "" or strlower(item.name or ""):find(search, 1, true) then
+            local gain = math.floor(entry.score - baselineScore + 0.5)
+            local gainText
+            if gain > 0 then
+                gainText = "|cff20e626+" .. gain .. "|r"
+            elseif gain < 0 then
+                gainText = "|cffff4040" .. gain .. "|r"
+            else
+                gainText = "|cff9d9d9d0|r"
+            end
             table.insert(list, {
                 id = item.id,
                 name = item.name or ("item " .. item.id),
-                rightText = entry.requiredLevel > 0 and ("Lv " .. entry.requiredLevel) or "",
+                rightText = gainText,
+                gainLine = (gain > 0 and "+" or "") .. gain .. " EP " .. versus .. ".",
             })
         end
     end
@@ -748,7 +781,13 @@ function EverGear:OpenSetItemPicker(setIndex, slotToken)
     local cosmetic = EverGear.COSMETIC_SLOTS[slotToken]
     pickerLevelCheck:SetShown(not cosmetic)
     pickerLevelLabel:SetShown(not cosmetic)
-    pickerLevelLabel:SetText("Up to level " .. PickerMaxLevel() .. " (the look-ahead level)")
+    local level = EverGear:GetPlayerInfo().level or 1
+    local maxLevel = PickerMaxLevel()
+    if maxLevel > level then
+        pickerLevelLabel:SetText("Up to level " .. maxLevel .. " (your look-ahead level)")
+    else
+        pickerLevelLabel:SetText("Up to your level (" .. level .. ")")
+    end
     pickerSearch:SetText("")
     BuildPickerList()
     picker:Show()
