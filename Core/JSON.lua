@@ -36,7 +36,13 @@ end
 -- `{}` (object), since every profile-shaped table EverGear actually encodes
 -- is object-like even when momentarily empty (e.g. a spec with no offStat
 -- entries), never meant to be an array.
+-- EverGear.JSON.emptyArray (below) is an empty table that encodes as `[]`,
+-- for formats that want an empty list there (gear set export).
+local EMPTY_ARRAY_MARK = {}
+
 local function IsArray(t)
+    local mt = getmetatable(t)
+    if mt and mt.jsonArray == EMPTY_ARRAY_MARK then return true end
     local count = 0
     for _ in pairs(t) do count = count + 1 end
     if count == 0 then return false end
@@ -91,6 +97,11 @@ EncodeValue = function(value, indent)
     else
         error("EverGear.JSON.encode: cannot encode a value of type " .. valueType)
     end
+end
+
+-- A fresh empty list that encodes as `[]` rather than `{}`.
+function EverGear.JSON.emptyArray()
+    return setmetatable({}, { jsonArray = EMPTY_ARRAY_MARK })
 end
 
 function EverGear.JSON.encode(value)
