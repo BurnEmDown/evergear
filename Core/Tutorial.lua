@@ -146,7 +146,9 @@ local POPUP_PAD = 18
 
 -- Pulsing gold frame drawn around whatever the current step is about.
 local highlightBox = CreateFrame("Frame", "EverGearTutorialHighlight", UIParent, "BackdropTemplate")
-highlightBox:SetFrameStrata("DIALOG")
+-- FULLSCREEN, above the DIALOG-strata popups some EverGear windows use, so
+-- the tour always draws on top of the windows it blocks (see Freeze below).
+highlightBox:SetFrameStrata("FULLSCREEN")
 highlightBox:SetBackdrop({
     edgeFile = "Interface\\Buttons\\WHITE8X8",
     edgeSize = 2,
@@ -163,7 +165,7 @@ end)
 
 local popup = CreateFrame("Frame", "EverGearTutorialFrame", UIParent, "BackdropTemplate")
 popup:SetSize(POPUP_WIDTH, 140)
-popup:SetFrameStrata("DIALOG")
+popup:SetFrameStrata("FULLSCREEN")
 popup:SetFrameLevel(highlightBox:GetFrameLevel() + 5)
 popup:SetClampedToScreen(true)
 popup:EnableMouse(true)
@@ -648,6 +650,64 @@ local function CloseSideWindows()
     end
 end
 
+-- ===== Freezing EverGear during the tour =====
+-- While the tour runs, every EverGear window gets a see-through cover that
+-- takes its clicks, mouse wheel and hovering, so nothing in them can be used
+-- or opened on top of the tour. The tour itself (popup, "?" button) stays on
+-- top and works; ending the tour lifts the covers. The rest of the game isn't
+-- affected. A cover is a child of its window, so it shows and hides with it.
+
+local FROZEN_WINDOWS = { "EverGearFrame", "EverGearSetItemPicker" }
+for _, name in ipairs(SIDE_WINDOWS) do table.insert(FROZEN_WINDOWS, name) end
+local COVER_LEVEL_GAP = 200
+
+local covers = {}
+local helpButtonLevel
+
+local function CoverFor(window, name)
+    local cover = covers[window]
+    if cover then return cover end
+    cover = CreateFrame("Frame", name .. "TourCover", window)
+    cover:SetAllPoints(window)
+    cover:EnableMouse(true)
+    cover:EnableMouseWheel(true)
+    cover:SetScript("OnMouseWheel", function() end)
+    cover:SetScript("OnMouseDown", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+        GameTooltip:SetText("The tour is running")
+        GameTooltip:AddLine("Close the tour with its X to use EverGear again.", 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    cover:SetScript("OnLeave", function(self)
+        if GameTooltip:IsOwned(self) then GameTooltip:Hide() end
+    end)
+    covers[window] = cover
+    return cover
+end
+
+local function Freeze()
+    for _, name in ipairs(FROZEN_WINDOWS) do
+        local window = Named(name)
+        if window and window.GetFrameLevel then
+            local cover = CoverFor(window, name)
+            cover:SetFrameLevel(window:GetFrameLevel() + COVER_LEVEL_GAP)
+            cover:Show()
+        end
+    end
+    -- The "?" button sits on the main window; keep it above its cover so it
+    -- can still end the tour.
+    helpButtonLevel = helpButtonLevel or helpButton:GetFrameLevel()
+    helpButton:SetFrameLevel(mainFrame:GetFrameLevel() + COVER_LEVEL_GAP + 1)
+end
+
+local function Unfreeze()
+    for _, cover in pairs(covers) do cover:Hide() end
+    if helpButtonLevel then
+        helpButton:SetFrameLevel(helpButtonLevel)
+        helpButtonLevel = nil
+    end
+end
+
 function EverGear:StartTutorial()
     DismissHint()
     if running then LeaveStep() end
@@ -661,6 +721,7 @@ function EverGear:StartTutorial()
     if #activeSteps == 0 then return end
 
     running = true
+    Freeze()
     currentIndex = nil
     Go(1)
 end
@@ -669,6 +730,7 @@ function EverGear:EndTutorial()
     DismissHint()
     if not running then return end
     running = false
+    Unfreeze()
     LeaveStep()
     popup:Hide()
 end
