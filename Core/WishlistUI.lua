@@ -908,9 +908,9 @@ local function RefreshSetModel(set)
         local itemId = set.slots[slotToken]
         if itemId and slotToken ~= "RangedSlot" then setModel:TryOn("item:" .. itemId, HAND_SLOT_NAMES[slotToken]) end
     end
-    local helmId, cloakId = set.slots.HeadSlot, set.slots.BackSlot
-    setModelWeapons:Apply(setModel, rangedId and ("item:" .. rangedId),
-        helmId and ("item:" .. helmId), cloakId and ("item:" .. cloakId))
+    -- No helm / cloak links: the model is dressed from scratch above, so they
+    -- only need taking off when hidden.
+    setModelWeapons:Apply(setModel, rangedId and ("item:" .. rangedId))
 end
 
 local function ActiveSetHasItem(itemId)
