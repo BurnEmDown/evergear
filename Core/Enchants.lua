@@ -251,34 +251,57 @@ function EverGear:GetEnchantsForItem(slotToken, itemIdOrLink, options)
     return list, target
 end
 
--- The enchant suggestion for what's equipped in a slot:
--- { best = { enchant, score } or nil, current = <enchant or nil>,
---   currentScore = <number>, hasBest = <bool>, others = { ... } }
--- best is only set when it beats the item's current enchant. nil when the
--- slot is empty or nothing can go on the item.
-function EverGear:GetEnchantSuggestion(slotToken, itemLink)
-    if not itemLink then return nil end
+-- The Enhancements tab's list for what's equipped in a slot: every enchant
+-- the player can get for it that adds something for their profile, plus the
+-- item's current enchant, best first:
+--   { entries = { { enchant, score, gain, isCurrent }, ... },
+--     current, currentEnchantId, currentScore, reason }
+-- gain is the change from the current enchant. reason, when entries is
+-- empty: "empty" (nothing equipped), "none" (nothing can go on the item) or
+-- "noGain" (nothing that adds anything).
+function EverGear:GetEnhancementList(slotToken, itemLink, maxEntries)
+    local result = { entries = {}, currentScore = 0 }
+    if not itemLink then
+        result.reason = "empty"
+        return result
+    end
     local list, target = self:GetEnchantsForItem(slotToken, itemLink)
-    if #list == 0 then return nil end
     local currentId = self:GetEnchantIdFromLink(itemLink)
     local current = currentId and self:GetEnchantByEnchantId(currentId)
-    local currentScore = current and self:ScoreEnchant(current, slotToken, target) or 0
-    local result = { current = current, currentEnchantId = currentId, currentScore = currentScore, others = {} }
+    result.current, result.currentEnchantId = current, currentId
+    result.currentScore = current and self:ScoreEnchant(current, slotToken, target) or 0
+    local hasCurrent = false
     for _, entry in ipairs(list) do
-        if entry.score > 0 and entry.score > currentScore then
-            if not result.best then
-                result.best = entry
-            elseif #result.others < 3 then
-                table.insert(result.others, entry)
-            end
+        local isCurrent = current ~= nil and entry.enchant.enchantId == current.enchantId
+        if isCurrent and hasCurrent then
+            -- another formula for the same enchant: list it once
+        elseif entry.score > 0 or isCurrent then
+            if isCurrent then hasCurrent = true end
+            table.insert(result.entries, {
+                enchant = entry.enchant, score = entry.score,
+                gain = entry.score - result.currentScore, isCurrent = isCurrent,
+            })
         end
     end
-    if not result.best then
-        if current and currentScore > 0 then
-            result.hasBest = true
-        else
-            return nil  -- nothing that adds anything for this profile
+    if current and not hasCurrent then
+        -- On the item but not one the player could get now (filters, level).
+        table.insert(result.entries, { enchant = current, score = result.currentScore, gain = 0, isCurrent = true })
+        table.sort(result.entries, function(a, b)
+            if a.score ~= b.score then return a.score > b.score end
+            return a.isCurrent
+        end)
+    end
+    if maxEntries and #result.entries > maxEntries then
+        -- Keep the current enchant visible even past the cut.
+        local trimmed, currentEntry = {}, nil
+        for i, entry in ipairs(result.entries) do
+            if i <= maxEntries then table.insert(trimmed, entry) elseif entry.isCurrent then currentEntry = entry end
         end
+        if currentEntry then trimmed[maxEntries] = currentEntry end
+        result.entries = trimmed
+    end
+    if #result.entries == 0 then
+        result.reason = (#list == 0) and "none" or "noGain"
     end
     return result
 end
@@ -310,7 +333,7 @@ end
 
 -- The name to show: formulas without their "Enchant " prefix.
 function EverGear:GetEnchantDisplayName(enchant)
-    if not enchant then return "" end
+    if not (enchant and enchant.name) then return "Unknown enchant" end
     return (enchant.name:gsub("^Enchant ", ""))
 end
 

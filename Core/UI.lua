@@ -1363,44 +1363,68 @@ local function BuildItemLink(itemID)
     return "item:" .. itemID .. ":0:0:0:0:0:0:0:0:0:0:0"
 end
 
--- ===== Enchant section =====
--- Below the suggested items: the best enchant for the item in this slot
--- (Enchants.lua), or a note that it already has the best one. Hidden when
--- nothing useful can go on the item. The tooltip shows what it does, what it
--- needs and a few other choices.
-local ENCHANT_SECTION_TOP_GAP = 6
+-- ===== Items / Enhancements tabs =====
+-- The panel has two tabs under its header, like gear sites do: Items (the
+-- suggested upgrades) and Enhancements (enchants, armor kits, scopes and the
+-- like for the item in this slot, from Enchants.lua). The chosen tab stays
+-- chosen for every slot until switched back.
+local DETAIL_CONTENT_TOP = -62
+local MAX_ENHANCEMENT_ROWS = 8
+local activeDetailTab = "items"
 
-local enchantSection = CreateFrame("Frame", "EverGearDetailEnchant", detailPanel)
-enchantSection:SetSize(DETAIL_WIDTH - 32, 60)
-enchantSection:Hide()
+local detailTabs = {}
+local function CreateDetailTab(key, label, name)
+    local tab = CreateFrame("Button", name, detailPanel)
+    tab:SetHeight(18)
+    local text = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    text:SetPoint("CENTER", 0, 1)
+    text:SetText(label)
+    tab:SetWidth(text:GetStringWidth() + 16)
+    tab.text = text
+    local underline = tab:CreateTexture(nil, "ARTWORK")
+    underline:SetHeight(2)
+    underline:SetPoint("BOTTOMLEFT", 4, 0)
+    underline:SetPoint("BOTTOMRIGHT", -4, 0)
+    underline:SetTexture("Interface\\Buttons\\WHITE8X8")
+    underline:SetVertexColor(unpack(THEME.gold))
+    tab.underline = underline
+    tab:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+    tab.key = key
+    tab:SetScript("OnClick", function()
+        if activeDetailTab == key then return end
+        activeDetailTab = key
+        if currentDetailSlot then EverGear:ShowUpgradeDetail(currentDetailSlot) end
+    end)
+    detailTabs[key] = tab
+    return tab
+end
 
-local enchantDivider = enchantSection:CreateTexture(nil, "ARTWORK")
-enchantDivider:SetHeight(1)
-enchantDivider:SetPoint("TOPLEFT", 0, 0)
-enchantDivider:SetPoint("TOPRIGHT", 0, 0)
-enchantDivider:SetTexture("Interface\\Buttons\\WHITE8X8")
-enchantDivider:SetVertexColor(unpack(THEME.panelBorder))
+local itemsTab = CreateDetailTab("items", "Items", "EverGearDetailTabItems")
+itemsTab:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 14, -36)
+local enhancementsTab = CreateDetailTab("enhancements", "Enhancements", "EverGearDetailTabEnhancements")
+enhancementsTab:SetPoint("LEFT", itemsTab, "RIGHT", 4, 0)
+enhancementsTab:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText("Enhancements")
+    GameTooltip:AddLine("Enchants, armor kits, scopes and the like for the item you have in this slot, best first.", 0.8, 0.8, 0.8, true)
+    GameTooltip:Show()
+end)
+enhancementsTab:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-local enchantHeader = enchantSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-enchantHeader:SetPoint("TOPLEFT", 0, -8)
-enchantHeader:SetText("Enchant")
-enchantHeader:SetTextColor(unpack(THEME.gold))
+local function UpdateDetailTabs()
+    for key, tab in pairs(detailTabs) do
+        local active = key == activeDetailTab
+        tab.underline:SetShown(active)
+        if active then
+            tab.text:SetTextColor(unpack(THEME.gold))
+        else
+            tab.text:SetTextColor(0.6, 0.6, 0.6)
+        end
+    end
+end
 
-local enchantIcon = CreateItemIconFrame("EverGearDetailEnchantIcon", enchantSection, ICON_SIZE)
-enchantIcon:SetPoint("TOPLEFT", 0, -24)
-
-local enchantName = enchantSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-enchantName:SetPoint("TOPLEFT", enchantIcon, "TOPRIGHT", 8, -2)
-enchantName:SetPoint("RIGHT", 0, 0)
-enchantName:SetJustifyH("LEFT")
-enchantName:SetWordWrap(true)
-
-local enchantSource = enchantSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-enchantSource:SetPoint("TOPLEFT", enchantName, "BOTTOMLEFT", 0, -4)
-enchantSource:SetPoint("RIGHT", 0, 0)
-enchantSource:SetJustifyH("LEFT")
-enchantSource:SetWordWrap(true)
-enchantSource:SetTextColor(0.7, 0.7, 0.7)
+-- ===== Enhancements tab rows =====
+local enhancementRows = {}
 
 local function AddEnchantRequirements(enchant)
     if enchant.effect then GameTooltip:AddLine(enchant.effect, 1, 1, 1, true) end
@@ -1414,66 +1438,106 @@ local function AddEnchantRequirements(enchant)
     if enchant.useProfession then
         GameTooltip:AddLine("Only usable with " .. enchant.useProfession .. ".", 0.8, 0.8, 0.8, true)
     end
+    if enchant.proc then
+        GameTooltip:AddLine("Its effect isn't scored yet, so it counts as 0.", 0.8, 0.8, 0.8, true)
+    end
 end
 
-enchantIcon:SetScript("OnEnter", function(self)
-    local suggestion = self.suggestion
-    if not suggestion then return end
-    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    local shown = suggestion.best and suggestion.best.enchant or suggestion.current
-    GameTooltip:SetText(EverGear:GetEnchantDisplayName(shown))
-    AddEnchantRequirements(shown)
-    if suggestion.best then
-        if suggestion.current then
-            GameTooltip:AddLine("Now: " .. EverGear:GetEnchantDisplayName(suggestion.current), 0.8, 0.8, 0.8, true)
-        elseif suggestion.currentEnchantId then
-            GameTooltip:AddLine("Replaces the item's current enchant.", 0.8, 0.8, 0.8, true)
-        end
-        if #suggestion.others > 0 then
-            GameTooltip:AddLine(" ")
-            GameTooltip:AddLine("Also good:", 1, 0.82, 0)
-            for _, entry in ipairs(suggestion.others) do
-                local gain = math.floor(entry.score - suggestion.currentScore + 0.5)
-                GameTooltip:AddLine(EverGear:GetEnchantDisplayName(entry.enchant) .. "  |cff20e626(+" .. gain .. ")|r", 1, 1, 1, true)
-            end
-        end
-    end
-    GameTooltip:Show()
-end)
-enchantIcon:SetScript("OnLeave", function() GameTooltip:Hide() end)
+local function GetOrCreateEnhancementRow(index)
+    if enhancementRows[index] then return enhancementRows[index] end
+    local row = CreateFrame("Frame", "EverGearEnhancementRow" .. index, detailPanel)
+    row:SetSize(DETAIL_WIDTH - 32, ICON_SIZE)
 
--- Fills and places the enchant section at yOffset (negative, from the
--- panel's top); returns the new yOffset below it, or yOffset unchanged when
--- there's nothing to show.
-local function LayoutEnchantSection(slotToken, yOffset)
-    local suggestion = EverGear.GetEnchantSuggestion
-        and EverGear:GetEnchantSuggestion(slotToken, EverGear:GetEquippedItemLink(slotToken))
-    enchantIcon.suggestion = suggestion
-    if not suggestion then
-        enchantSection:Hide()
-        return yOffset
+    local icon = CreateItemIconFrame(nil, row, ICON_SIZE)
+    icon:SetPoint("TOPLEFT", 0, 0)
+    icon:SetScript("OnEnter", function(self)
+        local entry = row.entry
+        if not entry then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(EverGear:GetEnchantDisplayName(entry.enchant))
+        AddEnchantRequirements(entry.enchant)
+        if entry.isCurrent then GameTooltip:AddLine("On your item now.", 0.2, 0.9, 0.25, true) end
+        GameTooltip:Show()
+    end)
+    icon:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    row.icon = icon
+
+    local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    nameText:SetPoint("TOPLEFT", icon, "TOPRIGHT", 8, -2)
+    nameText:SetPoint("RIGHT", 0, 0)
+    nameText:SetJustifyH("LEFT")
+    nameText:SetWordWrap(true)
+    row.nameText = nameText
+
+    local sourceText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    sourceText:SetPoint("TOPLEFT", nameText, "BOTTOMLEFT", 0, -4)
+    sourceText:SetPoint("RIGHT", 0, 0)
+    sourceText:SetJustifyH("LEFT")
+    sourceText:SetWordWrap(true)
+    sourceText:SetTextColor(0.7, 0.7, 0.7)
+    row.sourceText = sourceText
+
+    enhancementRows[index] = row
+    return row
+end
+
+local function HideEnhancementRows(from)
+    for i = from or 1, #enhancementRows do enhancementRows[i]:Hide() end
+end
+
+local ENHANCEMENT_MESSAGES = {
+    empty = "Nothing equipped in this slot.",
+    none = "No enchant, kit or scope you can get goes on this item.",
+    noGain = "No enhancement you can get adds anything for your EP profile.",
+}
+
+-- Fills the Enhancements tab from yOffset down; returns the yOffset below it.
+local function LayoutEnhancements(slotToken, yOffset)
+    local list = EverGear:GetEnhancementList(slotToken, EverGear:GetEquippedItemLink(slotToken), MAX_ENHANCEMENT_ROWS)
+    if #list.entries == 0 then
+        HideEnhancementRows()
+        local message = ENHANCEMENT_MESSAGES[list.reason] or ENHANCEMENT_MESSAGES.none
+        if list.reason ~= "empty" and list.currentEnchantId and not list.current then
+            message = message .. "\n\nYour item has an enchant EverGear doesn't know."
+        end
+        detailEmptyMessage:SetText(message)
+        detailEmptyMessage:ClearAllPoints()
+        detailEmptyMessage:SetPoint("TOPLEFT", 16, yOffset)
+        detailEmptyMessage:SetPoint("RIGHT", -12, 0)
+        detailEmptyMessage:Show()
+        return yOffset - detailEmptyMessage:GetStringHeight() - 16
     end
-    yOffset = yOffset + 16 - ENCHANT_SECTION_TOP_GAP  -- the row gap above is already there
-    enchantSection:ClearAllPoints()
-    enchantSection:SetPoint("TOPLEFT", 16, yOffset)
-    if suggestion.best then
-        local enchant = suggestion.best.enchant
-        SetIconTexture(enchantIcon, EverGear:GetEnchantIcon(enchant))
-        local gain = math.floor(suggestion.best.score - suggestion.currentScore + 0.5)
-        enchantName:SetText(EverGear:GetEnchantDisplayName(enchant) .. "  |cff20e626(+" .. gain .. ")|r")
-        enchantName:SetTextColor(1, 1, 1)
-        enchantSource:SetText(EverGear:GetEnchantSourceSummary(enchant))
-    else
-        SetIconTexture(enchantIcon, EverGear:GetEnchantIcon(suggestion.current))
-        enchantName:SetText(EverGear:GetEnchantDisplayName(suggestion.current))
-        enchantName:SetTextColor(1, 1, 1)
-        enchantSource:SetText("Already the best enchant you can get for it.")
+    detailEmptyMessage:Hide()
+    local ROW_GAP = 12
+    for i, entry in ipairs(list.entries) do
+        local row = GetOrCreateEnhancementRow(i)
+        row.entry = entry
+        row:ClearAllPoints()
+        row:SetPoint("TOPLEFT", 16, yOffset)
+        row:Show()
+        SetIconTexture(row.icon, EverGear:GetEnchantIcon(entry.enchant))
+        if entry.isCurrent then
+            row.icon:SetBackdropBorderColor(0.2, 0.9, 0.25, 1)
+        else
+            row.icon:SetBackdropBorderColor(0.6, 0.56, 0.42, 1)
+        end
+        local gain = math.floor(entry.gain + 0.5)
+        local gainText
+        if entry.isCurrent then
+            gainText = "|cff33e640(current)|r"
+        elseif gain >= 0 then
+            gainText = "|cff20e626(+" .. gain .. ")|r"
+        else
+            gainText = "|cffe62020(" .. gain .. ")|r"
+        end
+        row.nameText:SetText(EverGear:GetEnchantDisplayName(entry.enchant) .. "  " .. gainText)
+        row.nameText:SetTextColor(1, 1, 1)
+        row.sourceText:SetText(EverGear:GetEnchantSourceSummary(entry.enchant))
+        local textHeight = row.nameText:GetStringHeight() + 4 + row.sourceText:GetStringHeight()
+        yOffset = yOffset - math.max(ICON_SIZE, textHeight) - ROW_GAP
     end
-    local textHeight = enchantName:GetStringHeight() + 4 + enchantSource:GetStringHeight()
-    local height = 24 + math.max(ICON_SIZE, textHeight)
-    enchantSection:SetHeight(height)
-    enchantSection:Show()
-    return yOffset - height - 16
+    HideEnhancementRows(#list.entries + 1)
+    return yOffset - 4
 end
 
 -- This client build doesn't expose the old bare GetItemInfo/GetItemIcon
@@ -1602,10 +1666,20 @@ function EverGear:ShowUpgradeDetail(slotToken)
     if professionFilterPanel then professionFilterPanel:Hide() end
     if zoneFilterPanel then zoneFilterPanel:Hide() end
 
+    UpdateDetailTabs()
+    detailEmptyMessage:ClearAllPoints()
+    detailEmptyMessage:SetPoint("TOPLEFT", 16, DETAIL_CONTENT_TOP)
+    detailEmptyMessage:SetPoint("RIGHT", -12, 0)
+
     local candidates = btn.upgradeList or {}
     local shownCount = math.min(#candidates, MAX_DETAIL_CANDIDATES)
 
-    if shownCount == 0 then
+    if activeDetailTab == "enhancements" then
+        for _, row in ipairs(detailRows) do row:Hide() end
+        local yOffset = LayoutEnhancements(slotToken, DETAIL_CONTENT_TOP)
+        detailPanel:SetHeight(math.max(150, -yOffset + 16))
+    elseif shownCount == 0 then
+        HideEnhancementRows()
         detailEmptyMessage:Show()
         for _, row in ipairs(detailRows) do row:Hide() end
 
@@ -1615,18 +1689,13 @@ function EverGear:ShowUpgradeDetail(slotToken)
             detailEmptyMessage:SetText("No upgrade shown.\n\nAn upgrade may exist but is hidden by your source-type filters.")
         end
 
-        local belowMessage = -40 - detailEmptyMessage:GetStringHeight() - 16
-        local belowEnchant = LayoutEnchantSection(slotToken, belowMessage)
-        if belowEnchant ~= belowMessage then
-            detailPanel:SetHeight(math.max(150, -belowEnchant + 16))
-        else
-            detailPanel:SetHeight(150)
-        end
+        detailPanel:SetHeight(150 - DETAIL_CONTENT_TOP - 40)
     else
         detailEmptyMessage:Hide()
+        HideEnhancementRows()
 
         local ROW_GAP = 16
-        local yOffset = -40
+        local yOffset = DETAIL_CONTENT_TOP
 
         for i = 1, shownCount do
             local candidate = candidates[i]
@@ -1670,7 +1739,6 @@ function EverGear:ShowUpgradeDetail(slotToken)
             detailRows[i]:Hide()
         end
 
-        yOffset = LayoutEnchantSection(slotToken, yOffset)
         detailPanel:SetHeight(-yOffset + 16)
     end
 
