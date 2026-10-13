@@ -2330,8 +2330,11 @@ end)
 -- show PvP items at all, and leave out items that need a higher PvP rank
 -- than the character has (on by default; most of the gear needs no rank,
 -- only Honor and Marks of Honor -- the weapons, cloaks, necks and insignias
--- do). Stored as opt-outs in charDB.pvpFilter so a new character starts
--- with both on. Same button + panel pattern as the other filters; the
+-- do). Battleground reputation gear (source.type "reputation": Arathi Basin
+-- and Darkspear Islands vendors) follows "Show PvP items" too, and has its
+-- own switch for leaving out items that need a higher standing than the
+-- character has (on by default). Stored as opt-outs in charDB.pvpFilter so
+-- a new character starts with all of them on. Same button + panel pattern as the other filters; the
 -- button sits in the top-left column, below the Gear Sets button, which had
 -- room, and the panel opens on the right like the other filter panels.
 local function GetPvPFilter()
@@ -2341,7 +2344,7 @@ local function GetPvPFilter()
 end
 
 pvpFilterPanel = CreateFrame("Frame", "EverGearPvPFilterPanel", mainFrame, "BackdropTemplate")
-pvpFilterPanel:SetSize(230, 160)
+pvpFilterPanel:SetSize(230, 190)
 pvpFilterPanel:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
     edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
@@ -2380,7 +2383,8 @@ end
 local pvpShowCheck = PvPCheckbox("EverGearPvPFilterShow", "Show PvP items", -38,
     function() return not GetPvPFilter().hidden end,
     function(on) GetPvPFilter().hidden = not on or nil end,
-    "Show PvP items", "Suggest gear from the PvP honor vendors, bought with Honor and Marks of Honor.")
+    "Show PvP items", "Suggest gear from the PvP honor vendors, bought with Honor and Marks of Honor, "
+        .. "and from the battleground reputation vendors.")
 
 local pvpRankCheck = PvPCheckbox("EverGearPvPFilterRank", "Only what my rank allows", -62,
     function() return not GetPvPFilter().ignoreRank end,
@@ -2388,8 +2392,14 @@ local pvpRankCheck = PvPCheckbox("EverGearPvPFilterRank", "Only what my rank all
     "Only what my rank allows", "Leave out items that need a higher PvP rank than you have. Most PvP gear "
         .. "needs no rank; the weapons, cloaks, necks and insignias do.")
 
+local pvpRepCheck = PvPCheckbox("EverGearPvPFilterReputation", "Only what my reputation allows", -86,
+    function() return not GetPvPFilter().ignoreReputation end,
+    function(on) GetPvPFilter().ignoreReputation = not on or nil end,
+    "Only what my reputation allows", "Leave out battleground reputation gear that needs a higher standing "
+        .. "than you have with that battleground's faction (Arathi Basin, Darkspear Islands).")
+
 local pvpRankText = pvpFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-pvpRankText:SetPoint("TOPLEFT", 20, -92)
+pvpRankText:SetPoint("TOPLEFT", 20, -116)
 pvpRankText:SetPoint("RIGHT", -16, 0)
 pvpRankText:SetJustifyH("LEFT")
 pvpRankText:SetTextColor(unpack(THEME.parchment))
@@ -2398,11 +2408,12 @@ local pvpFilterNote = pvpFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontD
 pvpFilterNote:SetPoint("TOPLEFT", pvpRankText, "BOTTOMLEFT", 0, -8)
 pvpFilterNote:SetPoint("RIGHT", -16, 0)
 pvpFilterNote:SetJustifyH("LEFT")
-pvpFilterNote:SetText("PvP gear is for level 55 and up.")
+pvpFilterNote:SetText("Honor gear is for level 55 and up, battleground reputation gear from level 28.")
 
 local function RefreshPvPFilterPanel()
     pvpShowCheck:SetChecked(pvpShowCheck.isOn())
     pvpRankCheck:SetChecked(pvpRankCheck.isOn())
+    pvpRepCheck:SetChecked(pvpRepCheck.isOn())
     local rank, rankName = EverGear:GetPlayerPvPRank()
     if rank > 0 then
         pvpRankText:SetText("Your PvP rank: " .. (rankName or "?") .. " (rank " .. rank .. ")")
@@ -2420,7 +2431,7 @@ pvpFilterButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", 
 pvpFilterButton:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
     GameTooltip:SetText("PvP filters")
-    GameTooltip:AddLine("Show or hide gear from the PvP honor vendors, and whether your PvP rank limits it.", 0.8, 0.8, 0.8, true)
+    GameTooltip:AddLine("Show or hide gear from the PvP honor and battleground reputation vendors, and whether your PvP rank and reputation limit it.", 0.8, 0.8, 0.8, true)
     GameTooltip:Show()
 end)
 pvpFilterButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
