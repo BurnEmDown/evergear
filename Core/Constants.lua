@@ -6,7 +6,7 @@ EverGear.ADDON_NAME = "EverGear"
 -- change, no matter how small -- 0.0.1 -> 0.0.2 -> 0.0.3, etc. Moving to
 -- 0.1.0 or 1.0.0 is the user's call alone; Claude may suggest it's time,
 -- but must never bump a minor/major version on its own initiative.
-EverGear.VERSION = "0.2.0"
+EverGear.VERSION = "0.3.0"
 
 -- Populated later from Data\*.lua files. Each entry keyed by numeric item id.
 -- Canonical item shape (mirrors evergear-backend/schema.md):
@@ -234,6 +234,11 @@ EverGear.WEAPON_TYPE_FILTER_LIST = {
     { key = "idol",         label = "Idol" },
     { key = "relic",        label = "Relic" },
 }
+
+-- WoW Forever beta: every profession is capped at 225 skill until the beta
+-- ends. Anything that needs more (a crafted item's recipe, an enchant) stays
+-- in the data but isn't shown. Set to nil when the cap is lifted.
+EverGear.PROFESSION_SKILL_CAP = 225
 
 -- Professions that actually produce equippable gear -- gathering professions
 -- (Herbalism, Mining, Skinning) and consumable-only ones (Alchemy, Cooking,

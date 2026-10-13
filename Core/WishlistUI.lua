@@ -380,8 +380,77 @@ local SET_TOP_Y = -110
 local setSlotButtons = {}
 local slotMenu = CreateFrame("Frame", "EverGearSetSlotMenu", UIParent, "UIDropDownMenuTemplate")
 
+-- Most enchants listed in a set slot's Enchant submenu (a dropdown list
+-- doesn't scroll); the best ones for the active EP profile come first.
+local MAX_ENCHANT_CHOICES = 15
+
+-- Level 2 of the set slot menu: the enchants that fit this item, best first
+-- with their EP, plus "No enchant". Same rules as the gear set item picker:
+-- the source / profession filters and class, and its "Up to level" box (the
+-- look-ahead level) when ticked. Ones that add nothing for this profile are
+-- left out, but the set's current enchant is always listed.
+local function AddEnchantChoices(setIndex, slotToken, itemId)
+    local record, known = EverGear:GetSetEnchant(setIndex, slotToken)
+
+    local info = UIDropDownMenu_CreateInfo()
+    info.text = "No enchant"
+    info.checked = record == nil
+    info.func = function() EverGear:SetSetEnchant(setIndex, slotToken, nil); CloseDropDownMenus() end
+    UIDropDownMenu_AddButton(info, 2)
+
+    if record and not known then
+        info = UIDropDownMenu_CreateInfo()
+        info.text = (record.name or "Unknown enchant") .. " (kept from import)"
+        info.checked = true
+        info.disabled = true
+        UIDropDownMenu_AddButton(info, 2)
+    end
+
+    local levelCheck = _G.EverGearSetItemPickerLevelCheck
+    local maxLevel
+    if not levelCheck or levelCheck:GetChecked() then
+        local level = EverGear:GetPlayerInfo().level or 1
+        maxLevel = math.max(level, EverGear:GetCharDB().lookaheadLevel or level)
+    end
+    local entries = EverGear:GetEnchantsForItem(slotToken, itemId, { planning = true, maxLevel = maxLevel })
+    local currentListed = false
+    for _, entry in ipairs(entries) do
+        if known and entry.enchant.spellId == known.spellId then currentListed = true end
+    end
+    if known and not currentListed then
+        -- Not one the filters / level allow now, but it's on the set: keep it.
+        table.insert(entries, { enchant = known, score = EverGear:ScoreEnchant(known, slotToken, EverGear:GetEnchantTargetInfo(itemId)) })
+        table.sort(entries, function(a, b) return a.score > b.score end)
+    end
+
+    local shown = 0
+    for _, entry in ipairs(entries) do
+        local enchant = entry.enchant
+        local isCurrent = known ~= nil and known.spellId == enchant.spellId
+        if (entry.score > 0 and shown < MAX_ENCHANT_CHOICES) or isCurrent then
+            info = UIDropDownMenu_CreateInfo()
+            local text = EverGear:GetEnchantDisplayName(enchant) .. "  |cff20e626(+" .. math.floor(entry.score + 0.5) .. ")|r"
+            if enchant.reqLevel then text = text .. "  |cffaaaaaalevel " .. enchant.reqLevel .. "|r" end
+            info.text = text
+            info.checked = isCurrent
+            info.tooltipTitle = EverGear:GetEnchantDisplayName(enchant)
+            info.tooltipText = (enchant.effect and (enchant.effect .. "\n") or "") .. EverGear:GetEnchantSourceSummary(enchant)
+                .. (enchant.reqLevel and ("\nRequires level " .. enchant.reqLevel .. ".") or "")
+            info.tooltipOnButton = true
+            local spellId = enchant.spellId
+            info.func = function() EverGear:SetSetEnchant(setIndex, slotToken, spellId); CloseDropDownMenus() end
+            UIDropDownMenu_AddButton(info, 2)
+            if entry.score > 0 and not isCurrent then shown = shown + 1 end
+        end
+    end
+end
+
 local function ShowSetSlotMenu(anchor, setIndex, slotToken, itemId)
-    UIDropDownMenu_Initialize(slotMenu, function()
+    UIDropDownMenu_Initialize(slotMenu, function(_, level)
+        if level == 2 then
+            AddEnchantChoices(setIndex, slotToken, itemId)
+            return
+        end
         local info = UIDropDownMenu_CreateInfo()
         info.text = EverGear:GetWishlistItemName(itemId)
         info.isTitle = true
@@ -398,6 +467,16 @@ local function ShowSetSlotMenu(anchor, setIndex, slotToken, itemId)
             info.func = function() EverGear:SetAcquired(itemId, true) end
         end
         UIDropDownMenu_AddButton(info)
+
+        if not EverGear.COSMETIC_SLOTS[slotToken] then
+            info = UIDropDownMenu_CreateInfo()
+            info.notCheckable = true
+            info.hasArrow = true
+            info.keepShownOnClick = true
+            local record = EverGear:GetSetEnchant(setIndex, slotToken)
+            info.text = "Enchant" .. (record and (": " .. EverGear:GetEnchantDisplayName(record)) or "")
+            UIDropDownMenu_AddButton(info)
+        end
 
         info = UIDropDownMenu_CreateInfo()
         info.notCheckable = true
@@ -424,12 +503,20 @@ local function CreateSetSlotButton(slotToken)
             GameTooltip:SetHyperlink(H.BuildItemLink(self.itemId))
             local item = EverGear:GetItem(self.itemId)
             if item then GameTooltip:AddLine(EverGear:GetSourceSummary(item), 0.7, 0.7, 0.7, true) end
+            local index = EverGear:GetActiveSetIndex()
+            local record, known
+            if index then record, known = EverGear:GetSetEnchant(index, self.slotToken) end
+            if record then
+                local text = "Enchant: " .. EverGear:GetEnchantDisplayName(known or record)
+                if known and known.effect then text = text .. " (" .. known.effect .. ")" end
+                GameTooltip:AddLine(text, 0.4, 0.8, 1, true)
+            end
             if EverGear:IsAcquired(self.itemId) then
                 GameTooltip:AddLine("Acquired", 0.2, 0.9, 0.25)
             else
                 GameTooltip:AddLine("Not acquired yet", 0.9, 0.6, 0.2)
             end
-            GameTooltip:AddLine("Click to choose another item. Right-click for options.", 0.8, 0.8, 0.8, true)
+            GameTooltip:AddLine("Click to choose another item. Right-click for options, including its enchant.", 0.8, 0.8, 0.8, true)
         else
             GameTooltip:SetText((EverGear.FRIENDLY_SLOT_NAMES[self.slotToken] or self.slotToken) .. " (empty)")
             GameTooltip:AddLine("Click to choose an item, or Alt-click any item that fits this slot.", 0.8, 0.8, 0.8, true)

@@ -1317,11 +1317,16 @@ end
 --   zone or dungeon. Items with no source.zone (crafted, world drops from all
 --   over) are never hidden by it. ignoreZone skips this one, for the Upgrades
 --   by Zone window, where the zone is picked on purpose.
+-- * The profession skill cap (EverGear.PROFESSION_SKILL_CAP, the beta's 225):
+--   a crafted item whose recipe needs more skill can't be made by anyone yet,
+--   so it's never shown, whatever the filters say.
 local function PassesFilterPanels(self, item, charDB, ignoreZone)
     local filterKey = self:GetWeaponFilterKey(item)
     if filterKey and (charDB.weaponTypeFilter or {})[filterKey] == false then return false end
     local profession = item.source and item.source.type == "craft" and item.source.profession
     if profession then
+        local cap = self.PROFESSION_SKILL_CAP
+        if cap and (item.source.skill or 0) > cap then return false end
         if (charDB.professionFilter or {})[profession] == false then return false end
         if (charDB.professionBoEOnly or {})[profession] and item.bindType ~= "BoE" then return false end
     end
@@ -1480,6 +1485,20 @@ function EverGear:ScoreItemForSlot(itemIdOrLink, realSlotToken)
         stats, armor, dps = NormalizeLiveStats(link)
     end
     return ScoreItem(stats, profile, armor or 0, dps or 0, realSlotToken == "RangedSlot")
+end
+
+-- EP score of a bare stat bundle (not an item) with the active profile, plus
+-- armor and extra weapon DPS. Used for enchants (Enchants.lua).
+function EverGear:ScoreStats(stats, armor, dps, isRanged)
+    local playerInfo = self:GetPlayerInfo()
+    local profile = GetScoringProfile(playerInfo.classToken, self:GetCharDB().spec)
+    return ScoreItem(stats, profile, armor or 0, dps or 0, isRanged)
+end
+
+-- (stats, armor, dps) read live from an item link, for items the addon's data
+-- doesn't have. Enchants.lua uses it for a weapon's speed.
+function EverGear:ReadLiveItemStats(itemLink)
+    return NormalizeLiveStats(itemLink)
 end
 
 -- Every upgrade from one zone or dungeon, across all slots, best gain first:

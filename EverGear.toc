@@ -14,6 +14,7 @@ Core\Character.lua
 Core\Equipment.lua
 Core\Wishlist.lua
 Core\Upgrades.lua
+Core\Enchants.lua
 Core\JSON.lua
 Core\EPProfiles.lua
 Core\ProfileEditor.lua
@@ -87,3 +88,4 @@ Data\Items_ThunderBluff.lua
 Data\Items_Undercity.lua
 Data\Items_DustwallowMarsh.lua
 Data\Cosmetics.lua
+Data\Enchants.lua
