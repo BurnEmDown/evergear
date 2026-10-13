@@ -1482,6 +1482,20 @@ function EverGear:ScoreItemForSlot(itemIdOrLink, realSlotToken)
     return ScoreItem(stats, profile, armor or 0, dps or 0, realSlotToken == "RangedSlot")
 end
 
+-- EP score of a bare stat bundle (not an item) with the active profile, plus
+-- armor and extra weapon DPS. Used for enchants (Enchants.lua).
+function EverGear:ScoreStats(stats, armor, dps, isRanged)
+    local playerInfo = self:GetPlayerInfo()
+    local profile = GetScoringProfile(playerInfo.classToken, self:GetCharDB().spec)
+    return ScoreItem(stats, profile, armor or 0, dps or 0, isRanged)
+end
+
+-- (stats, armor, dps) read live from an item link, for items the addon's data
+-- doesn't have. Enchants.lua uses it for a weapon's speed.
+function EverGear:ReadLiveItemStats(itemLink)
+    return NormalizeLiveStats(itemLink)
+end
+
 -- Every upgrade from one zone or dungeon, across all slots, best gain first:
 -- { { item, slotToken, gain }, ... }. Uses the same rules as the main
 -- window's Suggested Upgrades (level / look-ahead, class, faction, source /
