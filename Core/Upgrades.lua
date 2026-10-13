@@ -1317,11 +1317,16 @@ end
 --   zone or dungeon. Items with no source.zone (crafted, world drops from all
 --   over) are never hidden by it. ignoreZone skips this one, for the Upgrades
 --   by Zone window, where the zone is picked on purpose.
+-- * The profession skill cap (EverGear.PROFESSION_SKILL_CAP, the beta's 225):
+--   a crafted item whose recipe needs more skill can't be made by anyone yet,
+--   so it's never shown, whatever the filters say.
 local function PassesFilterPanels(self, item, charDB, ignoreZone)
     local filterKey = self:GetWeaponFilterKey(item)
     if filterKey and (charDB.weaponTypeFilter or {})[filterKey] == false then return false end
     local profession = item.source and item.source.type == "craft" and item.source.profession
     if profession then
+        local cap = self.PROFESSION_SKILL_CAP
+        if cap and (item.source.skill or 0) > cap then return false end
         if (charDB.professionFilter or {})[profession] == false then return false end
         if (charDB.professionBoEOnly or {})[profession] and item.bindType ~= "BoE" then return false end
     end

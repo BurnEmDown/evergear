@@ -235,6 +235,11 @@ EverGear.WEAPON_TYPE_FILTER_LIST = {
     { key = "relic",        label = "Relic" },
 }
 
+-- WoW Forever beta: every profession is capped at 225 skill until the beta
+-- ends. Anything that needs more (a crafted item's recipe, an enchant) stays
+-- in the data but isn't shown. Set to nil when the cap is lifted.
+EverGear.PROFESSION_SKILL_CAP = 225
+
 -- Professions that actually produce equippable gear -- gathering professions
 -- (Herbalism, Mining, Skinning) and consumable-only ones (Alchemy, Cooking,
 -- First Aid, Fishing) are left out since they never show up as an item
