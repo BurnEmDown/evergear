@@ -5,6 +5,11 @@
 -- remembered per item (EverGearDB.debugChecked) so the list can show which
 -- items have been checked and which still need a hover.
 --
+-- The Enhancements tab lists the addon's enchants, armor kits, scopes and the
+-- like the same way (Data/Enchants.lua); with debug mode on, hovering one, or
+-- "Check all", compares its numbers with the game's own description of the
+-- spell (Debug.lua's CheckEnchantAgainstGame).
+--
 -- The list only ever has as many row frames as fit in the window; scrolling
 -- re-fills them from the filtered item list, so ~1,800 items cost nothing.
 
@@ -45,7 +50,27 @@ local bar, thumb
 local filtered = {}
 local offset = 0
 
+-- Which list the browser shows: "items" (EverGear.Items) or "enhancements"
+-- (EverGear.Enchants: Enchanting formulas, armor kits, scopes and the like,
+-- keyed by the spell that applies them; see Enchants.lua). Each keeps its own
+-- check results.
+local mode = "items"
+
+local function Dataset()
+    if mode == "enhancements" then return EverGear.Enchants or {} end
+    return EverGear.Items
+end
+
+local function EntryId(entry)
+    if mode == "enhancements" then return entry.spellId end
+    return entry.id
+end
+
 local function Checked()
+    if mode == "enhancements" then
+        EverGearDB.debugCheckedEnchants = EverGearDB.debugCheckedEnchants or {}
+        return EverGearDB.debugCheckedEnchants
+    end
     EverGearDB.debugChecked = EverGearDB.debugChecked or {}
     return EverGearDB.debugChecked
 end
@@ -93,7 +118,53 @@ local function SourceLabel(key)
         if entry.key == key then return entry.label end
     end
     if key == "none" then return "No source" end
+    if key == "drop" then return "Drop" end
     return key
+end
+
+-- Enhancements: "craft:Enchanting" for formulas, "craft:<profession>" for
+-- crafted kits / scopes / attachments, else their first source (quest,
+-- vendor, drop).
+local function EnchantSourceKey(enchant)
+    if enchant.kind == "enchanting" then return "craft:Enchanting" end
+    if enchant.profession then return "craft:" .. enchant.profession end
+    return (enchant.source and enchant.source[1]) or "none"
+end
+
+local function EnchantSlotsText(enchant)
+    local names = {}
+    for _, slot in ipairs(enchant.slots or {}) do names[#names + 1] = SlotLabel(slot) end
+    return table.concat(names, "/")
+end
+
+local function MatchesEnchant(enchant)
+    if filters.slot then
+        local fits = false
+        for _, slot in ipairs(enchant.slots or {}) do
+            if slot == filters.slot then fits = true end
+        end
+        if not fits then return false end
+    end
+    if filters.source and EnchantSourceKey(enchant) ~= filters.source then return false end
+    if filters.status and filters.status ~= "unconfirmed" then
+        if (Checked()[enchant.spellId] or "unchecked") ~= filters.status then return false end
+    elseif filters.status == "unconfirmed" then
+        return false  -- only confirmed enchants are in the addon's data
+    end
+    if filters.minLevel or filters.maxLevel then
+        local level = enchant.reqLevel
+        if not level then return false end
+        if filters.minLevel and level < filters.minLevel then return false end
+        if filters.maxLevel and level > filters.maxLevel then return false end
+    end
+    if filters.search then
+        local text = filters.search
+        if tostring(enchant.spellId) ~= text and tostring(enchant.enchantId) ~= text and tostring(enchant.itemId) ~= text then
+            local haystack = strlower((enchant.name or "") .. "\n" .. (enchant.effect or "") .. "\n" .. EverGear:GetEnchantSourceSummary(enchant))
+            if not haystack:find(text, 1, true) then return false end
+        end
+    end
+    return true
 end
 
 local function StatusOf(item)
@@ -101,6 +172,7 @@ local function StatusOf(item)
 end
 
 local function Matches(item)
+    if mode == "enhancements" then return MatchesEnchant(item) end
     if filters.slot and item.slot ~= filters.slot then return false end
     if filters.type and TypeKey(item) ~= filters.type then return false end
     if filters.source and SourceKey(item) ~= filters.source then return false end
@@ -154,6 +226,28 @@ local SORTERS = {
     id = function(a, b) return a.id < b.id end,
 }
 
+-- Enhancements: level = character level needed, then profession skill;
+-- ilvl = the lowest item level it goes on; id = spell id.
+local ENCHANT_SORTERS = {
+    level = function(a, b)
+        local la, lb = a.reqLevel or 0, b.reqLevel or 0
+        if la ~= lb then return la < lb end
+        local sa, sb = a.skill or 0, b.skill or 0
+        if sa ~= sb then return sa < sb end
+        return a.name < b.name
+    end,
+    name = function(a, b)
+        if a.name ~= b.name then return a.name < b.name end
+        return a.spellId < b.spellId
+    end,
+    ilvl = function(a, b)
+        local ia, ib = a.minItemLevel or 0, b.minItemLevel or 0
+        if ia ~= ib then return ia < ib end
+        return a.name < b.name
+    end,
+    id = function(a, b) return a.spellId < b.spellId end,
+}
+
 -- ===== Scroll bar (drawn and driven by hand, like the wanted list's) =====
 
 local function MaxOffset()
@@ -188,13 +282,38 @@ local function RowLevelText(item)
     return "Req " .. (level and tostring(level) or "?") .. ", ilvl " .. tostring(item.ilvl or "?")
 end
 
+local function StatusLabel(status)
+    if status == "ok" then return "|cff33e640Matches|r" end
+    if status == "differs" then return "|cffff9933Differs|r" end
+    return ""
+end
+
+local function EnchantInfoText(enchant)
+    local parts = { enchant.effect or "?", EnchantSlotsText(enchant) }
+    if (enchant.minItemLevel or 0) > 0 then parts[#parts + 1] = "item lvl " .. enchant.minItemLevel .. "+" end
+    if enchant.reqLevel then parts[#parts + 1] = "Req " .. enchant.reqLevel end
+    parts[#parts + 1] = EverGear:GetEnchantSourceSummary(enchant)
+    return table.concat(parts, " - ")
+end
+
 function RefreshRows()
     if not rows then return end
     local checked = Checked()
     for i, row in ipairs(rows) do
         local item = filtered[offset + i]
         row.item = item
-        if item then
+        if item and mode == "enhancements" then
+            H.SetIconTexture(row.icon, EverGear:GetEnchantIcon(item))
+            row.icon:SetBackdropBorderColor(0.6, 0.56, 0.42, 1)
+            row.nameText:SetText(item.name .. "  |cff888888" .. item.spellId .. "|r")
+            row.nameText:SetTextColor(1, 1, 1)
+            row.infoText:SetText(EnchantInfoText(item))
+            row.statusText:SetText(StatusLabel(checked[item.spellId]))
+            row.unconfirmedText:SetShown(item.proc == true)
+            row.unconfirmedText:SetText("proc, not scored")
+            row:Show()
+        elseif item then
+            row.unconfirmedText:SetText("unconfirmed")
             local quality = Quality(item.id)
             local r, g, b = H.GetQualityColor(quality)
             H.SetIconTexture(row.icon, H.SafeGetItemIcon(item.id) or "Interface\\Icons\\INV_Misc_QuestionMark")
@@ -206,14 +325,7 @@ function RefreshRows()
             local what = SlotLabel(item.slot) .. (typeKey ~= "none" and (" " .. TypeLabel(typeKey)) or "")
             row.infoText:SetText(RowLevelText(item) .. " - " .. what .. " - " .. EverGear:GetSourceSummary(item))
 
-            local status = checked[item.id]
-            if status == "ok" then
-                row.statusText:SetText("|cff33e640Matches|r")
-            elseif status == "differs" then
-                row.statusText:SetText("|cffff9933Differs|r")
-            else
-                row.statusText:SetText("")
-            end
+            row.statusText:SetText(StatusLabel(checked[item.id]))
             row.unconfirmedText:SetShown(not item.confirmed)
             row:Show()
         else
@@ -226,19 +338,21 @@ local function ApplyFilters()
     if not frame then return end
     wipe(filtered)
     local total = 0
-    for _, item in pairs(EverGear.Items) do
+    for _, item in pairs(Dataset()) do
         total = total + 1
         if Matches(item) then filtered[#filtered + 1] = item end
     end
-    table.sort(filtered, SORTERS[filters.sort] or SORTERS.level)
+    local sorters = mode == "enhancements" and ENCHANT_SORTERS or SORTERS
+    table.sort(filtered, sorters[filters.sort] or sorters.level)
 
     local checked, ok, differs = Checked(), 0, 0
     for _, item in ipairs(filtered) do
-        if checked[item.id] == "ok" then ok = ok + 1
-        elseif checked[item.id] == "differs" then differs = differs + 1 end
+        local id = EntryId(item)
+        if checked[id] == "ok" then ok = ok + 1
+        elseif checked[id] == "differs" then differs = differs + 1 end
     end
-    countText:SetText(string.format("Showing %d of %d items  -  |cff33e640%d match|r, |cffff9933%d differ|r, %d not checked",
-        #filtered, total, ok, differs, #filtered - ok - differs))
+    countText:SetText(string.format("Showing %d of %d %s  -  |cff33e640%d match|r, |cffff9933%d differ|r, %d not checked",
+        #filtered, total, mode == "enhancements" and "enhancements" or "items", ok, differs, #filtered - ok - differs))
     offset = 0
     UpdateScrollBar()
 end
@@ -284,6 +398,24 @@ local function CreateRow(index)
     row:SetScript("OnEnter", function(self)
         if not self.item then return end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        if mode == "enhancements" then
+            -- The item for kits / scopes, the formula's spell otherwise. With
+            -- debug mode on, hovering checks it against the game.
+            if self.item.itemId then
+                GameTooltip:SetHyperlink(H.BuildItemLink(self.item.itemId))
+            elseif GameTooltip.SetSpellByID then
+                GameTooltip:SetSpellByID(self.item.spellId)
+            else
+                GameTooltip:SetText(self.item.name)
+            end
+            GameTooltip:AddLine("EverGear: " .. (self.item.effect or "?"), 0.4, 0.8, 1, true)
+            GameTooltip:Show()
+            if EverGearDB.debugMode then
+                local status = EverGear:CheckEnchantAgainstGame(self.item.spellId)
+                if status then EverGear:OnItemBrowserCheck() end
+            end
+            return
+        end
         GameTooltip:SetHyperlink(H.BuildItemLink(self.item.id))
         GameTooltip:Show()
     end)
@@ -291,6 +423,10 @@ local function CreateRow(index)
     -- Shift-click links it in chat, Ctrl-click previews it, like any item.
     row:SetScript("OnClick", function(self)
         if not self.item then return end
+        if mode == "enhancements" then
+            if self.item.itemId then EverGear:HandleItemModifiedClick(self.item.itemId) end
+            return
+        end
         if EverGear:HandleItemModifiedClick(self.item.id) then return end
         -- Alt-click: the wanted list / gear set menu (WishlistUI.lua's hook).
         local _, link = H.SafeGetItemInfo(self.item.id)
@@ -315,6 +451,7 @@ local function CreateDropdown(name, width, labelText, x, y, buildMenu, currentLa
     end)
     UIDropDownMenu_SetText(dropdown, currentLabel())
     dropdown.currentLabel = currentLabel
+    dropdown.label = label
     return dropdown
 end
 
@@ -334,7 +471,7 @@ end
 -- Distinct values of some field across all items, sorted by their label.
 local function DistinctValues(keyOf, labelOf)
     local seen, list = {}, {}
-    for _, item in pairs(EverGear.Items) do
+    for _, item in pairs(Dataset()) do
         local key = keyOf(item)
         if key and not seen[key] then
             seen[key] = true
@@ -366,6 +503,47 @@ local function CreateLevelBox(x, y)
     return box
 end
 
+local dropdowns = {}        -- every filter dropdown, to refresh their labels
+local itemOnlyControls = {} -- hidden on the Enhancements tab
+local modeTabs = {}
+
+local function SetMode(newMode)
+    if mode == newMode then return end
+    mode = newMode
+    -- Fields only one list has, or whose values differ between them.
+    filters.slot, filters.type, filters.source, filters.zone, filters.quality = nil, nil, nil, nil, nil
+    for _, dropdown in ipairs(dropdowns) do UIDropDownMenu_SetText(dropdown, dropdown.currentLabel()) end
+    for _, control in ipairs(itemOnlyControls) do control:SetShown(mode == "items") end
+    for key, tab in pairs(modeTabs) do
+        local active = key == mode
+        tab.underline:SetShown(active)
+        if active then tab.text:SetTextColor(unpack(THEME.gold)) else tab.text:SetTextColor(0.6, 0.6, 0.6) end
+    end
+    if IsScanning() then StopScan(true) end
+    ApplyFilters()
+end
+
+local function CreateModeTab(key, label, name)
+    local tab = CreateFrame("Button", name, frame)
+    tab:SetHeight(18)
+    local text = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    text:SetPoint("CENTER", 0, 1)
+    text:SetText(label)
+    tab:SetWidth(text:GetStringWidth() + 16)
+    tab.text = text
+    local underline = tab:CreateTexture(nil, "ARTWORK")
+    underline:SetHeight(2)
+    underline:SetPoint("BOTTOMLEFT", 4, 0)
+    underline:SetPoint("BOTTOMRIGHT", -4, 0)
+    underline:SetTexture("Interface\\Buttons\\WHITE8X8")
+    underline:SetVertexColor(unpack(THEME.gold))
+    tab.underline = underline
+    tab:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+    tab:SetScript("OnClick", function() SetMode(key) end)
+    modeTabs[key] = tab
+    return tab
+end
+
 local function BuildWindow()
     frame = CreateFrame("Frame", "EverGearItemBrowser", UIParent, "BackdropTemplate")
     frame:SetSize(WIDTH, HEIGHT)
@@ -392,10 +570,20 @@ local function BuildWindow()
     local close = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
     close:SetPoint("TOPRIGHT", -4, -4)
 
+    -- Items / Enhancements, at the top left beside the title.
+    local itemsTab = CreateModeTab("items", "Items", "EverGearItemBrowserTabItems")
+    itemsTab:SetPoint("TOPLEFT", 20, -16)
+    local enhancementsTab = CreateModeTab("enhancements", "Enhancements", "EverGearItemBrowserTabEnhancements")
+    enhancementsTab:SetPoint("LEFT", itemsTab, "RIGHT", 4, 0)
+    itemsTab.underline:Show()
+    itemsTab.text:SetTextColor(unpack(THEME.gold))
+    enhancementsTab.underline:Hide()
+    enhancementsTab.text:SetTextColor(0.6, 0.6, 0.6)
+
     -- Row 1: search, level range, sort.
     local searchLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     searchLabel:SetPoint("TOPLEFT", 24, -42)
-    searchLabel:SetText("Search (name, id, zone, boss, quest)")
+    searchLabel:SetText("Search (name, id, zone, boss, quest, effect)")
     searchLabel:SetTextColor(unpack(THEME.gold))
     local search = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
     search:SetSize(180, 20)
@@ -436,30 +624,30 @@ local function BuildWindow()
             return "All"
         end
     end
-    CreateDropdown("EverGearItemBrowserSort", 80, "Sort by", 336, -42, function(dropdown, level)
+    dropdowns[#dropdowns + 1] = CreateDropdown("EverGearItemBrowserSort", 80, "Sort by", 336, -42, function(dropdown, level)
         for _, entry in ipairs(SORTS) do AddOption(dropdown, entry.label, "sort", entry.key, level) end
     end, LabelFor(SORTS, "sort"))
 
-    CreateDropdown("EverGearItemBrowserStatus", 110, "Check status", 456, -42, function(dropdown, level)
+    dropdowns[#dropdowns + 1] = CreateDropdown("EverGearItemBrowserStatus", 110, "Check status", 456, -42, function(dropdown, level)
         AddOption(dropdown, "All", "status", nil, level)
         for _, entry in ipairs(STATUS_FILTERS) do AddOption(dropdown, entry.label, "status", entry.key, level) end
     end, LabelFor(STATUS_FILTERS, "status"))
 
     -- Row 2: slot, type, rarity, source, zone.
     local ROW2_Y = -84
-    CreateDropdown("EverGearItemBrowserSlot", 70, "Slot", 4, ROW2_Y, function(dropdown, level)
+    dropdowns[#dropdowns + 1] = CreateDropdown("EverGearItemBrowserSlot", 70, "Slot", 4, ROW2_Y, function(dropdown, level)
         AddOption(dropdown, "All", "slot", nil, level)
         for _, slot in ipairs(SLOT_ORDER) do AddOption(dropdown, SlotLabel(slot), "slot", slot, level) end
     end, function() return filters.slot and SlotLabel(filters.slot) or "All" end)
 
-    CreateDropdown("EverGearItemBrowserType", 70, "Type", 108, ROW2_Y, function(dropdown, level)
+    local typeDropdown = CreateDropdown("EverGearItemBrowserType", 70, "Type", 108, ROW2_Y, function(dropdown, level)
         AddOption(dropdown, "All", "type", nil, level)
         for _, key in ipairs(DistinctValues(TypeKey, TypeLabel)) do
             AddOption(dropdown, TypeLabel(key), "type", key, level)
         end
     end, function() return filters.type and TypeLabel(filters.type) or "All" end)
 
-    CreateDropdown("EverGearItemBrowserRarity", 70, "Rarity", 212, ROW2_Y, function(dropdown, level)
+    local rarityDropdown = CreateDropdown("EverGearItemBrowserRarity", 70, "Rarity", 212, ROW2_Y, function(dropdown, level)
         AddOption(dropdown, "All", "quality", nil, level)
         for quality = 0, 5 do
             local r, g, b = H.GetQualityColor(quality)
@@ -473,14 +661,15 @@ local function BuildWindow()
         return QUALITY_NAMES[filters.quality]
     end)
 
-    CreateDropdown("EverGearItemBrowserSource", 90, "Source", 316, ROW2_Y, function(dropdown, level)
+    dropdowns[#dropdowns + 1] = CreateDropdown("EverGearItemBrowserSource", 90, "Source", 316, ROW2_Y, function(dropdown, level)
         AddOption(dropdown, "All", "source", nil, level)
-        for _, key in ipairs(DistinctValues(SourceKey, SourceLabel)) do
+        local keyOf = mode == "enhancements" and EnchantSourceKey or SourceKey
+        for _, key in ipairs(DistinctValues(keyOf, SourceLabel)) do
             AddOption(dropdown, SourceLabel(key), "source", key, level)
         end
     end, function() return filters.source and SourceLabel(filters.source) or "All" end)
 
-    CreateDropdown("EverGearItemBrowserZone", 100, "Zone", 440, ROW2_Y, function(dropdown, level, menuList)
+    local zoneDropdown = CreateDropdown("EverGearItemBrowserZone", 100, "Zone", 440, ROW2_Y, function(dropdown, level, menuList)
         local zones = DistinctValues(function(item) return item.source and item.source.zone end,
             function(zone) return zone end)
         if level == 1 then
@@ -502,6 +691,11 @@ local function BuildWindow()
             end
         end
     end, function() return filters.zone or "All" end)
+    for _, dropdown in ipairs({ typeDropdown, rarityDropdown, zoneDropdown }) do
+        dropdowns[#dropdowns + 1] = dropdown
+        itemOnlyControls[#itemOnlyControls + 1] = dropdown
+        itemOnlyControls[#itemOnlyControls + 1] = dropdown.label
+    end
 
     -- Row 3: debug mode, reset.
     local ROW3_Y = -138
@@ -521,13 +715,13 @@ local function BuildWindow()
     reset:SetPoint("TOPRIGHT", -24, ROW3_Y)
     reset:SetText("Reset checks")
     reset:SetScript("OnClick", function()
-        EverGearDB.debugChecked = {}
+        if mode == "enhancements" then EverGearDB.debugCheckedEnchants = {} else EverGearDB.debugChecked = {} end
         ApplyFilters()
     end)
     reset:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText("Reset checks")
-        GameTooltip:AddLine("Forget which items matched or differed, e.g. after updating the addon's data.", 0.8, 0.8, 0.8, true)
+        GameTooltip:AddLine("Forget which items (or, on the Enhancements tab, enhancements) matched or differed, e.g. after updating the addon's data.", 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     reset:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -655,9 +849,9 @@ function StopScan(cancelled)
     UpdateScanButton()
 
     local counts = result.counts
-    Print(string.format("%s %d items: |cff33e640%d match|r, |cffff9933%d differ|r (captured)%s%s.",
+    Print(string.format("%s %d %s: |cff33e640%d match|r, |cffff9933%d differ|r (captured)%s%s.",
         cancelled and "Stopped after checking" or "Checked",
-        counts.ok + counts.differs, counts.ok, counts.differs,
+        counts.ok + counts.differs, result.enchants and "enhancements" or "items", counts.ok, counts.differs,
         counts.skipped > 0 and (", " .. counts.skipped .. " skipped (gray, random-suffix or not gear)") or "",
         #result.retry > 0 and (", " .. #result.retry .. " couldn't be loaded from the server") or ""))
     if frame then
@@ -666,16 +860,19 @@ function StopScan(cancelled)
         SetOffset(keep)
     end
     if result.lastDiffer then EverGear:ShowDebugCapture(result.lastDiffer) end
+    if result.enchants and counts.differs > 0 then
+        Print("The enhancements that differ are in the debug export, with the game's own text (/eg debug export).")
+    end
 end
 
 function StartScan()
     if scan or #filtered == 0 then return end
     scan = {
         queue = {}, index = 0, retry = {}, pass = 1, wait = 0,
-        done = 0, total = #filtered,
+        done = 0, total = #filtered, enchants = mode == "enhancements",
         counts = { ok = 0, differs = 0, skipped = 0 },
     }
-    for i, item in ipairs(filtered) do scan.queue[i] = item.id end
+    for i, item in ipairs(filtered) do scan.queue[i] = EntryId(item) end
     UpdateScanButton()
     scanner:Show()
 end
@@ -700,13 +897,19 @@ scanner:SetScript("OnUpdate", function(_, elapsed)
             StopScan(false)
             return
         end
-        local status, reason = EverGear:CheckItemAgainstGame(itemId)
+        local status, reason
+        if scan.enchants then
+            status, reason = EverGear:CheckEnchantAgainstGame(itemId)  -- a spell id here
+        else
+            status, reason = EverGear:CheckItemAgainstGame(itemId)
+        end
         if status then
             scan.counts[status] = scan.counts[status] + 1
-            if status == "differs" then scan.lastDiffer = itemId end
+            if status == "differs" and not scan.enchants then scan.lastDiffer = itemId end
             scan.done = scan.done + 1
         elseif reason == "uncached" then
-            if C_Item and C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(itemId) end
+            -- Enchant spells were already asked for by the check itself.
+            if not scan.enchants and C_Item and C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(itemId) end
             scan.retry[#scan.retry + 1] = itemId
         else
             scan.counts.skipped = scan.counts.skipped + 1
@@ -741,6 +944,10 @@ end)
 local function RequestAllItems()
     requestQueue, requestIndex = {}, 0
     for itemId in pairs(EverGear.Items) do requestQueue[#requestQueue + 1] = itemId end
+    -- Kits, scopes and the like, for their icons on the Enhancements tab.
+    for _, enchant in pairs(EverGear.Enchants or {}) do
+        if enchant.itemId then requestQueue[#requestQueue + 1] = enchant.itemId end
+    end
     requester:Show()
 end
 
