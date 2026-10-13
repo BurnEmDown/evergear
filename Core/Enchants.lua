@@ -180,7 +180,8 @@ function EverGear:CanGetEnchant(enchant, charDB, playerInfo, effectiveLevel)
         end
         if not ok then return false end
     end
-    if enchant.reqLevel and enchant.reqLevel > effectiveLevel then return false end
+    -- effectiveLevel nil: no level limit (gear sets with the picker's level box off).
+    if enchant.reqLevel and effectiveLevel and enchant.reqLevel > effectiveLevel then return false end
     local sourceFilters = charDB.filters or {}
     local professionFilter = charDB.professionFilter or {}
     if enchant.kind == "enchanting" then
@@ -236,19 +237,22 @@ end
 -- ===== Suggestions =====
 
 -- Every enchant that can go on this item in this slot, scored, best first:
--- { { enchant, score }, ... }. options.ignoreAvailability lists them all
--- regardless of filters / level (for picking one in a gear set).
+-- { { enchant, score }, ... }. By default it's what the player can get now
+-- (filters, class, level with look-ahead). options.planning (gear sets)
+-- uses the same filters but options.maxLevel as the level limit instead --
+-- nil for none -- like the gear set item picker.
 function EverGear:GetEnchantsForItem(slotToken, itemIdOrLink, options)
     local target = self:GetEnchantTargetInfo(itemIdOrLink)
     if not target then return {}, nil end
     local charDB = self:GetCharDB()
     local playerInfo = self:GetPlayerInfo()
     local effectiveLevel = math.max(playerInfo.level or 1, charDB.lookaheadLevel or playerInfo.level or 1)
+    if options and options.planning then effectiveLevel = options.maxLevel end
     local list = {}
     for _, enchant in pairs(self.Enchants or {}) do
         if self:CanEnchantGoOn(enchant, slotToken, target)
             and not self:IsEnchantOverSkillCap(enchant)
-            and ((options and options.ignoreAvailability) or self:CanGetEnchant(enchant, charDB, playerInfo, effectiveLevel))
+            and self:CanGetEnchant(enchant, charDB, playerInfo, effectiveLevel)
         then
             table.insert(list, { enchant = enchant, score = self:ScoreEnchant(enchant, slotToken, target) })
         end
@@ -340,10 +344,30 @@ function EverGear:GetEnchantSourceSummary(enchant)
     return #parts > 0 and table.concat(parts, ", ") or "Unknown source"
 end
 
+local sharedNames
+local function SharedNames()
+    if sharedNames then return sharedNames end
+    local counts = {}
+    for _, enchant in pairs(EverGear.Enchants or {}) do
+        counts[enchant.name] = (counts[enchant.name] or 0) + 1
+    end
+    sharedNames = {}
+    for name, count in pairs(counts) do
+        if count > 1 then sharedNames[name] = true end
+    end
+    return sharedNames
+end
+
 -- The name to show: formulas without their "Enchant " prefix.
 function EverGear:GetEnchantDisplayName(enchant)
     if not (enchant and enchant.name) then return "Unknown enchant" end
-    return (enchant.name:gsub("^Enchant ", ""))
+    local name = enchant.name:gsub("^Enchant ", "")
+    -- Several enchants share a name (the five Lesser Arcanums of Voracity):
+    -- tell them apart by what they do.
+    if enchant.effect and SharedNames()[enchant.name] then
+        name = name .. " (" .. enchant.effect .. ")"
+    end
+    return name
 end
 
 -- Icon: the item's for item enhancements, a generic enchanting one for

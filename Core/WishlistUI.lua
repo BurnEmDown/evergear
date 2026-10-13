@@ -385,12 +385,12 @@ local slotMenu = CreateFrame("Frame", "EverGearSetSlotMenu", UIParent, "UIDropDo
 local MAX_ENCHANT_CHOICES = 15
 
 -- Level 2 of the set slot menu: the enchants that fit this item, best first
--- with their EP, plus "No enchant". Not limited by level or filters (sets are
--- for planning), but ones that add nothing for this profile are left out
--- unless it's the one on the slot now.
+-- with their EP, plus "No enchant". Same rules as the gear set item picker:
+-- the source / profession filters and class, and its "Up to level" box (the
+-- look-ahead level) when ticked. Ones that add nothing for this profile are
+-- left out, but the set's current enchant is always listed.
 local function AddEnchantChoices(setIndex, slotToken, itemId)
     local record, known = EverGear:GetSetEnchant(setIndex, slotToken)
-    local currentSpell = record and record.spellId
 
     local info = UIDropDownMenu_CreateInfo()
     info.text = "No enchant"
@@ -406,21 +406,41 @@ local function AddEnchantChoices(setIndex, slotToken, itemId)
         UIDropDownMenu_AddButton(info, 2)
     end
 
+    local levelCheck = _G.EverGearSetItemPickerLevelCheck
+    local maxLevel
+    if not levelCheck or levelCheck:GetChecked() then
+        local level = EverGear:GetPlayerInfo().level or 1
+        maxLevel = math.max(level, EverGear:GetCharDB().lookaheadLevel or level)
+    end
+    local entries = EverGear:GetEnchantsForItem(slotToken, itemId, { planning = true, maxLevel = maxLevel })
+    local currentListed = false
+    for _, entry in ipairs(entries) do
+        if known and entry.enchant.spellId == known.spellId then currentListed = true end
+    end
+    if known and not currentListed then
+        -- Not one the filters / level allow now, but it's on the set: keep it.
+        table.insert(entries, { enchant = known, score = EverGear:ScoreEnchant(known, slotToken, EverGear:GetEnchantTargetInfo(itemId)) })
+        table.sort(entries, function(a, b) return a.score > b.score end)
+    end
+
     local shown = 0
-    for _, entry in ipairs((EverGear:GetEnchantsForItem(slotToken, itemId, { ignoreAvailability = true }))) do
+    for _, entry in ipairs(entries) do
         local enchant = entry.enchant
-        local isCurrent = known and known.spellId == enchant.spellId or enchant.spellId == currentSpell
+        local isCurrent = known ~= nil and known.spellId == enchant.spellId
         if (entry.score > 0 and shown < MAX_ENCHANT_CHOICES) or isCurrent then
             info = UIDropDownMenu_CreateInfo()
-            info.text = EverGear:GetEnchantDisplayName(enchant) .. "  |cff20e626(+" .. math.floor(entry.score + 0.5) .. ")|r"
+            local text = EverGear:GetEnchantDisplayName(enchant) .. "  |cff20e626(+" .. math.floor(entry.score + 0.5) .. ")|r"
+            if enchant.reqLevel then text = text .. "  |cffaaaaaalevel " .. enchant.reqLevel .. "|r" end
+            info.text = text
             info.checked = isCurrent
             info.tooltipTitle = EverGear:GetEnchantDisplayName(enchant)
             info.tooltipText = (enchant.effect and (enchant.effect .. "\n") or "") .. EverGear:GetEnchantSourceSummary(enchant)
+                .. (enchant.reqLevel and ("\nRequires level " .. enchant.reqLevel .. ".") or "")
             info.tooltipOnButton = true
             local spellId = enchant.spellId
             info.func = function() EverGear:SetSetEnchant(setIndex, slotToken, spellId); CloseDropDownMenus() end
             UIDropDownMenu_AddButton(info, 2)
-            if entry.score > 0 then shown = shown + 1 end
+            if entry.score > 0 and not isCurrent then shown = shown + 1 end
         end
     end
 end
