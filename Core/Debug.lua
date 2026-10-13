@@ -426,9 +426,17 @@ local function StoreCapture(record, status, diffs, notes, addonStats, sourceNote
     }
 end
 
+-- Enchants (item browser's Enhancements section) whose numbers differ from
+-- the game's own description of the spell, keyed by spell id.
+local function EnchantCaptures()
+    EverGearDB.debugEnchantCaptures = EverGearDB.debugEnchantCaptures or {}
+    return EverGearDB.debugEnchantCaptures
+end
+
 local function CaptureCount()
     local n = 0
     for _ in pairs(Captures()) do n = n + 1 end
+    for _ in pairs(EnchantCaptures()) do n = n + 1 end
     return n
 end
 
@@ -446,6 +454,12 @@ function EverGear:BuildCaptureJSON()
         record._addonStats = entry.addonStats
         record._capturedAtLevel = entry.level
         out[tostring(id)] = record
+    end
+    -- Enchants that differ: what EverGear has next to the game's own text.
+    if next(EnchantCaptures()) then
+        local enchants = {}
+        for spellId, entry in pairs(EnchantCaptures()) do enchants[tostring(spellId)] = entry end
+        out._enchants = enchants
     end
     return EverGear.JSON.encode(out)
 end
@@ -573,6 +587,7 @@ local function BuildWindow()
     clearButton:SetText("Clear captured")
     clearButton:SetScript("OnClick", function()
         EverGearDB.debugCaptures = {}
+        EverGearDB.debugEnchantCaptures = {}
         print("|cff33ff99EverGear|r debug: captures cleared.")
         RefreshCaptureUI()
     end)
@@ -782,6 +797,69 @@ function EverGear:CheckItemAgainstGame(itemId)
     return status
 end
 
+-- ===== Enchant checks =====
+-- For the item browser's Enhancements section: compares an enchant's numbers
+-- in EverGear's data (stats, armor, weapon damage, health / mana) with the
+-- game's own description of the spell that applies it (the formula, or the
+-- item's Use spell). Every number EverGear has must appear in the game's
+-- text; anything missing means the data is off (e.g. a value Forever
+-- changed). Enchants with no numbers (procs, utility) count as matching once
+-- the game has a description for them.
+
+local function SpellDescription(spellId)
+    local get = (C_Spell and C_Spell.GetSpellDescription) or GetSpellDescription
+    local text = get and get(spellId)
+    if type(text) == "string" and text ~= "" then return text end
+    local request = C_Spell and C_Spell.RequestLoadSpellData
+    if request then request(spellId) end
+    return nil
+end
+
+local function ExpectedNumbers(enchant)
+    local list, seen = {}, {}
+    local function add(value)
+        if type(value) == "number" and value > 0 and not seen[value] then
+            seen[value] = true
+            list[#list + 1] = value
+        end
+    end
+    for _, value in pairs(enchant.stats or {}) do add(value) end
+    add(enchant.armor)
+    add(enchant.weaponDamage)
+    table.sort(list)
+    return list
+end
+
+-- Returns "ok" or "differs", or nil, "uncached" when the game hasn't loaded
+-- the spell yet (it's asked for; try again later), or nil, "unknown".
+function EverGear:CheckEnchantAgainstGame(spellId)
+    local enchant = self.GetEnchant and self:GetEnchant(spellId)
+    if not enchant then return nil, "unknown" end
+    local text = SpellDescription(spellId)
+    if not text then return nil, "uncached" end
+    local found = {}
+    for number in text:gmatch("%d+") do found[tonumber(number)] = true end
+    local missing = {}
+    for _, value in ipairs(ExpectedNumbers(enchant)) do
+        if not found[value] then missing[#missing + 1] = value end
+    end
+    local status = #missing > 0 and "differs" or "ok"
+    EverGearDB.debugCheckedEnchants = EverGearDB.debugCheckedEnchants or {}
+    EverGearDB.debugCheckedEnchants[spellId] = status
+    if status == "differs" then
+        EnchantCaptures()[spellId] = {
+            name = enchant.name, spellId = spellId, enchantId = enchant.enchantId,
+            itemId = enchant.itemId, effect = enchant.effect, stats = enchant.stats,
+            armor = enchant.armor, weaponDamage = enchant.weaponDamage,
+            gameText = text, missing = missing,
+        }
+    else
+        EnchantCaptures()[spellId] = nil
+    end
+    RefreshCaptureUI()
+    return status
+end
+
 -- Opens the debug window on an item that's already captured.
 function EverGear:ShowDebugCapture(itemId)
     local entry = Captures()[itemId]
@@ -808,6 +886,7 @@ function EverGear:HandleDebugCommand(arg)
         return
     elseif arg == "clear" then
         EverGearDB.debugCaptures = {}
+        EverGearDB.debugEnchantCaptures = {}
         RefreshCaptureUI()
         print("|cff33ff99EverGear|r debug: captures cleared.")
         return
