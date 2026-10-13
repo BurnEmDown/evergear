@@ -413,6 +413,10 @@ local function CreateRow(index)
             if EverGearDB.debugMode then
                 local status = EverGear:CheckEnchantAgainstGame(self.item.spellId)
                 if status then EverGear:OnItemBrowserCheck() end
+                if status == "differs" then
+                    GameTooltip:AddLine("Differs from the game -- captured. Click Export JSON to copy it.", 1, 0.6, 0.2, true)
+                    GameTooltip:Show()
+                end
             end
             return
         end
@@ -742,6 +746,22 @@ local function BuildWindow()
         GameTooltip:Show()
     end)
     checkAllButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    -- The same copy-and-paste JSON box as the debug window's Export button,
+    -- with every capture: items, and enhancements (under "_enchants").
+    local exportButton = CreateFrame("Button", "EverGearItemBrowserExport", frame, "UIPanelButtonTemplate")
+    exportButton:SetSize(100, 22)
+    exportButton:SetPoint("RIGHT", checkAllButton, "LEFT", -6, 0)
+    exportButton:SetText("Export JSON")
+    exportButton:SetScript("OnClick", function() EverGear:HandleDebugCommand("export") end)
+    exportButton:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText("Export JSON")
+        GameTooltip:AddLine("Opens everything captured (items that differ, and enhancements that differ, "
+            .. "with the game's own text) as JSON, ready to copy.", 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    exportButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     countText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     countText:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", LIST_SIDE + 4, LIST_TOP + 2)
