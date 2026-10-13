@@ -12,6 +12,7 @@
 --   * the item's level is at least enchant.minItemLevel (armor kits, scopes);
 --   * the character can use it: class (Zul'Gurub enchants), character level
 --     (enchant.reqLevel, against the look-ahead level like item upgrades);
+--   * it doesn't need more profession skill than the beta's cap (225);
 --   * it can be had, following the same filters as item upgrades:
 --       - Enchanting formulas: Enchanting ticked in the profession filter and
 --         the Craft source type on. Anyone can have an enchanter put one on,
@@ -149,6 +150,13 @@ local function GoesInSlot(enchant, slotToken)
     return false
 end
 
+-- Needs more profession skill than anyone can have right now (the beta's
+-- cap, EverGear.PROFESSION_SKILL_CAP)? Such enchants are never shown.
+function EverGear:IsEnchantOverSkillCap(enchant)
+    local cap = self.PROFESSION_SKILL_CAP
+    return cap ~= nil and (enchant.skill or 0) > cap
+end
+
 -- Can this enchant go on this item in this slot (slot, weapon kind, item level)?
 function EverGear:CanEnchantGoOn(enchant, slotToken, target)
     if not (enchant and target and GoesInSlot(enchant, slotToken)) then return false end
@@ -239,6 +247,7 @@ function EverGear:GetEnchantsForItem(slotToken, itemIdOrLink, options)
     local list = {}
     for _, enchant in pairs(self.Enchants or {}) do
         if self:CanEnchantGoOn(enchant, slotToken, target)
+            and not self:IsEnchantOverSkillCap(enchant)
             and ((options and options.ignoreAvailability) or self:CanGetEnchant(enchant, charDB, playerInfo, effectiveLevel))
         then
             table.insert(list, { enchant = enchant, score = self:ScoreEnchant(enchant, slotToken, target) })
