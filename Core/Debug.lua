@@ -159,7 +159,9 @@ local function StripColor(text)
 end
 
 -- Reads one item link's tooltip into canonical-shaped stats. Returns stats, notes where
--- notes lists lines worth a human look (school-damage wands and the like).
+-- notes lists lines worth a human look (school-damage wands and the like), the classes
+-- line, and every "Requires ..." line other than the level (reputation standing, PvP
+-- rank, profession skill) as the tooltip shows it, minus the "Requires ".
 local function ReadTooltipStats(link)
     scanTooltip:ClearLines()
     scanTooltip:SetOwner(UIParent, "ANCHOR_NONE")
@@ -168,6 +170,7 @@ local function ReadTooltipStats(link)
     local stats, notes = {}, {}
     local equipN, onhitN, useN = 0, 0, 0
     local classes
+    local requires, seenRequires = {}, {}
 
     local function Fragment(text)
         if not text or text == "" then return end
@@ -243,6 +246,14 @@ local function ReadTooltipStats(link)
             stats["USE_" .. useN] = use
             return
         end
+        local required = text:match("^Requires (.+)$")
+        if required and not required:match("^Level %d+$") then
+            if not seenRequires[required] then
+                seenRequires[required] = true
+                requires[#requires + 1] = required
+            end
+            return
+        end
         local classList = text:match("^Classes: (.+)$")
         if classList then
             classes = {}
@@ -267,7 +278,28 @@ local function ReadTooltipStats(link)
         stats.BONUS_ARMOR = nil
     end
 
-    return stats, notes, classes
+    return stats, notes, classes, requires
+end
+
+local STANDINGS = { Neutral = true, Friendly = true, Honored = true, Revered = true, Exalted = true }
+
+-- Reads the reputation and PvP rank an item needs out of its "Requires ..." lines:
+-- "The Defilers - Honored" and "Sergeant (Rank 3)" (wowhead's shape; a bare
+-- rank name without the number isn't told apart from anything else, so it only
+-- shows in _requires).
+local function ParseRequirements(requires)
+    local reputation, pvpRank
+    for _, line in ipairs(requires or {}) do
+        local faction, standing = line:match("^(.+) %- (%a+)$")
+        if faction and STANDINGS[standing] then
+            reputation = { faction = faction, standing = standing }
+        end
+        local rankName, rank = line:match("^(.+) %(Rank (%d+)%)$")
+        if rankName then
+            pvpRank = { name = rankName, rank = tonumber(rank) }
+        end
+    end
+    return reputation, pvpRank
 end
 
 -- Builds the canonical record for a link, as the game shows it. Returns nil for anything
@@ -331,10 +363,17 @@ function EverGear:BuildLiveItemRecord(link, includeWhite)
         end
     end
 
-    local stats, tooltipNotes, classes = ReadTooltipStats(link)
+    local stats, tooltipNotes, classes, requires = ReadTooltipStats(link)
     for _, n in ipairs(tooltipNotes) do notes[#notes + 1] = n end
     record.stats = stats
     record.classes = classes
+    -- What else the item needs, for whoever adds the capture (keys starting with "_"
+    -- aren't part of the schema): the raw lines, plus the reputation / PvP rank read
+    -- from them, which the comparison below checks against the item's source.
+    if #requires > 0 then
+        record._requires = requires
+        record._reputation, record._pvpRank = ParseRequirements(requires)
+    end
     return record, nil, notes
 end
 
@@ -383,6 +422,22 @@ function EverGear:CompareLiveToDatabase(live, db)
         if not skip and live[field] ~= db[field] and not (live[field] == nil and db[field] == nil) then
             diffs[#diffs + 1] = string.format("%s: addon %s, game %s", field, tostring(db[field]), tostring(live[field]))
         end
+    end
+
+    -- The reputation or PvP rank the game says it needs, against a reputation / PvP
+    -- vendor source. (Other sources aren't checked: a vendor item can need a
+    -- reputation too, and the raw lines are in the capture either way.)
+    local source = db.source or {}
+    local rep = live._reputation
+    if source.type == "reputation" and (not rep or source.repFaction ~= rep.faction or source.standing ~= rep.standing) then
+        diffs[#diffs + 1] = string.format("reputation: addon %s - %s, game %s",
+            tostring(source.repFaction), tostring(source.standing),
+            rep and (rep.faction .. " - " .. rep.standing) or "none")
+    end
+    local rank = live._pvpRank
+    if source.type == "pvp" and rank and source.rank ~= rank.rank then
+        diffs[#diffs + 1] = string.format("PvP rank: addon %s, game %s (rank %d)",
+            tostring(source.rank), rank.name, rank.rank)
     end
 
     local g, d = NormalizeForCompare(live.stats), NormalizeForCompare(db.stats)
@@ -701,9 +756,10 @@ local function ShowFlaggedItem(record, status, diffs, notes, addonStats)
             keys[#keys + 1] = k .. " = " .. tostring(v)
         end
         table.sort(keys)
-        diffText:SetText(string.format("%s %s, level %s\n%s",
+        local requires = record._requires and ("\nRequires: " .. table.concat(record._requires, "; ")) or ""
+        diffText:SetText(string.format("%s %s, level %s%s\n%s",
             record.slot, record.armorType or record.weaponType or "", tostring(record.minLevel),
-            table.concat(keys, "\n")))
+            requires, table.concat(keys, "\n")))
     else
         statusText:SetText("STATS DIFFER FROM GAME")
         statusText:SetTextColor(unpack(ORANGE))
