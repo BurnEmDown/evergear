@@ -70,7 +70,7 @@ EverGear.Cosmetics[262765] = {id = 262765, name = "Azeroth Commerce Authority Ta
 EverGear.Cosmetics[20131] = {id = 20131, name = "Battle Tabard of the Defilers", slot = "TabardSlot", quality = 1, faction = "Horde", source = "Quest"}
 EverGear.Cosmetics[281631] = {id = 281631, name = "Collector's Edition Tabard", slot = "TabardSlot", quality = 1}
 EverGear.Cosmetics[19160] = {id = 19160, name = "Contest Winner's Tabard", slot = "TabardSlot", quality = 1}
-EverGear.Cosmetics[276502] = {id = 276502, name = "Darkspear Battle Tabard", slot = "TabardSlot", quality = 1}
+EverGear.Cosmetics[276502] = {id = 276502, name = "Darkspear Battle Tabard", slot = "TabardSlot", quality = 1, faction = "Horde", source = "Vendor"}
 EverGear.Cosmetics[262764] = {id = 262764, name = "Durotar Supply and Logistics Tabard", slot = "TabardSlot", quality = 1, faction = "Horde", source = "Vendor"}
 EverGear.Cosmetics[275042] = {id = 275042, name = "Farholde Keep Tabard", slot = "TabardSlot", quality = 1}
 EverGear.Cosmetics[19031] = {id = 19031, name = "Frostwolf Battle Tabard", slot = "TabardSlot", quality = 1, faction = "Horde", source = "Vendor"}
@@ -99,6 +99,6 @@ EverGear.Cosmetics[191481] = {id = 191481, name = "Tabard of Mastery", slot = "T
 EverGear.Cosmetics[11364] = {id = 11364, name = "Tabard of Stormwind", slot = "TabardSlot", quality = 1}
 EverGear.Cosmetics[22999] = {id = 22999, name = "Tabard of the Argent Dawn", slot = "TabardSlot", quality = 1, source = "Quest"}
 EverGear.Cosmetics[23192] = {id = 23192, name = "Tabard of the Scarlet Crusade", slot = "TabardSlot", quality = 1, source = "Drop"}
-EverGear.Cosmetics[276504] = {id = 276504, name = "Theramore Battle Tabard", slot = "TabardSlot", quality = 1}
+EverGear.Cosmetics[276504] = {id = 276504, name = "Theramore Battle Tabard", slot = "TabardSlot", quality = 1, faction = "Alliance", source = "Vendor"}
 EverGear.Cosmetics[23710] = {id = 23710, name = "Upperdeck Tabard #3", slot = "TabardSlot", quality = 1}
 EverGear.Cosmetics[19505] = {id = 19505, name = "Warsong Battle Tabard", slot = "TabardSlot", quality = 1, faction = "Horde", source = "Vendor"}

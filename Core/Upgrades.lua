@@ -1317,9 +1317,44 @@ end
 --   zone or dungeon. Items with no source.zone (crafted, world drops from all
 --   over) are never hidden by it. ignoreZone skips this one, for the Upgrades
 --   by Zone window, where the zone is picked on purpose.
+-- * PvP honor gear (source.type == "pvp", the PvP filter panel): hidden
+--   altogether with "Show PvP items" off (charDB.pvpFilter.hidden), and by
+--   default an item needing a higher PvP rank than the character has is
+--   hidden too (charDB.pvpFilter.ignoreRank turns that off).
+-- * Battleground reputation gear (source.type == "reputation", same panel):
+--   hidden with "Show PvP items" off too, and by default an item needing a
+--   higher standing with its battleground faction than the character has is
+--   hidden (charDB.pvpFilter.ignoreReputation turns that off).
 -- * The profession skill cap (EverGear.PROFESSION_SKILL_CAP, the beta's 225):
 --   a crafted item whose recipe needs more skill can't be made by anyone yet,
 --   so it's never shown, whatever the filters say.
+-- The character's PvP rank number (0 = none, 1 = Private / Scout ... 14 =
+-- Grand Marshal / High Warlord) and its name, from the game.
+function EverGear:GetPlayerPvPRank()
+    local rankId = UnitPVPRank and UnitPVPRank("player")
+    if not rankId or rankId == 0 or not GetPVPRankInfo then return 0, nil end
+    local name, number = GetPVPRankInfo(rankId)
+    return tonumber(number) or 0, name
+end
+
+-- Reputation standings, as the game numbers them (GetFactionInfoByID's
+-- standingID): 4 = Neutral ... 8 = Exalted.
+EverGear.STANDING_IDS = { Neutral = 4, Friendly = 5, Honored = 6, Revered = 7, Exalted = 8 }
+
+-- The character's standing with a faction (standingID, see above), from the
+-- game. A faction the character hasn't met yet counts as Neutral.
+function EverGear:GetPlayerStanding(factionId)
+    if not factionId then return 4 end
+    local standingId
+    if GetFactionInfoByID then
+        standingId = select(3, GetFactionInfoByID(factionId))
+    elseif C_Reputation and C_Reputation.GetFactionDataByID then
+        local data = C_Reputation.GetFactionDataByID(factionId)
+        standingId = data and data.reaction
+    end
+    return tonumber(standingId) or 4
+end
+
 local function PassesFilterPanels(self, item, charDB, ignoreZone)
     local filterKey = self:GetWeaponFilterKey(item)
     if filterKey and (charDB.weaponTypeFilter or {})[filterKey] == false then return false end
@@ -1329,6 +1364,21 @@ local function PassesFilterPanels(self, item, charDB, ignoreZone)
         if cap and (item.source.skill or 0) > cap then return false end
         if (charDB.professionFilter or {})[profession] == false then return false end
         if (charDB.professionBoEOnly or {})[profession] and item.bindType ~= "BoE" then return false end
+    end
+    if item.source and item.source.type == "pvp" then
+        local pvpFilter = charDB.pvpFilter or {}
+        if pvpFilter.hidden then return false end
+        if item.source.rank and not pvpFilter.ignoreRank and item.source.rank > self:GetPlayerPvPRank() then
+            return false
+        end
+    end
+    if item.source and item.source.type == "reputation" then
+        local pvpFilter = charDB.pvpFilter or {}
+        if pvpFilter.hidden then return false end
+        local needed = self.STANDING_IDS[item.source.standing]
+        if needed and not pvpFilter.ignoreReputation and needed > self:GetPlayerStanding(item.source.repFactionId) then
+            return false
+        end
     end
     local zone = item.source and item.source.zone
     if zone and not ignoreZone and (charDB.zoneFilter or {})[zone] == false then return false end
@@ -1577,6 +1627,16 @@ function EverGear:GetSourceSummary(item)
         return source.zone and (source.zone .. " (" .. what .. ")") or what
     elseif source.type == "craft" then
         return "Crafted" .. (source.profession and (" (" .. source.profession .. ")") or "")
+    elseif source.type == "pvp" then
+        -- e.g. "PvP vendor: Grand Marshal (rank 14)" or "PvP vendor (Honor)".
+        if source.rank then
+            return "PvP vendor: " .. (source.rankName or "rank") .. " (rank " .. source.rank .. ")"
+        end
+        return "PvP vendor (Honor)"
+    elseif source.type == "reputation" then
+        -- e.g. "Arathi Basin: The Defilers - Honored".
+        local what = (source.repFaction or "Reputation") .. (source.standing and (" - " .. source.standing) or "")
+        return source.battleground and (source.battleground .. ": " .. what) or what
     end
     return "Unknown source"
 end

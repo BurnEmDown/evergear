@@ -127,6 +127,18 @@ local function ParseEquipText(text)
     if v then return { { "RANGED_ATTACK_POWER", tonumber(v) } } end
     v = t:match("^restores (%d+) mana per 5 sec%.?$")
     if v then return { { "MP5", tonumber(v) } } end
+    -- Darkspear Islands trinkets: a base value plus more "in Forest and Grassland
+    -- areas". The database keeps the base value, which is what counts anywhere else.
+    v = t:match("^restores (%d+) mana per 5 sec%. restores an additional %d+ mana per 5 sec in .+$")
+    if v then return { { "MP5", tonumber(v) } } end
+    v = t:match("^increases all resistances by (%d+)%. gain an additional %d+ to all resistances in .+$")
+    if v then
+        local list = {}
+        for _, school in ipairs({ "FIRE", "FROST", "NATURE", "SHADOW", "ARCANE" }) do
+            list[#list + 1] = { school .. "_RESISTANCE", tonumber(v) }
+        end
+        return list
+    end
     v = t:match("^restores (%d+) health per 5 sec%.?$")
     if v then return { { "HP5", tonumber(v) } } end
     v = t:match("^increased defense %+(%d+)%.?$")
