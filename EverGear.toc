@@ -89,5 +89,6 @@ Data\Items_Undercity.lua
 Data\Items_DustwallowMarsh.lua
 Data\Items_PvPHonorVendors.lua
 Data\Items_BGReputation.lua
+Data\Items_ReputationVendors.lua
 Data\Cosmetics.lua
 Data\Enchants.lua

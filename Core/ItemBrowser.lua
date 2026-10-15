@@ -120,7 +120,7 @@ local function SourceLabel(key)
     if key == "none" then return "No source" end
     if key == "drop" then return "Drop" end
     if key == "pvp" then return "PvP" end
-    if key == "reputation" then return "BG Reputation" end
+    if key == "reputation" then return "Reputation" end
     return key
 end
 
