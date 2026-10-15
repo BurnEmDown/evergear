@@ -2297,7 +2297,7 @@ zoneFilterNote:SetText("Crafted items and world drops from all over aren't tied 
 
 local zoneFilterButton = CreateFrame("Button", "EverGearZoneFilterButton", mainFrame)
 zoneFilterButton:SetSize(20, 20)
-zoneFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -92)
+zoneFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -116)
 zoneFilterButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Map_01")
 zoneFilterButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 zoneFilterButton:SetScript("OnEnter", function(self)
@@ -2332,8 +2332,9 @@ end)
 -- only Honor and Marks of Honor -- the weapons, cloaks, necks and insignias
 -- do). Stored as opt-outs in charDB.pvpFilter so a new character starts
 -- with both on. Same button + panel pattern as the other filters; the
--- button sits in the top-left column, below the Gear Sets button, which had
--- room, and the panel opens on the right like the other filter panels.
+-- button sits in the right-hand column with the other filter buttons, below
+-- the profession filter (the zone filter and Upgrades by Zone buttons sit
+-- below it), and the panel opens on the right like the other filter panels.
 local function GetPvPFilter()
     local charDB = EverGear:GetCharDB()
     charDB.pvpFilter = charDB.pvpFilter or {}
@@ -2414,11 +2415,11 @@ pvpFilterPanel:SetScript("OnShow", RefreshPvPFilterPanel)
 
 local pvpFilterButton = CreateFrame("Button", "EverGearPvPFilterButton", mainFrame)
 pvpFilterButton:SetSize(20, 20)
-pvpFilterButton:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 16, -92)
+pvpFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -92)
 pvpFilterButton:SetNormalTexture("Interface\\Icons\\INV_BannerPVP_02")
 pvpFilterButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 pvpFilterButton:SetScript("OnEnter", function(self)
-    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
     GameTooltip:SetText("PvP filters")
     GameTooltip:AddLine("Show or hide gear from the PvP honor vendors, and whether your PvP rank limits it.", 0.8, 0.8, 0.8, true)
     GameTooltip:Show()
