@@ -584,6 +584,7 @@ local filterCheckboxes = {}
 local weaponFilterPanel
 local professionFilterPanel
 local zoneFilterPanel
+local pvpFilterPanel
 
 local function CreateFilterCheckbox(name, label, key)
     local cb = CreateFrame("CheckButton", name, mainFrame, "UICheckButtonTemplate")
@@ -1649,7 +1650,7 @@ function EverGear:ShowUpgradeDetailOnHover(slotToken)
     if detailOpenedByClick and detailPanel:IsShown() then return end
     if not btn.upgradeList or #btn.upgradeList == 0 then return end
     if detailPanel:IsShown() and currentDetailSlot == slotToken then return end
-    for _, filterPanel in ipairs({ weaponFilterPanel, professionFilterPanel, zoneFilterPanel }) do
+    for _, filterPanel in ipairs({ weaponFilterPanel, professionFilterPanel, zoneFilterPanel, pvpFilterPanel }) do
         if filterPanel and filterPanel:IsShown() then return end
     end
     detailOpenedByClick = false
@@ -1665,6 +1666,7 @@ function EverGear:ShowUpgradeDetail(slotToken)
     if weaponFilterPanel then weaponFilterPanel:Hide() end
     if professionFilterPanel then professionFilterPanel:Hide() end
     if zoneFilterPanel then zoneFilterPanel:Hide() end
+    if pvpFilterPanel then pvpFilterPanel:Hide() end
 
     UpdateDetailTabs()
     detailEmptyMessage:ClearAllPoints()
@@ -1947,6 +1949,7 @@ weaponFilterButton:SetScript("OnClick", function()
     detailPanel:Hide()
     professionFilterPanel:Hide()
     zoneFilterPanel:Hide()
+    if pvpFilterPanel then pvpFilterPanel:Hide() end
     CloseZoneUpgradesWindow()
     weaponFilterPanel:ClearAllPoints()
     weaponFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
@@ -2113,6 +2116,7 @@ professionFilterButton:SetScript("OnClick", function()
     detailPanel:Hide()
     weaponFilterPanel:Hide()
     zoneFilterPanel:Hide()
+    if pvpFilterPanel then pvpFilterPanel:Hide() end
     CloseZoneUpgradesWindow()
     professionFilterPanel:ClearAllPoints()
     professionFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
@@ -2313,10 +2317,137 @@ zoneFilterButton:SetScript("OnClick", function()
     detailPanel:Hide()
     weaponFilterPanel:Hide()
     professionFilterPanel:Hide()
+    if pvpFilterPanel then pvpFilterPanel:Hide() end
     CloseZoneUpgradesWindow()
     zoneFilterPanel:ClearAllPoints()
     zoneFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
     zoneFilterPanel:Show()
+end)
+
+-- ===== PvP filter =====
+-- PvP honor gear (source.type "pvp", the "Premier" items from the honor
+-- vendors). Two switches, both read by Upgrades.lua's PassesFilterPanels:
+-- show PvP items at all, and leave out items that need a higher PvP rank
+-- than the character has (on by default; most of the gear needs no rank,
+-- only Honor and Marks of Honor -- the weapons, cloaks, necks and insignias
+-- do). Battleground reputation gear (source.type "reputation": Arathi Basin
+-- and Darkspear Islands vendors) follows "Show PvP items" too, and has its
+-- own switch for leaving out items that need a higher standing than the
+-- character has (on by default). Stored as opt-outs in charDB.pvpFilter so
+-- a new character starts with all of them on. Same button + panel pattern as the other filters; the
+-- button sits in the top-left column, below the Gear Sets button, which had
+-- room, and the panel opens on the right like the other filter panels.
+local function GetPvPFilter()
+    local charDB = EverGear:GetCharDB()
+    charDB.pvpFilter = charDB.pvpFilter or {}
+    return charDB.pvpFilter
+end
+
+pvpFilterPanel = CreateFrame("Frame", "EverGearPvPFilterPanel", mainFrame, "BackdropTemplate")
+pvpFilterPanel:SetSize(230, 190)
+pvpFilterPanel:SetBackdrop({
+    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+    tile = true, tileSize = 32, edgeSize = 32,
+    insets = { left = 11, right = 12, top = 12, bottom = 11 }
+})
+pvpFilterPanel:Hide()
+
+local pvpFilterCloseButton = CreateFrame("Button", nil, pvpFilterPanel, "UIPanelCloseButton")
+pvpFilterCloseButton:SetPoint("TOPRIGHT", -2, -2)
+
+local pvpFilterHeader = pvpFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+pvpFilterHeader:SetPoint("TOP", 0, -14)
+pvpFilterHeader:SetText("PvP Gear")
+pvpFilterHeader:SetTextColor(unpack(THEME.gold))
+
+local function PvPCheckbox(name, label, y, isOn, setOn, tooltipTitle, tooltipText)
+    local cb = CreateFrame("CheckButton", name, pvpFilterPanel, "UICheckButtonTemplate")
+    cb:SetPoint("TOPLEFT", 14, y)
+    _G[name .. "Text"]:SetText(label)
+    cb:SetScript("OnClick", function(self)
+        setOn(self:GetChecked() and true or false)
+        EverGear:RefreshUI()
+    end)
+    cb:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(tooltipTitle)
+        GameTooltip:AddLine(tooltipText, 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    cb:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    cb.isOn = isOn
+    return cb
+end
+
+local pvpShowCheck = PvPCheckbox("EverGearPvPFilterShow", "Show PvP items", -38,
+    function() return not GetPvPFilter().hidden end,
+    function(on) GetPvPFilter().hidden = not on or nil end,
+    "Show PvP items", "Suggest gear from the PvP honor vendors, bought with Honor and Marks of Honor, "
+        .. "and from the battleground reputation vendors.")
+
+local pvpRankCheck = PvPCheckbox("EverGearPvPFilterRank", "Only what my rank allows", -62,
+    function() return not GetPvPFilter().ignoreRank end,
+    function(on) GetPvPFilter().ignoreRank = not on or nil end,
+    "Only what my rank allows", "Leave out items that need a higher PvP rank than you have. Most PvP gear "
+        .. "needs no rank; the weapons, cloaks, necks and insignias do.")
+
+local pvpRepCheck = PvPCheckbox("EverGearPvPFilterReputation", "Only what my reputation allows", -86,
+    function() return not GetPvPFilter().ignoreReputation end,
+    function(on) GetPvPFilter().ignoreReputation = not on or nil end,
+    "Only what my reputation allows", "Leave out battleground reputation gear that needs a higher standing "
+        .. "than you have with that battleground's faction (Arathi Basin, Darkspear Islands).")
+
+local pvpRankText = pvpFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+pvpRankText:SetPoint("TOPLEFT", 20, -116)
+pvpRankText:SetPoint("RIGHT", -16, 0)
+pvpRankText:SetJustifyH("LEFT")
+pvpRankText:SetTextColor(unpack(THEME.parchment))
+
+local pvpFilterNote = pvpFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+pvpFilterNote:SetPoint("TOPLEFT", pvpRankText, "BOTTOMLEFT", 0, -8)
+pvpFilterNote:SetPoint("RIGHT", -16, 0)
+pvpFilterNote:SetJustifyH("LEFT")
+pvpFilterNote:SetText("Honor gear is for level 55 and up, battleground reputation gear from level 28.")
+
+local function RefreshPvPFilterPanel()
+    pvpShowCheck:SetChecked(pvpShowCheck.isOn())
+    pvpRankCheck:SetChecked(pvpRankCheck.isOn())
+    pvpRepCheck:SetChecked(pvpRepCheck.isOn())
+    local rank, rankName = EverGear:GetPlayerPvPRank()
+    if rank > 0 then
+        pvpRankText:SetText("Your PvP rank: " .. (rankName or "?") .. " (rank " .. rank .. ")")
+    else
+        pvpRankText:SetText("Your PvP rank: none yet")
+    end
+end
+pvpFilterPanel:SetScript("OnShow", RefreshPvPFilterPanel)
+
+local pvpFilterButton = CreateFrame("Button", "EverGearPvPFilterButton", mainFrame)
+pvpFilterButton:SetSize(20, 20)
+pvpFilterButton:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 16, -92)
+pvpFilterButton:SetNormalTexture("Interface\\Icons\\INV_BannerPVP_02")
+pvpFilterButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+pvpFilterButton:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText("PvP filters")
+    GameTooltip:AddLine("Show or hide gear from the PvP honor and battleground reputation vendors, and whether your PvP rank and reputation limit it.", 0.8, 0.8, 0.8, true)
+    GameTooltip:Show()
+end)
+pvpFilterButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+pvpFilterButton:SetScript("OnClick", function()
+    if pvpFilterPanel:IsShown() then
+        pvpFilterPanel:Hide()
+        return
+    end
+    detailPanel:Hide()
+    weaponFilterPanel:Hide()
+    professionFilterPanel:Hide()
+    zoneFilterPanel:Hide()
+    CloseZoneUpgradesWindow()
+    pvpFilterPanel:ClearAllPoints()
+    pvpFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
+    pvpFilterPanel:Show()
 end)
 
 -- ===== Wanted list / gear sets buttons =====

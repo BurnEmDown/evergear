@@ -484,6 +484,9 @@ local STEPS = {
         "Hide items from zones and dungeons you won't visit. "
             .. "Current Level keeps just the places meant for your level; click it again every few levels "
             .. "to keep the list up to date. Or click Show All if you'd rather not filter by zone at all.", "below"),
+    FilterPanelStep("EverGearPvPFilterButton", "EverGearPvPFilterPanel", "PvP gear",
+        "Gear from the PvP honor vendors and the battleground reputation vendors. Turn it off if you don't do PvP. "
+            .. "By default it only shows what your PvP rank and reputation allow."),
     {
         title = "Upgrades by Zone",
         text = "Pick a zone or dungeon here to see every upgrade you can get there, for all your slots at once. "
@@ -637,7 +640,7 @@ end
 -- them all when it starts, so each step opens just what it explains.
 local SIDE_WINDOWS = {
     "EverGearDetailPanel", "EverGearZoneUpgradesPanel",
-    "EverGearWeaponFilterPanel", "EverGearProfessionFilterPanel", "EverGearZoneFilterPanel",
+    "EverGearWeaponFilterPanel", "EverGearProfessionFilterPanel", "EverGearZoneFilterPanel", "EverGearPvPFilterPanel",
     "EverGearWantedFrame", "EverGearSetsFrame", "EverGearSetTextPopup",
     "EverGearProfileEditor", "EverGearCopyProfilePopup", "EverGearExportProfilePopup", "EverGearImportProfilePopup",
 }
