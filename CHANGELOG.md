@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.3.1] - 2026-10-16
+
+### Changed
+- Updated items changed in the latest WoW Forever patch: Protector's Chain
+  Shirt, Leggings, Helm and Belt, Crusader's Chain Leggings, Blindwatcher's
+  Sight, Rage of the Storm, Replica Crescent Necklace, Furlfeather Ring,
+  Bristlebark Bow, Wisesight Wand, Ghostfang's Steps, Igleggings,
+  Snarlsnout Shooter, Ukta's Conduit and Helm Splitter.
+- Enchant Bracer - Lesser Intellect now gives +3 Intellect, and Enchant
+  Cloak - Defense +30 armor, matching the patch.
+
+## [0.3.0] - 2026-10-13
+
+### Added
+- Enchants: the new Enhancements tab in Suggested Upgrades shows the best
+  enchant for each equipped item, plus armor kits, scopes and other
+  permanent enhancements. It only suggests what fits the item and what you
+  can make or get at your level.
+- Gear sets: pick an enchant for each slot. Enchants are included when you
+  export or import a set, including sets from sixtyupgrades.com.
+
+### Changed
+- While the beta caps professions at 225 skill, crafted items and
+  enchants that need more skill than that aren't suggested.
+
 ## [0.2.0] - 2026-10-11
 
 ### Added
