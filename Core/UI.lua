@@ -2499,8 +2499,9 @@ end
 -- faction that has gear in EverGear. It isn't a PvP setting, so it has its
 -- own button: in the left-hand column below the Gear Sets button (the right
 -- one is full), opening its panel on the right like the other filters.
--- (In a do block: UI.lua is close to Lua's 200-locals limit for one chunk.)
-do
+-- Built inside its own function: UI.lua's main chunk is at Lua 5.1's limit of
+-- 200 local variables (locals in a do block still count toward it there).
+;(function()
     local function GetReputationFilter()
         local charDB = EverGear:GetCharDB()
         charDB.reputationFilter = charDB.reputationFilter or {}
@@ -2609,7 +2610,7 @@ do
             reputationFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
             reputationFilterPanel:Show()
         end)
-end
+end)()
 
 -- ===== Refresh / toggle =====
 
