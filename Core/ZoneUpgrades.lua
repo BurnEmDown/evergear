@@ -295,7 +295,7 @@ function EverGear:ToggleZoneUpgrades()
     -- while this window is open, they stack below it instead.)
     if EverGear.HideUpgradeDetail then EverGear:HideUpgradeDetail("right") end
     -- The weapon, profession and zone filter panels open in this spot too.
-    for _, filterPanel in ipairs({ EverGearWeaponFilterPanel, EverGearProfessionFilterPanel, EverGearZoneFilterPanel, EverGearPvPFilterPanel }) do
+    for _, filterPanel in ipairs({ EverGearWeaponFilterPanel, EverGearProfessionFilterPanel, EverGearZoneFilterPanel, EverGearPvPFilterPanel, EverGearReputationFilterPanel }) do
         if filterPanel then filterPanel:Hide() end
     end
     panel:Show()
@@ -305,7 +305,7 @@ end
 -- Opening button: under the zone filter button on the main window's right edge.
 local openButton = CreateFrame("Button", "EverGearZoneUpgradesButton", EverGear.Frame)
 openButton:SetSize(20, 20)
-openButton:SetPoint("TOPRIGHT", EverGear.Frame, "TOPRIGHT", -16, -140)
+openButton:SetPoint("TOPRIGHT", EverGear.Frame, "TOPRIGHT", -16, -154)
 openButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Spyglass_02")
 openButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 openButton:SetScript("OnClick", function() EverGear:ToggleZoneUpgrades() end)

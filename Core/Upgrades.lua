@@ -1321,11 +1321,12 @@ end
 --   altogether with "Show PvP items" off (charDB.pvpFilter.hidden), and by
 --   default an item needing a higher PvP rank than the character has is
 --   hidden too (charDB.pvpFilter.ignoreRank turns that off).
--- * Reputation gear (source.type == "reputation", same panel): by default an
---   item needing a higher standing with its faction than the character has is
---   hidden (charDB.pvpFilter.ignoreReputation turns that off). Battleground
---   reputation gear (source.battleground) is hidden with "Show PvP items" off
---   too; other reputation vendors (Booty Bay, ...) aren't PvP and stay.
+-- * Reputation gear (source.type == "reputation", the Reputation filter
+--   panel): by default an item needing a higher standing with its faction
+--   than the character has is hidden (charDB.reputationFilter.ignoreStanding
+--   turns that off). Battleground reputation gear (source.battleground) is
+--   also hidden with the PvP panel's "Show PvP items" off; other reputation
+--   vendors (Booty Bay, ...) aren't PvP and stay.
 -- * The profession skill cap (EverGear.PROFESSION_SKILL_CAP, the beta's 225):
 --   a crafted item whose recipe needs more skill can't be made by anyone yet,
 --   so it's never shown, whatever the filters say.
@@ -1377,7 +1378,8 @@ local function PassesFilterPanels(self, item, charDB, ignoreZone)
         local pvpFilter = charDB.pvpFilter or {}
         if pvpFilter.hidden and item.source.battleground then return false end
         local needed = self.STANDING_IDS[item.source.standing]
-        if needed and not pvpFilter.ignoreReputation and needed > self:GetPlayerStanding(item.source.repFactionId) then
+        local ignoreStanding = (charDB.reputationFilter or {}).ignoreStanding
+        if needed and not ignoreStanding and needed > self:GetPlayerStanding(item.source.repFactionId) then
             return false
         end
     end

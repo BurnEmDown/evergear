@@ -585,6 +585,7 @@ local weaponFilterPanel
 local professionFilterPanel
 local zoneFilterPanel
 local pvpFilterPanel
+local reputationFilterPanel
 
 local function CreateFilterCheckbox(name, label, key)
     local cb = CreateFrame("CheckButton", name, mainFrame, "UICheckButtonTemplate")
@@ -1650,7 +1651,7 @@ function EverGear:ShowUpgradeDetailOnHover(slotToken)
     if detailOpenedByClick and detailPanel:IsShown() then return end
     if not btn.upgradeList or #btn.upgradeList == 0 then return end
     if detailPanel:IsShown() and currentDetailSlot == slotToken then return end
-    for _, filterPanel in ipairs({ weaponFilterPanel, professionFilterPanel, zoneFilterPanel, pvpFilterPanel }) do
+    for _, filterPanel in ipairs({ weaponFilterPanel, professionFilterPanel, zoneFilterPanel, pvpFilterPanel, reputationFilterPanel }) do
         if filterPanel and filterPanel:IsShown() then return end
     end
     detailOpenedByClick = false
@@ -1667,6 +1668,7 @@ function EverGear:ShowUpgradeDetail(slotToken)
     if professionFilterPanel then professionFilterPanel:Hide() end
     if zoneFilterPanel then zoneFilterPanel:Hide() end
     if pvpFilterPanel then pvpFilterPanel:Hide() end
+    if reputationFilterPanel then reputationFilterPanel:Hide() end
 
     UpdateDetailTabs()
     detailEmptyMessage:ClearAllPoints()
@@ -1950,6 +1952,7 @@ weaponFilterButton:SetScript("OnClick", function()
     professionFilterPanel:Hide()
     zoneFilterPanel:Hide()
     if pvpFilterPanel then pvpFilterPanel:Hide() end
+    if reputationFilterPanel then reputationFilterPanel:Hide() end
     CloseZoneUpgradesWindow()
     weaponFilterPanel:ClearAllPoints()
     weaponFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
@@ -2098,7 +2101,7 @@ end)
 -- directly above it (including its -16 x offset, so both line up flush).
 local professionFilterButton = CreateFrame("Button", "EverGearProfessionFilterButton", mainFrame)
 professionFilterButton:SetSize(20, 20)
-professionFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -68)
+professionFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -66)
 professionFilterButton:SetNormalTexture("Interface\\Icons\\Trade_BlackSmithing")
 professionFilterButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 professionFilterButton:SetScript("OnEnter", function(self)
@@ -2117,6 +2120,7 @@ professionFilterButton:SetScript("OnClick", function()
     weaponFilterPanel:Hide()
     zoneFilterPanel:Hide()
     if pvpFilterPanel then pvpFilterPanel:Hide() end
+    if reputationFilterPanel then reputationFilterPanel:Hide() end
     CloseZoneUpgradesWindow()
     professionFilterPanel:ClearAllPoints()
     professionFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
@@ -2297,7 +2301,7 @@ zoneFilterNote:SetText("Crafted items and world drops from all over aren't tied 
 
 local zoneFilterButton = CreateFrame("Button", "EverGearZoneFilterButton", mainFrame)
 zoneFilterButton:SetSize(20, 20)
-zoneFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -116)
+zoneFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -132)
 zoneFilterButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Map_01")
 zoneFilterButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 zoneFilterButton:SetScript("OnEnter", function(self)
@@ -2318,6 +2322,7 @@ zoneFilterButton:SetScript("OnClick", function()
     weaponFilterPanel:Hide()
     professionFilterPanel:Hide()
     if pvpFilterPanel then pvpFilterPanel:Hide() end
+    if reputationFilterPanel then reputationFilterPanel:Hide() end
     CloseZoneUpgradesWindow()
     zoneFilterPanel:ClearAllPoints()
     zoneFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
@@ -2330,13 +2335,11 @@ end)
 -- show PvP items at all, and leave out items that need a higher PvP rank
 -- than the character has (on by default; most of the gear needs no rank,
 -- only Honor and Marks of Honor -- the weapons, cloaks, necks and insignias
--- do). Battleground reputation gear (source.type "reputation": Arathi Basin
--- and Darkspear Islands vendors) follows "Show PvP items" too, and has its
--- own switch for leaving out items that need a higher standing than the
--- character has (on by default), which also covers the other reputation
--- vendors (Booty Bay, Gadgetzan, ...) -- those aren't PvP, so "Show PvP
--- items" leaves them alone. Stored as opt-outs in charDB.pvpFilter so
--- a new character starts with all of them on. Same button + panel pattern as
+-- do). Battleground reputation gear (source.type "reputation" with a
+-- battleground: Arathi Basin and Darkspear Islands vendors) follows "Show
+-- PvP items" too; whether its standing limits it is the Reputation filter's
+-- job (below). Stored as opt-outs in charDB.pvpFilter so a new character
+-- starts with both on. Same button + panel pattern as
 -- the other filters; the button sits in the right-hand column with the other
 -- filter buttons, below the profession filter (the zone filter and Upgrades
 -- by Zone buttons sit below it), and the panel opens on the right like the
@@ -2348,7 +2351,7 @@ local function GetPvPFilter()
 end
 
 pvpFilterPanel = CreateFrame("Frame", "EverGearPvPFilterPanel", mainFrame, "BackdropTemplate")
-pvpFilterPanel:SetSize(230, 190)
+pvpFilterPanel:SetSize(230, 130)
 pvpFilterPanel:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
     edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
@@ -2396,29 +2399,15 @@ local pvpRankCheck = PvPCheckbox("EverGearPvPFilterRank", "Only what my rank all
     "Only what my rank allows", "Leave out items that need a higher PvP rank than you have. Most PvP gear "
         .. "needs no rank; the weapons, cloaks, necks and insignias do.")
 
-local pvpRepCheck = PvPCheckbox("EverGearPvPFilterReputation", "Only what my reputation allows", -86,
-    function() return not GetPvPFilter().ignoreReputation end,
-    function(on) GetPvPFilter().ignoreReputation = not on or nil end,
-    "Only what my reputation allows", "Leave out reputation gear that needs a higher standing than you have "
-        .. "with its faction: the battleground vendors (Arathi Basin, Darkspear Islands) and others such as "
-        .. "Booty Bay or Gadgetzan.")
-
 local pvpRankText = pvpFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-pvpRankText:SetPoint("TOPLEFT", 20, -116)
+pvpRankText:SetPoint("TOPLEFT", 20, -92)
 pvpRankText:SetPoint("RIGHT", -16, 0)
 pvpRankText:SetJustifyH("LEFT")
 pvpRankText:SetTextColor(unpack(THEME.parchment))
 
-local pvpFilterNote = pvpFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-pvpFilterNote:SetPoint("TOPLEFT", pvpRankText, "BOTTOMLEFT", 0, -8)
-pvpFilterNote:SetPoint("RIGHT", -16, 0)
-pvpFilterNote:SetJustifyH("LEFT")
-pvpFilterNote:SetText("Honor gear is for level 55 and up, battleground reputation gear from level 28.")
-
 local function RefreshPvPFilterPanel()
     pvpShowCheck:SetChecked(pvpShowCheck.isOn())
     pvpRankCheck:SetChecked(pvpRankCheck.isOn())
-    pvpRepCheck:SetChecked(pvpRepCheck.isOn())
     local rank, rankName = EverGear:GetPlayerPvPRank()
     if rank > 0 then
         pvpRankText:SetText("Your PvP rank: " .. (rankName or "?") .. " (rank " .. rank .. ")")
@@ -2430,13 +2419,13 @@ pvpFilterPanel:SetScript("OnShow", RefreshPvPFilterPanel)
 
 local pvpFilterButton = CreateFrame("Button", "EverGearPvPFilterButton", mainFrame)
 pvpFilterButton:SetSize(20, 20)
-pvpFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -92)
+pvpFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -88)
 pvpFilterButton:SetNormalTexture("Interface\\Icons\\INV_BannerPVP_02")
 pvpFilterButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 pvpFilterButton:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_LEFT")
     GameTooltip:SetText("PvP filters")
-    GameTooltip:AddLine("Show or hide gear from the PvP honor and battleground reputation vendors, and whether your PvP rank and reputation limit it.", 0.8, 0.8, 0.8, true)
+    GameTooltip:AddLine("Show or hide gear from the PvP honor and battleground reputation vendors, and whether your PvP rank limits it.", 0.8, 0.8, 0.8, true)
     GameTooltip:Show()
 end)
 pvpFilterButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -2449,6 +2438,7 @@ pvpFilterButton:SetScript("OnClick", function()
     weaponFilterPanel:Hide()
     professionFilterPanel:Hide()
     zoneFilterPanel:Hide()
+    reputationFilterPanel:Hide()
     CloseZoneUpgradesWindow()
     pvpFilterPanel:ClearAllPoints()
     pvpFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
@@ -2479,7 +2469,7 @@ end
 CreateCornerButton("EverGearWantedButton", -44, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_1",
     "Wanted list", "Items this character wants. Alt-click any item, or use the star in Suggested Upgrades, to add one.",
     function() EverGear:OpenWishlistWindow("ToggleWantedWindow") end)
-CreateCornerButton("EverGearSetsButton", -68, "Interface\\Icons\\INV_Chest_Chain_05",
+CreateCornerButton("EverGearSetsButton", -66, "Interface\\Icons\\INV_Chest_Chain_05",
     "Gear sets", "Build gear sets for this character and see which pieces you have.",
     function() EverGear:OpenWishlistWindow("ToggleSetsWindow") end)
 
@@ -2493,6 +2483,147 @@ function EverGear:OpenWishlistWindow(toggleName)
         print("|cff33ff99EverGear|r: the wanted list / gear sets didn't load. If you just updated EverGear, exit and restart the game (a /reload doesn't pick up new addon files).")
     end
 end
+
+-- ===== Reputation filter =====
+-- Reputation gear (source.type "reputation": the battleground vendors and
+-- others such as Booty Bay or Gadgetzan). One switch, read by Upgrades.lua's
+-- PassesFilterPanels: leave out items that need a higher standing with their
+-- faction than the character has (on by default; stored as an opt-out in
+-- charDB.reputationFilter). Under it, the character's standing with each
+-- faction that has gear in EverGear. It isn't a PvP setting, so it has its
+-- own button, in the right-hand column with the other filter buttons (below
+-- PvP), opening its panel on the right like them.
+-- Built inside its own function: UI.lua's main chunk is at Lua 5.1's limit of
+-- 200 local variables (locals in a do block still count toward it there).
+;(function()
+    local function GetReputationFilter()
+        local charDB = EverGear:GetCharDB()
+        charDB.reputationFilter = charDB.reputationFilter or {}
+        return charDB.reputationFilter
+    end
+
+    local STANDING_NAMES = { "Hated", "Hostile", "Unfriendly", "Neutral", "Friendly", "Honored", "Revered", "Exalted" }
+    local REPUTATION_LINES = 10
+
+    reputationFilterPanel = CreateFrame("Frame", "EverGearReputationFilterPanel", mainFrame, "BackdropTemplate")
+    reputationFilterPanel:SetSize(260, 100)
+    reputationFilterPanel:SetBackdrop({
+        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+        tile = true, tileSize = 32, edgeSize = 32,
+        insets = { left = 11, right = 12, top = 12, bottom = 11 }
+    })
+    reputationFilterPanel:Hide()
+
+    local reputationFilterCloseButton = CreateFrame("Button", nil, reputationFilterPanel, "UIPanelCloseButton")
+    reputationFilterCloseButton:SetPoint("TOPRIGHT", -2, -2)
+
+    local reputationFilterHeader = reputationFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    reputationFilterHeader:SetPoint("TOP", 0, -14)
+    reputationFilterHeader:SetText("Reputation Gear")
+    reputationFilterHeader:SetTextColor(unpack(THEME.gold))
+
+    local reputationStandingCheck = CreateFrame("CheckButton", "EverGearReputationFilterStanding", reputationFilterPanel, "UICheckButtonTemplate")
+    reputationStandingCheck:SetPoint("TOPLEFT", 14, -38)
+    EverGearReputationFilterStandingText:SetText("Only what my reputation allows")
+    reputationStandingCheck:SetScript("OnClick", function(self)
+        GetReputationFilter().ignoreStanding = not self:GetChecked() or nil
+        EverGear:RefreshUI()
+    end)
+    reputationStandingCheck:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText("Only what my reputation allows")
+        GameTooltip:AddLine("Leave out reputation gear that needs a higher standing than you have with its faction: "
+            .. "vendors such as Booty Bay or Gadgetzan, and the battleground vendors.", 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    reputationStandingCheck:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    local reputationListTitle = reputationFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    reputationListTitle:SetPoint("TOPLEFT", 20, -68)
+    reputationListTitle:SetText("Your standing:")
+    reputationListTitle:SetTextColor(unpack(THEME.parchment))
+
+    -- Two columns per line, the faction on the left and the standing right-aligned,
+    -- one line each: a long name ("Theramore Expeditionary Force") is cut short
+    -- rather than wrapping onto the next line.
+    local reputationLines = {}
+    for i = 1, REPUTATION_LINES do
+        local standing = reputationFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        standing:SetPoint("TOPRIGHT", -20, -68 - i * 14)
+        standing:SetJustifyH("RIGHT")
+        local name = reputationFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        name:SetPoint("TOPLEFT", 26, -68 - i * 14)
+        name:SetPoint("RIGHT", standing, "LEFT", -8, 0)
+        name:SetJustifyH("LEFT")
+        if name.SetWordWrap then name:SetWordWrap(false) end
+        reputationLines[i] = { name = name, standing = standing }
+    end
+
+    -- The factions with reputation gear this character's side can buy, by name.
+    local function ReputationFactions()
+        local playerFaction = UnitFactionGroup and UnitFactionGroup("player")
+        local seen, list = {}, {}
+        for _, item in pairs(EverGear.Items) do
+            local source = item.source
+            if source and source.type == "reputation" and source.repFactionId and not seen[source.repFactionId]
+                and (not source.faction or source.faction == playerFaction) then
+                seen[source.repFactionId] = true
+                list[#list + 1] = { id = source.repFactionId, name = source.repFaction or "?" }
+            end
+        end
+        table.sort(list, function(a, b) return a.name < b.name end)
+        return list
+    end
+
+    local function RefreshReputationFilterPanel()
+        reputationStandingCheck:SetChecked(not GetReputationFilter().ignoreStanding)
+        local factions = ReputationFactions()
+        local shown = math.min(#factions, REPUTATION_LINES)
+        for i, line in ipairs(reputationLines) do
+            local faction = factions[i]
+            if faction and i <= shown then
+                line.name:SetText(faction.name)
+                line.standing:SetText(STANDING_NAMES[EverGear:GetPlayerStanding(faction.id)] or "?")
+                line.name:Show()
+                line.standing:Show()
+            else
+                line.name:Hide()
+                line.standing:Hide()
+            end
+        end
+        reputationFilterPanel:SetHeight(100 + shown * 14)
+    end
+    reputationFilterPanel:SetScript("OnShow", RefreshReputationFilterPanel)
+
+    local reputationFilterButton = CreateFrame("Button", "EverGearReputationFilterButton", mainFrame)
+    reputationFilterButton:SetSize(20, 20)
+    reputationFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -110)
+    reputationFilterButton:SetNormalTexture("Interface\\Icons\\INV_Shirt_GuildTabard_01")
+    reputationFilterButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+    reputationFilterButton:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+        GameTooltip:SetText("Reputation filter")
+        GameTooltip:AddLine("Whether your reputation limits the reputation vendors' gear, and your standing with each faction.", 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    reputationFilterButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    reputationFilterButton:SetScript("OnClick", function()
+        if reputationFilterPanel:IsShown() then
+            reputationFilterPanel:Hide()
+            return
+        end
+        detailPanel:Hide()
+        weaponFilterPanel:Hide()
+        professionFilterPanel:Hide()
+        zoneFilterPanel:Hide()
+        pvpFilterPanel:Hide()
+        CloseZoneUpgradesWindow()
+        reputationFilterPanel:ClearAllPoints()
+        reputationFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
+        reputationFilterPanel:Show()
+    end)
+end)()
 
 -- ===== Refresh / toggle =====
 
