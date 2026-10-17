@@ -2506,7 +2506,7 @@ end
     local REPUTATION_LINES = 10
 
     reputationFilterPanel = CreateFrame("Frame", "EverGearReputationFilterPanel", mainFrame, "BackdropTemplate")
-    reputationFilterPanel:SetSize(230, 100)
+    reputationFilterPanel:SetSize(260, 100)
     reputationFilterPanel:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
         edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
@@ -2544,13 +2544,20 @@ end
     reputationListTitle:SetText("Your standing:")
     reputationListTitle:SetTextColor(unpack(THEME.parchment))
 
+    -- Two columns per line, the faction on the left and the standing right-aligned,
+    -- one line each: a long name ("Theramore Expeditionary Force") is cut short
+    -- rather than wrapping onto the next line.
     local reputationLines = {}
     for i = 1, REPUTATION_LINES do
-        local line = reputationFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        line:SetPoint("TOPLEFT", 26, -68 - i * 14)
-        line:SetPoint("RIGHT", -16, 0)
-        line:SetJustifyH("LEFT")
-        reputationLines[i] = line
+        local standing = reputationFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        standing:SetPoint("TOPRIGHT", -20, -68 - i * 14)
+        standing:SetJustifyH("RIGHT")
+        local name = reputationFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        name:SetPoint("TOPLEFT", 26, -68 - i * 14)
+        name:SetPoint("RIGHT", standing, "LEFT", -8, 0)
+        name:SetJustifyH("LEFT")
+        if name.SetWordWrap then name:SetWordWrap(false) end
+        reputationLines[i] = { name = name, standing = standing }
     end
 
     -- The factions with reputation gear this character's side can buy, by name.
@@ -2576,11 +2583,13 @@ end
         for i, line in ipairs(reputationLines) do
             local faction = factions[i]
             if faction and i <= shown then
-                local standing = STANDING_NAMES[EverGear:GetPlayerStanding(faction.id)] or "?"
-                line:SetText(faction.name .. ": " .. standing)
-                line:Show()
+                line.name:SetText(faction.name)
+                line.standing:SetText(STANDING_NAMES[EverGear:GetPlayerStanding(faction.id)] or "?")
+                line.name:Show()
+                line.standing:Show()
             else
-                line:Hide()
+                line.name:Hide()
+                line.standing:Hide()
             end
         end
         reputationFilterPanel:SetHeight(100 + shown * 14)
