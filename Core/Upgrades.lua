@@ -1324,7 +1324,9 @@ end
 -- * Reputation gear (source.type == "reputation", the Filters window's
 --   Reputation source): by default an item needing a higher standing with its faction
 --   than the character has is hidden (charDB.reputationFilter.ignoreStanding
---   turns that off). Battleground reputation gear (source.battleground) is
+--   turns that off), and a faction the player turned off in the list
+--   (charDB.reputationFilter.hiddenFactions[repFactionId]) is hidden whatever
+--   the standing. Battleground reputation gear (source.battleground) is
 --   also hidden with the PvP source unticked; other reputation
 --   vendors (Booty Bay, ...) aren't PvP and stay.
 -- * The profession skill cap (EverGear.PROFESSION_SKILL_CAP, the beta's 225):
@@ -1377,8 +1379,10 @@ local function PassesFilterPanels(self, item, charDB, ignoreZone)
     if item.source and item.source.type == "reputation" then
         local pvpFilter = charDB.pvpFilter or {}
         if pvpFilter.hidden and item.source.battleground then return false end
+        local reputationFilter = charDB.reputationFilter or {}
+        if (reputationFilter.hiddenFactions or {})[item.source.repFactionId] then return false end
         local needed = self.STANDING_IDS[item.source.standing]
-        local ignoreStanding = (charDB.reputationFilter or {}).ignoreStanding
+        local ignoreStanding = reputationFilter.ignoreStanding
         if needed and not ignoreStanding and needed > self:GetPlayerStanding(item.source.repFactionId) then
             return false
         end

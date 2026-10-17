@@ -4,13 +4,14 @@
 --   * Sources: where items come from. Each source has its own extra settings
 --     right under it: Craft has the professions (and BoE Only for each), PvP
 --     has "Only what my rank allows", Reputation has "Only what my reputation
---     allows" and the character's standing with each faction.
+--     allows" and a scrolling list of the factions with gear, each with the
+--     character's standing and a box to show or hide that faction's gear.
 --   * Weapons: weapon types, with All / None / Usable Only.
 --   * Zones: zones and dungeons, with Show All / Show None / Current Level.
 -- Every setting is stored where it always was, so nothing a player already
 -- chose is lost: charDB.filters (sources), professionFilter and
 -- professionBoEOnly, pvpFilter (hidden / ignoreRank), reputationFilter
--- (ignoreStanding), weaponTypeFilter and zoneFilter. Upgrades.lua's
+-- (ignoreStanding, hiddenFactions), weaponTypeFilter and zoneFilter. Upgrades.lua's
 -- PassesFilterPanels and UI.lua's RefreshUI read them.
 
 EverGear = EverGear or {}
@@ -200,22 +201,6 @@ table.insert(sourceChecks, repStandingCheck)
 y = y - SUB_ROW
 
 local STANDING_NAMES = { "Hated", "Hostile", "Unfriendly", "Neutral", "Friendly", "Honored", "Revered", "Exalted" }
-local REPUTATION_LINES = 10
-local REP_LEFT, REP_RIGHT = 16 + INDENT + 6, COLUMN_2 - 14
-local repLines = {}
-for i = 1, REPUTATION_LINES do
-    -- Faction on the left, standing right-aligned; a long name is cut short
-    -- rather than wrapping onto the next line.
-    local standing = Note(sourcesPage, "", "GameFontHighlightSmall")
-    standing:SetJustifyH("RIGHT")
-    standing:SetPoint("TOPRIGHT", sourcesPage, "TOPLEFT", REP_RIGHT, y - (i - 1) * LINE)
-    local name = Note(sourcesPage, "", "GameFontHighlightSmall")
-    name:SetPoint("TOPLEFT", REP_LEFT, y - (i - 1) * LINE)
-    name:SetPoint("RIGHT", standing, "LEFT", -6, 0)
-    if name.SetWordWrap then name:SetWordWrap(false) end
-    repLines[i] = { name = name, standing = standing }
-end
-local repListTop = y
 
 -- The factions with reputation gear this character's side can buy, by name.
 local function ReputationFactions()
@@ -232,6 +217,107 @@ local function ReputationFactions()
     table.sort(list, function(a, b) return a.name < b.name end)
     return list
 end
+
+-- Factions the player turned off (charDB.reputationFilter.hiddenFactions,
+-- by faction id): their gear is left out whatever the standing.
+local function HiddenFactions()
+    local filter = Table("reputationFilter")
+    filter.hiddenFactions = filter.hiddenFactions or {}
+    return filter.hiddenFactions
+end
+
+-- The reputation list: one row per faction (a checkbox to show or hide its
+-- gear, the name, the standing right-aligned), REP_ROWS at a time. More
+-- factions than that scroll, with the mouse wheel or the scroll bar.
+local REP_ROWS, REP_ROW_HEIGHT = 7, 18
+local REP_LEFT, REP_RIGHT = 16 + INDENT, COLUMN_2 - 36
+local repFactions = {}
+local repRows = {}
+local repTitle = Note(sourcesPage, "Your standing:", "GameFontNormalSmall")
+repTitle:SetPoint("TOPLEFT", REP_LEFT + 4, y - 4)
+repTitle:SetTextColor(unpack(THEME.parchment))
+y = y - LINE - 6
+local repListTop = y
+
+local repScroll = CreateFrame("ScrollFrame", "EverGearFiltersReputationScroll", sourcesPage, "FauxScrollFrameTemplate")
+repScroll:SetPoint("TOPLEFT", REP_LEFT, repListTop)
+repScroll:SetSize(REP_RIGHT - REP_LEFT, REP_ROWS * REP_ROW_HEIGHT)
+
+local function RepOffset()
+    return tonumber(FauxScrollFrame_GetOffset and FauxScrollFrame_GetOffset(repScroll)) or 0
+end
+
+local function UpdateReputationRows()
+    local count = #repFactions
+    if FauxScrollFrame_Update then FauxScrollFrame_Update(repScroll, count, REP_ROWS, REP_ROW_HEIGHT) end
+    local offset = RepOffset()
+    local hidden = HiddenFactions()
+    local enabled = Sources().reputation ~= false
+    for i, row in ipairs(repRows) do
+        local faction = repFactions[offset + i]
+        if faction then
+            row.faction = faction
+            row.check:SetChecked(not hidden[faction.id])
+            SetEnabled(row.check, enabled)
+            row.name:SetText(faction.name)
+            row.standing:SetText(STANDING_NAMES[EverGear:GetPlayerStanding(faction.id)] or "?")
+            row.check:Show(); row.name:Show(); row.standing:Show()
+        else
+            row.faction = nil
+            row.check:Hide(); row.name:Hide(); row.standing:Hide()
+        end
+    end
+end
+
+repScroll:SetScript("OnVerticalScroll", function(self, offset)
+    if FauxScrollFrame_OnVerticalScroll then
+        FauxScrollFrame_OnVerticalScroll(self, offset, REP_ROW_HEIGHT, UpdateReputationRows)
+    end
+end)
+
+for i = 1, REP_ROWS do
+    local rowY = repListTop - (i - 1) * REP_ROW_HEIGHT
+    local check = CreateFrame("CheckButton", "EverGearFiltersReputationRow" .. i, sourcesPage, "UICheckButtonTemplate")
+    check:SetSize(20, 20)
+    check:SetPoint("TOPLEFT", REP_LEFT, rowY + 1)
+    -- Faction on the left, standing right-aligned; a long name is cut short
+    -- rather than wrapping onto the next line.
+    local standing = Note(sourcesPage, "", "GameFontHighlightSmall")
+    standing:SetJustifyH("RIGHT")
+    standing:SetPoint("TOPRIGHT", sourcesPage, "TOPLEFT", REP_RIGHT, rowY - 3)
+    local name = Note(sourcesPage, "", "GameFontHighlightSmall")
+    name:SetPoint("TOPLEFT", REP_LEFT + 22, rowY - 3)
+    name:SetPoint("RIGHT", standing, "LEFT", -6, 0)
+    if name.SetWordWrap then name:SetWordWrap(false) end
+    local row = { check = check, name = name, standing = standing }
+    check:SetScript("OnClick", function(self)
+        if not row.faction then return end
+        HiddenFactions()[row.faction.id] = (not self:GetChecked()) or nil
+        Refresh()
+    end)
+    check:SetScript("OnEnter", function(self)
+        if not row.faction then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(row.faction.name)
+        GameTooltip:AddLine("Untick to leave out this faction's gear.", 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    check:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    repRows[i] = row
+end
+
+local function SetAllFactions(shown)
+    local hidden = HiddenFactions()
+    for _, faction in ipairs(repFactions) do hidden[faction.id] = (not shown) or nil end
+    UpdateReputationRows()
+    Refresh()
+end
+y = repListTop - REP_ROWS * REP_ROW_HEIGHT - 4
+local repAll = SmallButton(sourcesPage, "All", 60, function() SetAllFactions(true) end)
+repAll:SetPoint("TOPLEFT", REP_LEFT, y)
+local repNone = SmallButton(sourcesPage, "None", 60, function() SetAllFactions(false) end)
+repNone:SetPoint("LEFT", repAll, "RIGHT", 6, 0)
+local leftBottom = -(y - 24)
 
 -- Right column: Craft and the professions under it.
 local craftCheck = SourceCheck("craft", "Craft", COLUMN_2, WINDOW_TOP)
@@ -282,21 +368,10 @@ local function RefreshSourcesPage()
     pvpRankText:SetText(rank > 0 and ("Your PvP rank: " .. (rankName or "?") .. " (rank " .. rank .. ")")
         or "Your PvP rank: none yet")
 
-    local factions = ReputationFactions()
-    local shown = math.min(#factions, REPUTATION_LINES)
-    for i, line in ipairs(repLines) do
-        local faction = i <= shown and factions[i]
-        if faction then
-            line.name:SetText(faction.name)
-            line.standing:SetText(STANDING_NAMES[EverGear:GetPlayerStanding(faction.id)] or "?")
-            line.name:Show()
-            line.standing:Show()
-        else
-            line.name:Hide()
-            line.standing:Hide()
-        end
-    end
-    local leftBottom = -repListTop + shown * LINE
+    repFactions = ReputationFactions()
+    UpdateReputationRows()
+    local repOn = repCheck:GetChecked()
+    if repOn then repAll:Enable(); repNone:Enable() else repAll:Disable(); repNone:Disable() end
     local rightBottom = -py + 28
     pageSizes.sources = { COLUMN_2 + 240, math.max(leftBottom, rightBottom) + 24 }
 end
@@ -545,6 +620,7 @@ function EverGear:GetActiveFilterSummary()
         if sources[key] == false then table.insert(active, "Sources") break end
     end
     if Table("pvpFilter").hidden and active[1] ~= "Sources" then table.insert(active, "Sources") end
+    if next(HiddenFactions()) then table.insert(active, "Reputations") end
     for _, profName in ipairs(EverGear.PROFESSION_FILTER_LIST) do
         if Table("professionFilter")[profName] == false or Table("professionBoEOnly")[profName] then
             table.insert(active, "Professions") break
