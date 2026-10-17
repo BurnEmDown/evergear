@@ -305,7 +305,7 @@ end
 -- Opening button: under the zone filter button on the main window's right edge.
 local openButton = CreateFrame("Button", "EverGearZoneUpgradesButton", EverGear.Frame)
 openButton:SetSize(20, 20)
-openButton:SetPoint("TOPRIGHT", EverGear.Frame, "TOPRIGHT", -16, -116)
+openButton:SetPoint("TOPRIGHT", EverGear.Frame, "TOPRIGHT", -16, -140)
 openButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Spyglass_02")
 openButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 openButton:SetScript("OnClick", function() EverGear:ToggleZoneUpgrades() end)
