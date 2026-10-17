@@ -2351,7 +2351,7 @@ local function GetPvPFilter()
 end
 
 pvpFilterPanel = CreateFrame("Frame", "EverGearPvPFilterPanel", mainFrame, "BackdropTemplate")
-pvpFilterPanel:SetSize(230, 160)
+pvpFilterPanel:SetSize(230, 130)
 pvpFilterPanel:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
     edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
@@ -2404,12 +2404,6 @@ pvpRankText:SetPoint("TOPLEFT", 20, -92)
 pvpRankText:SetPoint("RIGHT", -16, 0)
 pvpRankText:SetJustifyH("LEFT")
 pvpRankText:SetTextColor(unpack(THEME.parchment))
-
-local pvpFilterNote = pvpFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-pvpFilterNote:SetPoint("TOPLEFT", pvpRankText, "BOTTOMLEFT", 0, -8)
-pvpFilterNote:SetPoint("RIGHT", -16, 0)
-pvpFilterNote:SetJustifyH("LEFT")
-pvpFilterNote:SetText("Honor gear is for level 55 and up, battleground reputation gear from level 28.")
 
 local function RefreshPvPFilterPanel()
     pvpShowCheck:SetChecked(pvpShowCheck.isOn())
