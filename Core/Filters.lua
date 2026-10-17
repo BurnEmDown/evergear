@@ -143,7 +143,7 @@ end
 
 local sourcesPage = pages.sources
 local sourceChecks = {}       -- every checkbox on the page, refreshed together
-local COLUMN_2 = 262
+local COLUMN_2 = 316
 
 local function SourceCheck(key, label, x, y)
     local cb = Checkbox(sourcesPage, "EverGearFilter_" .. key, label, x, y,
@@ -230,18 +230,34 @@ end
 -- gear, the name, the standing right-aligned), REP_ROWS at a time. More
 -- factions than that scroll, with the mouse wheel or the scroll bar.
 local REP_ROWS, REP_ROW_HEIGHT = 7, 18
-local REP_LEFT, REP_RIGHT = 16 + INDENT, COLUMN_2 - 36
+-- The list sits in its own recessed box (dark fill, thin gold edge, like the
+-- main window's gear area), as wide as the left column, with the scroll bar
+-- inside its right edge. Rows are children of the box, so they draw over it.
+local REP_BOX_LEFT, REP_BOX_RIGHT = 18, COLUMN_2 - 14
+local REP_PAD, REP_SCROLLBAR = 6, 22
+local REP_TEXT_RIGHT = REP_BOX_RIGHT - REP_BOX_LEFT - REP_PAD - REP_SCROLLBAR
 local repFactions = {}
 local repRows = {}
 local repTitle = Note(sourcesPage, "Your standing:", "GameFontNormalSmall")
-repTitle:SetPoint("TOPLEFT", REP_LEFT + 4, y - 4)
+repTitle:SetPoint("TOPLEFT", REP_BOX_LEFT + 4, y - 4)
 repTitle:SetTextColor(unpack(THEME.parchment))
-y = y - LINE - 6
-local repListTop = y
+y = y - LINE - 8
 
-local repScroll = CreateFrame("ScrollFrame", "EverGearFiltersReputationScroll", sourcesPage, "FauxScrollFrameTemplate")
-repScroll:SetPoint("TOPLEFT", REP_LEFT, repListTop)
-repScroll:SetSize(REP_RIGHT - REP_LEFT, REP_ROWS * REP_ROW_HEIGHT)
+local repBox = CreateFrame("Frame", "EverGearFiltersReputationList", sourcesPage, "BackdropTemplate")
+repBox:SetPoint("TOPLEFT", REP_BOX_LEFT, y)
+repBox:SetSize(REP_BOX_RIGHT - REP_BOX_LEFT, REP_ROWS * REP_ROW_HEIGHT + 2 * REP_PAD)
+repBox:SetBackdrop({
+    bgFile = "Interface\\Buttons\\WHITE8X8",
+    edgeFile = "Interface\\Buttons\\WHITE8X8",
+    edgeSize = 1,
+})
+repBox:SetBackdropColor(unpack(THEME.panelBg))
+repBox:SetBackdropBorderColor(unpack(THEME.panelBorder))
+local repListTop = -REP_PAD   -- inside the box
+
+local repScroll = CreateFrame("ScrollFrame", "EverGearFiltersReputationScroll", repBox, "FauxScrollFrameTemplate")
+repScroll:SetPoint("TOPLEFT", REP_PAD, repListTop)
+repScroll:SetSize(REP_TEXT_RIGHT - REP_PAD, REP_ROWS * REP_ROW_HEIGHT)
 
 local function RepOffset()
     return tonumber(FauxScrollFrame_GetOffset and FauxScrollFrame_GetOffset(repScroll)) or 0
@@ -277,16 +293,16 @@ end)
 
 for i = 1, REP_ROWS do
     local rowY = repListTop - (i - 1) * REP_ROW_HEIGHT
-    local check = CreateFrame("CheckButton", "EverGearFiltersReputationRow" .. i, sourcesPage, "UICheckButtonTemplate")
+    local check = CreateFrame("CheckButton", "EverGearFiltersReputationRow" .. i, repBox, "UICheckButtonTemplate")
     check:SetSize(20, 20)
-    check:SetPoint("TOPLEFT", REP_LEFT, rowY + 1)
+    check:SetPoint("TOPLEFT", REP_PAD - 2, rowY + 1)
     -- Faction on the left, standing right-aligned; a long name is cut short
     -- rather than wrapping onto the next line.
-    local standing = Note(sourcesPage, "", "GameFontHighlightSmall")
+    local standing = Note(repBox, "", "GameFontHighlightSmall")
     standing:SetJustifyH("RIGHT")
-    standing:SetPoint("TOPRIGHT", sourcesPage, "TOPLEFT", REP_RIGHT, rowY - 3)
-    local name = Note(sourcesPage, "", "GameFontHighlightSmall")
-    name:SetPoint("TOPLEFT", REP_LEFT + 22, rowY - 3)
+    standing:SetPoint("TOPRIGHT", repBox, "TOPLEFT", REP_TEXT_RIGHT, rowY - 3)
+    local name = Note(repBox, "", "GameFontHighlightSmall")
+    name:SetPoint("TOPLEFT", REP_PAD + 20, rowY - 3)
     name:SetPoint("RIGHT", standing, "LEFT", -6, 0)
     if name.SetWordWrap then name:SetWordWrap(false) end
     local row = { check = check, name = name, standing = standing }
@@ -312,9 +328,9 @@ local function SetAllFactions(shown)
     UpdateReputationRows()
     Refresh()
 end
-y = repListTop - REP_ROWS * REP_ROW_HEIGHT - 4
+y = y - REP_ROWS * REP_ROW_HEIGHT - 2 * REP_PAD - 6
 local repAll = SmallButton(sourcesPage, "All", 60, function() SetAllFactions(true) end)
-repAll:SetPoint("TOPLEFT", REP_LEFT, y)
+repAll:SetPoint("TOPLEFT", REP_BOX_LEFT, y)
 local repNone = SmallButton(sourcesPage, "None", 60, function() SetAllFactions(false) end)
 repNone:SetPoint("LEFT", repAll, "RIGHT", 6, 0)
 local leftBottom = -(y - 24)
