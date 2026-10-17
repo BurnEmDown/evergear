@@ -14,7 +14,7 @@ EverGear = EverGear or {}
 local EDGE_OFFSET = 17
 
 local button = CreateFrame("Button", "EverGearMinimapButton", Minimap)
-button:SetSize(31, 31)
+button:SetSize(32, 32)
 button:SetFrameStrata("MEDIUM")
 button:SetFrameLevel(8)
 button:RegisterForClicks("LeftButtonUp")
@@ -26,7 +26,7 @@ button:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight"
 -- square with no alpha channel, so its dark corners showed outside the round
 -- border here.
 local icon = button:CreateTexture(nil, "BACKGROUND")
-icon:SetSize(20, 20)
+icon:SetSize(22, 22)
 icon:SetPoint("CENTER", 0, 0)
 icon:SetTexture("Interface\\AddOns\\EverGear\\MinimapIcon")
 
