@@ -1581,8 +1581,10 @@ else
     end
 end
 
--- One line at the bottom of gear tooltips, only for items already on the
--- wanted list or in a set: "EverGear: wanted, set: 'Tank' (acquired)".
+-- At the bottom of gear tooltips: one line for items already on the wanted
+-- list or in a set ("EverGear: wanted, set: 'Tank' (acquired)"), and for
+-- vendor items, the vendors this character can buy it from.
+local VENDOR_TOOLTIP_LINES = 8
 local function OnItemTooltip(tooltip)
     if not tooltip.GetItem then return end
     local _, itemLink = tooltip:GetItem()
@@ -1599,6 +1601,26 @@ local function OnItemTooltip(tooltip)
     if #where > 0 then
         local status = EverGear:IsAcquired(itemId) and " (acquired)" or ""
         tooltip:AddLine("EverGear: " .. table.concat(where, ", ") .. status, 1.00, 0.82, 0.20)
+    end
+
+    -- Every vendor this character can buy it from, most convenient first (see
+    -- Database.lua's GetVendorsByPreference); a zone they're in is green.
+    local item = EverGear:GetItem(itemId)
+    if item and item.source and item.source.vendors then
+        local vendors = EverGear:GetVendorsByPreference(item)
+        if #vendors > 0 then
+            local here = GetRealZoneText and GetRealZoneText()
+            tooltip:AddLine("EverGear: sold by", 1.00, 0.82, 0.20)
+            for i, vendor in ipairs(vendors) do
+                if i > VENDOR_TOOLTIP_LINES then
+                    tooltip:AddLine("  and " .. (#vendors - VENDOR_TOOLTIP_LINES) .. " more", 0.7, 0.7, 0.7)
+                    break
+                end
+                local inZone = here and vendor.zone == here
+                tooltip:AddDoubleLine("  " .. vendor.name, vendor.zone or "", 1, 1, 1,
+                    inZone and 0.25 or 0.7, inZone and 1 or 0.7, inZone and 0.25 or 0.7)
+            end
+        end
     end
 end
 

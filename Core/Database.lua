@@ -86,6 +86,31 @@ function EverGear:GetUsableVendors(item, faction)
     return usable
 end
 
+-- The character's usable vendors, most convenient first: one in the zone the
+-- character is in, then one in a zone meant for their level
+-- (ZONE_LEVEL_RANGES); otherwise the data's order, which has the vendors seen
+-- in WoW Forever first. Suggestion rows name the first; item tooltips list
+-- them all.
+function EverGear:GetVendorsByPreference(item)
+    local playerInfo = self:GetPlayerInfo()
+    local here = GetRealZoneText and GetRealZoneText()
+    local level = playerInfo.level or 1
+    local vendors = self:GetUsableVendors(item, playerInfo.faction)
+    local rank = {}
+    for index, vendor in ipairs(vendors) do
+        local range = vendor.zone and self.ZONE_LEVEL_RANGES and self.ZONE_LEVEL_RANGES[vendor.zone]
+        local score = 0
+        if here and vendor.zone == here then score = score + 8 end
+        if range and level >= range[1] and level <= range[2] then score = score + 4 end
+        rank[vendor] = { score = score, index = index }
+    end
+    table.sort(vendors, function(a, b)
+        if rank[a].score ~= rank[b].score then return rank[a].score > rank[b].score end
+        return rank[a].index < rank[b].index
+    end)
+    return vendors
+end
+
 -- False when only the other faction can get the item: a faction-locked source
 -- (source.faction), or a vendor item none of whose vendors serve this faction.
 function EverGear:IsSourceAvailableToFaction(item, faction)

@@ -1635,10 +1635,11 @@ function EverGear:GetSourceSummary(item)
         end
         return source.zone or "Unknown zone"
     elseif source.type == "vendor" then
-        -- The first vendor this character can use, e.g. "Vendor: Nargal
-        -- Deatheye (The Barrens) +2 more" when others sell it too.
+        -- The most convenient vendor this character can use (see
+        -- GetVendorsByPreference), e.g. "Vendor: Nargal Deatheye (The Barrens)
+        -- +2 more" when others sell it too; the item's tooltip lists them all.
         if source.vendors then
-            local vendors = self:GetUsableVendors(item, self:GetPlayerInfo().faction)
+            local vendors = self:GetVendorsByPreference(item)
             local first = vendors[1]
             if not first then return "Vendor (other faction only)" end
             local text = "Vendor: " .. first.name .. (first.zone and (" (" .. first.zone .. ")") or "")
