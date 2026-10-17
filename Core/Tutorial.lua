@@ -305,18 +305,23 @@ local function OpenUpgradePanel(step)
     step.panelSide = (btn and btn.side == "left") and "left" or "right"
 end
 
--- Shared shape for the weapon / profession / zone filter steps.
-local function FilterPanelStep(buttonName, panelName, title, text, panelSide)
+-- Shared shape for the Filters window steps: each opens the window on one
+-- tab (or switches to it when an earlier step left the window open).
+local function FiltersTabStep(tab, title, text, panelSide)
     return {
         title = title,
         text = text,
-        target = function() return Named(buttonName) end,
+        target = function() return Named("EverGearFiltersButton") end,
         open = function(step)
-            local panel = Named(panelName)
-            OpenForStep(step, panel, function() ClickButton(Named(buttonName)) end)
+            local panel = Named("EverGearFiltersPanel")
+            if IsShownFrame(panel) then
+                if EverGear.SelectFiltersTab then EverGear:SelectFiltersTab(tab) end
+            else
+                OpenForStep(step, panel, function() EverGear:OpenFiltersWindow(tab) end)
+            end
         end,
         place = function(step, target)
-            local panel = Named(panelName)
+            local panel = Named("EverGearFiltersPanel")
             if IsShownFrame(panel) then
                 PlaceBesideFrame(panel, panelSide or "right")
             else
@@ -457,36 +462,14 @@ local STEPS = {
         target = function() return Named("EverGearLookaheadSlider") end,
         side = "right",
     },
-    {
-        title = "Where items come from",
-        text = "Untick a source to stop seeing items from it, for example crafted items or dungeon drops.",
-        target = function()
-            local first = EverGear.SOURCE_TYPE_FILTERS and EverGear.SOURCE_TYPE_FILTERS[1]
-            return first and Named("EverGearFilter_" .. first.key)
-        end,
-        -- The two rows of checkboxes, not just the first one.
-        highlight = function()
-            highlightBox:ClearAllPoints()
-            highlightBox:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 14, -146)
-            highlightBox:SetPoint("BOTTOMRIGHT", mainFrame, "TOPRIGHT", -14, -206)
-            highlightClock = 0
-            highlightBox:Show()
-        end,
-        side = "right",
-    },
-    FilterPanelStep("EverGearWeaponFilterButton", "EverGearWeaponFilterPanel", "Weapon types",
+    FiltersTabStep("sources", "Filters: sources",
+        "Everything that limits your suggestions is in this one window. Untick a source to stop seeing items "
+            .. "from it. Craft lists the professions: for one you don't have, tick BoE Only to see just the Bind "
+            .. "on Equip items you could buy. PvP and Reputation gear only show what your rank and standing "
+            .. "allow, unless you untick those boxes."),
+    FiltersTabStep("weapons", "Filters: weapon types",
         "Hide weapon types you don't want suggested. Usable Only keeps just the ones your class can use."),
-    FilterPanelStep("EverGearProfessionFilterButton", "EverGearProfessionFilterPanel", "Professions",
-        "Tick each profession whose crafted items you want to see. Bind on Pickup items can only be used "
-            .. "by whoever crafts them, so for a profession you don't have, also tick BoE Only: "
-            .. "you'll see the Bind on Equip items you can buy from other players, but not the rest."),
-    FilterPanelStep("EverGearPvPFilterButton", "EverGearPvPFilterPanel", "PvP gear",
-        "Gear from the PvP honor vendors and the battleground reputation vendors. Turn it off if you don't do PvP. "
-            .. "By default it only shows what your PvP rank allows."),
-    FilterPanelStep("EverGearReputationFilterButton", "EverGearReputationFilterPanel", "Reputation gear",
-        "Gear from reputation vendors such as Booty Bay or Gadgetzan, and from the battleground vendors. "
-            .. "By default it only shows what your standing allows; your standing with each faction is listed here."),
-    FilterPanelStep("EverGearZoneFilterButton", "EverGearZoneFilterPanel", "Zones and dungeons",
+    FiltersTabStep("zones", "Filters: zones and dungeons",
         "Hide items from zones and dungeons you won't visit. "
             .. "Current Level keeps just the places meant for your level; click it again every few levels "
             .. "to keep the list up to date. Or click Show All if you'd rather not filter by zone at all.", "below"),
@@ -643,7 +626,7 @@ end
 -- them all when it starts, so each step opens just what it explains.
 local SIDE_WINDOWS = {
     "EverGearDetailPanel", "EverGearZoneUpgradesPanel",
-    "EverGearWeaponFilterPanel", "EverGearProfessionFilterPanel", "EverGearZoneFilterPanel", "EverGearPvPFilterPanel", "EverGearReputationFilterPanel",
+    "EverGearFiltersPanel",
     "EverGearWantedFrame", "EverGearSetsFrame", "EverGearSetTextPopup",
     "EverGearProfileEditor", "EverGearCopyProfilePopup", "EverGearExportProfilePopup", "EverGearImportProfilePopup",
 }

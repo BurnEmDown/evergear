@@ -1,7 +1,7 @@
 -- "Upgrades by Zone": pick a zone or dungeon and see every upgrade it has for
 -- this character, across all slots (quest rewards, boss and trash drops,
 -- vendors...), best gain first -- instead of checking slot by slot. Opened
--- from the button under the zone filter button, or /eg zone.
+-- from the button under the Filters button, or /eg zone.
 --
 -- Same rules as Suggested Upgrades (level and look-ahead, class, faction, the
 -- source / weapon / profession filters) except the zone filter, since the zone
@@ -294,18 +294,16 @@ function EverGear:ToggleZoneUpgrades()
     -- close them, as the left-hand side windows do on their side. (Opened
     -- while this window is open, they stack below it instead.)
     if EverGear.HideUpgradeDetail then EverGear:HideUpgradeDetail("right") end
-    -- The weapon, profession and zone filter panels open in this spot too.
-    for _, filterPanel in ipairs({ EverGearWeaponFilterPanel, EverGearProfessionFilterPanel, EverGearZoneFilterPanel, EverGearPvPFilterPanel, EverGearReputationFilterPanel }) do
-        if filterPanel then filterPanel:Hide() end
-    end
+    -- The Filters window opens in this spot too.
+    if EverGearFiltersPanel then EverGearFiltersPanel:Hide() end
     panel:Show()
     Rebuild()
 end
 
--- Opening button: under the zone filter button on the main window's right edge.
+-- Opening button: under the Filters button on the main window's right edge.
 local openButton = CreateFrame("Button", "EverGearZoneUpgradesButton", EverGear.Frame)
 openButton:SetSize(20, 20)
-openButton:SetPoint("TOPRIGHT", EverGear.Frame, "TOPRIGHT", -16, -154)
+openButton:SetPoint("TOPRIGHT", EverGear.Frame, "TOPRIGHT", -16, -68)
 openButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Spyglass_02")
 openButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 openButton:SetScript("OnClick", function() EverGear:ToggleZoneUpgrades() end)
