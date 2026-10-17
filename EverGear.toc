@@ -19,6 +19,7 @@ Core\JSON.lua
 Core\EPProfiles.lua
 Core\ProfileEditor.lua
 Core\UI.lua
+Core\Filters.lua
 Core\WishlistUI.lua
 Core\ZoneUpgrades.lua
 Core\Debug.lua

@@ -1294,7 +1294,7 @@ end
 
 -- ===== Public interface =====
 
--- The main window's filter panels, shared by Suggested Upgrades and the Gear
+-- The Filters window's settings (Filters.lua), shared by Suggested Upgrades and the Gear
 -- Sets item picker (GetWearableItemsForSlot below) so both hide the same
 -- things. The source-type checkboxes (Quest / Vendor / ...) aren't in here:
 -- Suggested Upgrades applies those in UI.lua, after this, so a slot whose
@@ -1317,15 +1317,15 @@ end
 --   zone or dungeon. Items with no source.zone (crafted, world drops from all
 --   over) are never hidden by it. ignoreZone skips this one, for the Upgrades
 --   by Zone window, where the zone is picked on purpose.
--- * PvP honor gear (source.type == "pvp", the PvP filter panel): hidden
---   altogether with "Show PvP items" off (charDB.pvpFilter.hidden), and by
+-- * PvP honor gear (source.type == "pvp", the Filters window's PvP source):
+--   hidden altogether with PvP unticked (charDB.pvpFilter.hidden), and by
 --   default an item needing a higher PvP rank than the character has is
 --   hidden too (charDB.pvpFilter.ignoreRank turns that off).
--- * Reputation gear (source.type == "reputation", the Reputation filter
---   panel): by default an item needing a higher standing with its faction
+-- * Reputation gear (source.type == "reputation", the Filters window's
+--   Reputation source): by default an item needing a higher standing with its faction
 --   than the character has is hidden (charDB.reputationFilter.ignoreStanding
 --   turns that off). Battleground reputation gear (source.battleground) is
---   also hidden with the PvP panel's "Show PvP items" off; other reputation
+--   also hidden with the PvP source unticked; other reputation
 --   vendors (Booty Bay, ...) aren't PvP and stay.
 -- * The profession skill cap (EverGear.PROFESSION_SKILL_CAP, the beta's 225):
 --   a crafted item whose recipe needs more skill can't be made by anyone yet,
