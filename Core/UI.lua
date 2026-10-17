@@ -2101,7 +2101,7 @@ end)
 -- directly above it (including its -16 x offset, so both line up flush).
 local professionFilterButton = CreateFrame("Button", "EverGearProfessionFilterButton", mainFrame)
 professionFilterButton:SetSize(20, 20)
-professionFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -68)
+professionFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -66)
 professionFilterButton:SetNormalTexture("Interface\\Icons\\Trade_BlackSmithing")
 professionFilterButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 professionFilterButton:SetScript("OnEnter", function(self)
@@ -2301,7 +2301,7 @@ zoneFilterNote:SetText("Crafted items and world drops from all over aren't tied 
 
 local zoneFilterButton = CreateFrame("Button", "EverGearZoneFilterButton", mainFrame)
 zoneFilterButton:SetSize(20, 20)
-zoneFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -116)
+zoneFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -132)
 zoneFilterButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Map_01")
 zoneFilterButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 zoneFilterButton:SetScript("OnEnter", function(self)
@@ -2419,7 +2419,7 @@ pvpFilterPanel:SetScript("OnShow", RefreshPvPFilterPanel)
 
 local pvpFilterButton = CreateFrame("Button", "EverGearPvPFilterButton", mainFrame)
 pvpFilterButton:SetSize(20, 20)
-pvpFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -92)
+pvpFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -88)
 pvpFilterButton:SetNormalTexture("Interface\\Icons\\INV_BannerPVP_02")
 pvpFilterButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 pvpFilterButton:SetScript("OnEnter", function(self)
@@ -2469,7 +2469,7 @@ end
 CreateCornerButton("EverGearWantedButton", -44, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_1",
     "Wanted list", "Items this character wants. Alt-click any item, or use the star in Suggested Upgrades, to add one.",
     function() EverGear:OpenWishlistWindow("ToggleWantedWindow") end)
-CreateCornerButton("EverGearSetsButton", -68, "Interface\\Icons\\INV_Chest_Chain_05",
+CreateCornerButton("EverGearSetsButton", -66, "Interface\\Icons\\INV_Chest_Chain_05",
     "Gear sets", "Build gear sets for this character and see which pieces you have.",
     function() EverGear:OpenWishlistWindow("ToggleSetsWindow") end)
 
@@ -2491,8 +2491,8 @@ end
 -- faction than the character has (on by default; stored as an opt-out in
 -- charDB.reputationFilter). Under it, the character's standing with each
 -- faction that has gear in EverGear. It isn't a PvP setting, so it has its
--- own button: in the left-hand column below the Gear Sets button (the right
--- one is full), opening its panel on the right like the other filters.
+-- own button, in the right-hand column with the other filter buttons (below
+-- PvP), opening its panel on the right like them.
 -- Built inside its own function: UI.lua's main chunk is at Lua 5.1's limit of
 -- 200 local variables (locals in a do block still count toward it there).
 ;(function()
@@ -2587,23 +2587,33 @@ end
     end
     reputationFilterPanel:SetScript("OnShow", RefreshReputationFilterPanel)
 
-    CreateCornerButton("EverGearReputationFilterButton", -92, "Interface\\Icons\\INV_Shirt_GuildTabard_01",
-        "Reputation filter", "Whether your reputation limits the reputation vendors' gear, and your standing with each faction.",
-        function()
-            if reputationFilterPanel:IsShown() then
-                reputationFilterPanel:Hide()
-                return
-            end
-            detailPanel:Hide()
-            weaponFilterPanel:Hide()
-            professionFilterPanel:Hide()
-            zoneFilterPanel:Hide()
-            pvpFilterPanel:Hide()
-            CloseZoneUpgradesWindow()
-            reputationFilterPanel:ClearAllPoints()
-            reputationFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
-            reputationFilterPanel:Show()
-        end)
+    local reputationFilterButton = CreateFrame("Button", "EverGearReputationFilterButton", mainFrame)
+    reputationFilterButton:SetSize(20, 20)
+    reputationFilterButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -110)
+    reputationFilterButton:SetNormalTexture("Interface\\Icons\\INV_Shirt_GuildTabard_01")
+    reputationFilterButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+    reputationFilterButton:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+        GameTooltip:SetText("Reputation filter")
+        GameTooltip:AddLine("Whether your reputation limits the reputation vendors' gear, and your standing with each faction.", 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    reputationFilterButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    reputationFilterButton:SetScript("OnClick", function()
+        if reputationFilterPanel:IsShown() then
+            reputationFilterPanel:Hide()
+            return
+        end
+        detailPanel:Hide()
+        weaponFilterPanel:Hide()
+        professionFilterPanel:Hide()
+        zoneFilterPanel:Hide()
+        pvpFilterPanel:Hide()
+        CloseZoneUpgradesWindow()
+        reputationFilterPanel:ClearAllPoints()
+        reputationFilterPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 8, 0)
+        reputationFilterPanel:Show()
+    end)
 end)()
 
 -- ===== Refresh / toggle =====
