@@ -1321,10 +1321,11 @@ end
 --   altogether with "Show PvP items" off (charDB.pvpFilter.hidden), and by
 --   default an item needing a higher PvP rank than the character has is
 --   hidden too (charDB.pvpFilter.ignoreRank turns that off).
--- * Battleground reputation gear (source.type == "reputation", same panel):
---   hidden with "Show PvP items" off too, and by default an item needing a
---   higher standing with its battleground faction than the character has is
---   hidden (charDB.pvpFilter.ignoreReputation turns that off).
+-- * Reputation gear (source.type == "reputation", same panel): by default an
+--   item needing a higher standing with its faction than the character has is
+--   hidden (charDB.pvpFilter.ignoreReputation turns that off). Battleground
+--   reputation gear (source.battleground) is hidden with "Show PvP items" off
+--   too; other reputation vendors (Booty Bay, ...) aren't PvP and stay.
 -- * The profession skill cap (EverGear.PROFESSION_SKILL_CAP, the beta's 225):
 --   a crafted item whose recipe needs more skill can't be made by anyone yet,
 --   so it's never shown, whatever the filters say.
@@ -1374,7 +1375,7 @@ local function PassesFilterPanels(self, item, charDB, ignoreZone)
     end
     if item.source and item.source.type == "reputation" then
         local pvpFilter = charDB.pvpFilter or {}
-        if pvpFilter.hidden then return false end
+        if pvpFilter.hidden and item.source.battleground then return false end
         local needed = self.STANDING_IDS[item.source.standing]
         if needed and not pvpFilter.ignoreReputation and needed > self:GetPlayerStanding(item.source.repFactionId) then
             return false
@@ -1634,9 +1635,12 @@ function EverGear:GetSourceSummary(item)
         end
         return "PvP vendor (Honor)"
     elseif source.type == "reputation" then
-        -- e.g. "Arathi Basin: The Defilers - Honored".
+        -- e.g. "Arathi Basin: The Defilers - Honored", or for a reputation
+        -- vendor "Stranglethorn Vale (Gezzy Gunkgear: Booty Bay - Honored)".
         local what = (source.repFaction or "Reputation") .. (source.standing and (" - " .. source.standing) or "")
-        return source.battleground and (source.battleground .. ": " .. what) or what
+        if source.battleground then return source.battleground .. ": " .. what end
+        if source.name then what = source.name .. ": " .. what end
+        return source.zone and (source.zone .. " (" .. what .. ")") or what
     end
     return "Unknown source"
 end

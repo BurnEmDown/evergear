@@ -2333,7 +2333,9 @@ end)
 -- do). Battleground reputation gear (source.type "reputation": Arathi Basin
 -- and Darkspear Islands vendors) follows "Show PvP items" too, and has its
 -- own switch for leaving out items that need a higher standing than the
--- character has (on by default). Stored as opt-outs in charDB.pvpFilter so
+-- character has (on by default), which also covers the other reputation
+-- vendors (Booty Bay, Gadgetzan, ...) -- those aren't PvP, so "Show PvP
+-- items" leaves them alone. Stored as opt-outs in charDB.pvpFilter so
 -- a new character starts with all of them on. Same button + panel pattern as
 -- the other filters; the button sits in the right-hand column with the other
 -- filter buttons, below the profession filter (the zone filter and Upgrades
@@ -2397,8 +2399,9 @@ local pvpRankCheck = PvPCheckbox("EverGearPvPFilterRank", "Only what my rank all
 local pvpRepCheck = PvPCheckbox("EverGearPvPFilterReputation", "Only what my reputation allows", -86,
     function() return not GetPvPFilter().ignoreReputation end,
     function(on) GetPvPFilter().ignoreReputation = not on or nil end,
-    "Only what my reputation allows", "Leave out battleground reputation gear that needs a higher standing "
-        .. "than you have with that battleground's faction (Arathi Basin, Darkspear Islands).")
+    "Only what my reputation allows", "Leave out reputation gear that needs a higher standing than you have "
+        .. "with its faction: the battleground vendors (Arathi Basin, Darkspear Islands) and others such as "
+        .. "Booty Bay or Gadgetzan.")
 
 local pvpRankText = pvpFilterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 pvpRankText:SetPoint("TOPLEFT", 20, -116)
