@@ -159,11 +159,18 @@ EverGear.ZONE_LEVEL_RANGES = {
     ["Badlands"] = { 36, 45 },
     ["Swamp of Sorrows"] = { 36, 43 },
     ["Dustwallow Marsh"] = { 36, 61 },
+    ["Feralas"] = { 43, 50 },              -- foreverdb.net's map list
+    ["Tanaris"] = { 44, 50 },              -- foreverdb.net
+    ["Moonglade"] = { 51, 60 },            -- foreverdb.net
+    ["Winterspring"] = { 53, 60 },         -- foreverdb.net
+    ["Riverglades"] = { 35, 45 },          -- new in Forever, no published range: an
+                                           -- estimate from its Powderfuse vendor's level 40 gear
     ["Stormwind City"] = { 1, 60 },
     ["Ironforge"] = { 1, 60 },
     ["Orgrimmar"] = { 1, 60 },
     ["Thunder Bluff"] = { 1, 60 },
     ["Undercity"] = { 1, 60 },
+    ["Darnassus"] = { 1, 60 },
     -- Dungeons
     ["Hall of Thanes"] = { 12, 16 },
     ["Ragefire Chasm"] = { 13, 17 },
@@ -190,7 +197,7 @@ EverGear.OTHER_FACTION_ZONES = {
     Alliance = { "Mulgore", "Durotar", "Tirisfal Glades", "The Barrens", "Silverpine Forest",
                  "Ragefire Chasm", "Orgrimmar", "Thunder Bluff", "Undercity" },
     Horde = { "Elwynn Forest", "Dun Morogh", "Westfall", "Loch Modan", "Teldrassil", "Darkshore",
-              "The Stockade", "Hall of Thanes", "Stormwind City", "Ironforge" },
+              "The Stockade", "Hall of Thanes", "Stormwind City", "Ironforge", "Darnassus" },
 }
 
 EverGear.SOURCE_TYPE_FILTERS = {

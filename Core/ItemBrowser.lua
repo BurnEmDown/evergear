@@ -178,7 +178,7 @@ local function Matches(item)
     if filters.slot and item.slot ~= filters.slot then return false end
     if filters.type and TypeKey(item) ~= filters.type then return false end
     if filters.source and SourceKey(item) ~= filters.source then return false end
-    if filters.zone and not (item.source and item.source.zone == filters.zone) then return false end
+    if filters.zone and not EverGear.ZoneListHas(EverGear:GetSourceZones(item), filters.zone) then return false end
     if filters.quality ~= nil then
         local quality = Quality(item.id)
         if filters.quality == "unknown" then
