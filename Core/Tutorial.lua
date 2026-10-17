@@ -482,7 +482,10 @@ local STEPS = {
             .. "you'll see the Bind on Equip items you can buy from other players, but not the rest."),
     FilterPanelStep("EverGearPvPFilterButton", "EverGearPvPFilterPanel", "PvP gear",
         "Gear from the PvP honor vendors and the battleground reputation vendors. Turn it off if you don't do PvP. "
-            .. "By default it only shows what your PvP rank and reputation allow."),
+            .. "By default it only shows what your PvP rank allows."),
+    FilterPanelStep("EverGearReputationFilterButton", "EverGearReputationFilterPanel", "Reputation gear",
+        "Gear from reputation vendors such as Booty Bay or Gadgetzan, and from the battleground vendors. "
+            .. "By default it only shows what your standing allows; your standing with each faction is listed here."),
     FilterPanelStep("EverGearZoneFilterButton", "EverGearZoneFilterPanel", "Zones and dungeons",
         "Hide items from zones and dungeons you won't visit. "
             .. "Current Level keeps just the places meant for your level; click it again every few levels "
@@ -640,7 +643,7 @@ end
 -- them all when it starts, so each step opens just what it explains.
 local SIDE_WINDOWS = {
     "EverGearDetailPanel", "EverGearZoneUpgradesPanel",
-    "EverGearWeaponFilterPanel", "EverGearProfessionFilterPanel", "EverGearZoneFilterPanel", "EverGearPvPFilterPanel",
+    "EverGearWeaponFilterPanel", "EverGearProfessionFilterPanel", "EverGearZoneFilterPanel", "EverGearPvPFilterPanel", "EverGearReputationFilterPanel",
     "EverGearWantedFrame", "EverGearSetsFrame", "EverGearSetTextPopup",
     "EverGearProfileEditor", "EverGearCopyProfilePopup", "EverGearExportProfilePopup", "EverGearImportProfilePopup",
 }
