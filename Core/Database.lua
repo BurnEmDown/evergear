@@ -67,10 +67,66 @@ function EverGear:GetItemsForSlot(realSlotToken)
     return results
 end
 
-function EverGear:GetItemsForZone(zoneName)
+-- ===== Where an item comes from, for one faction =====
+-- A vendor item may list several vendors (source.vendors: { name, zone,
+-- faction }, the ones seen in WoW Forever first), some only for the Alliance
+-- or the Horde and some neutral. These answer "where can THIS character get
+-- it": faction is "Alliance" / "Horde", or nil for every vendor.
+
+-- The vendors the faction can buy from, in the data's order.
+function EverGear:GetUsableVendors(item, faction)
+    local usable = {}
+    local vendors = item.source and item.source.vendors
+    if not vendors then return usable end
+    for _, vendor in ipairs(vendors) do
+        if not faction or not vendor.faction or vendor.faction == faction then
+            table.insert(usable, vendor)
+        end
+    end
+    return usable
+end
+
+-- False when only the other faction can get the item: a faction-locked source
+-- (source.faction), or a vendor item none of whose vendors serve this faction.
+function EverGear:IsSourceAvailableToFaction(item, faction)
+    if not faction then return true end
+    local source = item.source
+    if not source then return true end
+    if source.faction and source.faction ~= faction then return false end
+    if source.vendors and #self:GetUsableVendors(item, faction) == 0 then return false end
+    return true
+end
+
+-- The zones the item comes from for the faction: its usable vendors' zones,
+-- or source.zone. Empty for items not tied to a place (crafted, world drops).
+function EverGear:GetSourceZones(item, faction)
+    local source = item.source
+    if not source then return {} end
+    if source.vendors then
+        local zones, seen = {}, {}
+        for _, vendor in ipairs(self:GetUsableVendors(item, faction)) do
+            if vendor.zone and not seen[vendor.zone] then
+                seen[vendor.zone] = true
+                table.insert(zones, vendor.zone)
+            end
+        end
+        return zones
+    end
+    return source.zone and { source.zone } or {}
+end
+
+local function HasZone(zones, zoneName)
+    for _, zone in ipairs(zones) do
+        if zone == zoneName then return true end
+    end
+    return false
+end
+EverGear.ZoneListHas = HasZone
+
+function EverGear:GetItemsForZone(zoneName, faction)
     local results = {}
     for _, item in pairs(self.Items) do
-        if item.source and item.source.zone == zoneName then
+        if HasZone(self:GetSourceZones(item, faction), zoneName) then
             table.insert(results, item)
         end
     end

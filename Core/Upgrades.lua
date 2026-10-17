@@ -1387,8 +1387,19 @@ local function PassesFilterPanels(self, item, charDB, ignoreZone)
             return false
         end
     end
-    local zone = item.source and item.source.zone
-    if zone and not ignoreZone and (charDB.zoneFilter or {})[zone] == false then return false end
+    -- Hidden only when every place this character could get it from is
+    -- unticked (a vendor item can have vendors in several zones).
+    if not ignoreZone then
+        local zoneFilter = charDB.zoneFilter or {}
+        local zones = self:GetSourceZones(item, self:GetPlayerInfo().faction)
+        if #zones > 0 then
+            local anyShown = false
+            for _, zone in ipairs(zones) do
+                if zoneFilter[zone] ~= false then anyShown = true break end
+            end
+            if not anyShown then return false end
+        end
+    end
     return true
 end
 
@@ -1455,6 +1466,8 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink, options)
         -- no source.faction at all, so it's never caught by this filter in
         -- the first place -- nothing extra to do here for that case.
         local factionAllowed = (not itemFaction) or (not playerInfo.faction) or itemFaction == playerInfo.faction
+        -- A vendor item only the other faction's vendors sell is out too.
+        factionAllowed = factionAllowed and self:IsSourceAvailableToFaction(item, playerInfo.faction)
 
         -- A quest reward can't be had before the quest can be picked up, even
         -- when the item itself has no level requirement (most rewards don't):
@@ -1506,6 +1519,7 @@ function EverGear:GetWearableItemsForSlot(realSlotToken, maxLevel)
         local proficiencyLevel = math.max(requiredLevel, playerInfo.level or 1)
         if (not maxLevel or requiredLevel <= maxLevel)
             and ((not itemFaction) or (not playerInfo.faction) or itemFaction == playerInfo.faction)
+            and self:IsSourceAvailableToFaction(item, playerInfo.faction)
             and IsArmorTypeAllowed(item, playerInfo.classToken, proficiencyLevel)
             and IsWeaponTypeAllowed(item, playerInfo.classToken)
             and IsClassAllowed(item, playerInfo.classToken)
@@ -1571,7 +1585,8 @@ function EverGear:GetUpgradesForZone(zoneName)
         for _, candidate in ipairs(candidates) do
             local item = candidate.item
             local sourceType = item.source and item.source.type
-            if item.source and item.source.zone == zoneName and sourceFilters[sourceType] ~= false then
+            if EverGear.ZoneListHas(self:GetSourceZones(item, self:GetPlayerInfo().faction), zoneName)
+                and sourceFilters[sourceType] ~= false then
                 local gain = candidate.score - (currentScore or 0)
                 if not best[item.id] or gain > best[item.id].gain then
                     best[item.id] = { item = item, slotToken = slotToken, gain = gain }
@@ -1620,6 +1635,16 @@ function EverGear:GetSourceSummary(item)
         end
         return source.zone or "Unknown zone"
     elseif source.type == "vendor" then
+        -- The first vendor this character can use, e.g. "Vendor: Nargal
+        -- Deatheye (The Barrens) +2 more" when others sell it too.
+        if source.vendors then
+            local vendors = self:GetUsableVendors(item, self:GetPlayerInfo().faction)
+            local first = vendors[1]
+            if not first then return "Vendor (other faction only)" end
+            local text = "Vendor: " .. first.name .. (first.zone and (" (" .. first.zone .. ")") or "")
+            if #vendors > 1 then text = text .. " +" .. (#vendors - 1) .. " more" end
+            return text
+        end
         return "Vendor" .. (source.name and (": " .. source.name) or "")
     elseif source.type == "worldDrop" then
         -- A drop from one named mob (often a rare) names it after the zone:

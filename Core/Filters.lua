@@ -476,11 +476,12 @@ local zoneChecks = {}
 -- sorted by name ("The Deadmines" under D).
 function EverGear.CollectSourceZones()
     local isDungeon, seen = {}, {}
+    local faction = EverGear:GetPlayerInfo().faction
     for _, item in pairs(EverGear.Items) do
         local source = item.source
-        if source and source.zone then
-            seen[source.zone] = true
-            if source.type == "dungeonDrop" or source.type == "raidDrop" then isDungeon[source.zone] = true end
+        for _, zone in ipairs(EverGear:GetSourceZones(item, faction)) do
+            seen[zone] = true
+            if source.type == "dungeonDrop" or source.type == "raidDrop" then isDungeon[zone] = true end
         end
     end
     local dungeons, zones = {}, {}
