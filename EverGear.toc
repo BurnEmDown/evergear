@@ -91,5 +91,6 @@ Data\Items_DustwallowMarsh.lua
 Data\Items_PvPHonorVendors.lua
 Data\Items_BGReputation.lua
 Data\Items_ReputationVendors.lua
+Data\Items_TownVendors.lua
 Data\Cosmetics.lua
 Data\Enchants.lua
