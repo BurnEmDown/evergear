@@ -1857,7 +1857,6 @@ local BaseRefreshUI = EverGear.RefreshUI
 function EverGear:RefreshUI()
     BaseRefreshUI(self)
     if self.RefreshZoneUpgrades then self:RefreshZoneUpgrades() end
-    if self.RefreshFiltersButton then self:RefreshFiltersButton() end
 end
 
 -- Re-applies every saved filter setting to its checkbox in the Filters window

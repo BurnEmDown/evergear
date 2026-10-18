@@ -629,7 +629,7 @@ function EverGear:ToggleFiltersWindow(tab)
 end
 
 -- How many kinds of filter are hiding something right now, and what they are:
--- shown on the Filters button.
+-- listed in the Filters button's tooltip.
 function EverGear:GetActiveFilterSummary()
     local active = {}
     local sources = Sources()
@@ -664,8 +664,6 @@ button:SetSize(20, 20)
 button:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -16, -44)
 button:SetNormalTexture("Interface\\Icons\\INV_Misc_Gear_01")
 button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
-local badge = button:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
-badge:SetPoint("BOTTOMRIGHT", 2, -2)
 button:SetScript("OnClick", function() EverGear:ToggleFiltersWindow() end)
 button:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_LEFT")
@@ -679,9 +677,3 @@ button:SetScript("OnEnter", function(self)
     GameTooltip:Show()
 end)
 button:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
--- Called from RefreshUI: the badge shows how many kinds of filter are active.
-function EverGear:RefreshFiltersButton()
-    local count = self:GetActiveFilterSummary()
-    badge:SetText(count > 0 and tostring(count) or "")
-end
