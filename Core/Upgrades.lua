@@ -152,7 +152,7 @@ EverGear.SPEC_PROFILES = {
             -- placeholder. Revisit if Arms ever gets its own distinct set.
             stats = { STRENGTH = 2, AGILITY = 1, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
@@ -175,7 +175,7 @@ EverGear.SPEC_PROFILES = {
             -- mechanically-rescaled placeholder.
             stats = { STRENGTH = 2, AGILITY = 1, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
@@ -235,7 +235,7 @@ EverGear.SPEC_PROFILES = {
                         -- than nearly irrelevant.
                         stats = { STRENGTH = 1, AGILITY = 0.91, STAMINA = 1, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0.05, dpsWeight = 1.0, rangedDpsWeight = 0,
                         secondary = {
-                            SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                            SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                             SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                             FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                             NATURE_DAMAGE = 0,
@@ -262,7 +262,7 @@ EverGear.SPEC_PROFILES = {
                     profile = {
                         stats = { STRENGTH = 2, AGILITY = 1.05, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 7.5, rangedDpsWeight = 0,
                         secondary = {
-                            SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                            SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                             SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                             FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                             NATURE_DAMAGE = 0,
@@ -284,9 +284,9 @@ EverGear.SPEC_PROFILES = {
         ["Holy"] = {  -- role: Healer
             -- sixtyupgrades-derived weights: every key the source JSON
             -- omitted is an explicit 0 here (confirmed convention), not a
-            -- mechanically-rescaled placeholder -- including SPELL_POWER,
-            -- which this set omits in favor of SPELL_DAMAGE/SPELL_HEALING
-            -- alone. The source JSON's "mana" (0.06) is folded into
+            -- mechanically-rescaled placeholder. (SPELL_POWER has no weight of
+            -- its own: ScoreItem scores it as SPELL_DAMAGE plus
+            -- SPELL_HEALING.) The source JSON's "mana" (0.06) is folded into
             -- MANA_REGEN, same as Priest Holy/Discipline.
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 1, SPIRIT = 0.5 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
@@ -297,7 +297,7 @@ EverGear.SPEC_PROFILES = {
                 DEFENSE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                SPELL_POWER = 0, SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
+                SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
                 SPELL_CRIT_CHANCE = 20, SPELL_HASTE = 0, MANA_REGEN = 0.06, SPELL_PENETRATION = 0,
                 SPELL_DAMAGE = 1, THREAT_REDUCTION = 0,
                 HP5 = 0, MP5 = 3,
@@ -306,9 +306,10 @@ EverGear.SPEC_PROFILES = {
         ["Protection"] = {  -- role: Tank
             stats = { STRENGTH = 3.0, AGILITY = 0.5, STAMINA = 2.5, INTELLECT = 0.25, SPIRIT = 0.05 }, armorWeight = 0.3, dpsWeight = 1.0, rangedDpsWeight = 0,
             secondary = {
-                -- Caster-exclusive stats -- 0 for this melee/physical role
-                SPELL_POWER = 1.2, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
-                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
+                -- Caster-exclusive stats -- 0 for this melee/physical role, except
+                -- spell damage (Holy Shield, Consecration and Seal threat)
+                SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1.2,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
                 -- Universal utility stats
@@ -329,7 +330,7 @@ EverGear.SPEC_PROFILES = {
             -- mechanically-rescaled placeholder.
             stats = { STRENGTH = 2, AGILITY = 1, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
@@ -352,7 +353,7 @@ EverGear.SPEC_PROFILES = {
                 -- omitted is an explicit 0 here (confirmed convention), not a
                 -- mechanically-rescaled placeholder -- this is a pure-DPS EP
                 -- metric, not a survivability-aware one.
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
@@ -376,7 +377,7 @@ EverGear.SPEC_PROFILES = {
                 -- omitted is an explicit 0 here (confirmed convention), not a
                 -- mechanically-rescaled placeholder -- this is a pure-DPS EP
                 -- metric, not a survivability-aware one.
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
@@ -400,7 +401,7 @@ EverGear.SPEC_PROFILES = {
                 -- omitted is an explicit 0 here (confirmed convention), not a
                 -- mechanically-rescaled placeholder -- this is a pure-DPS EP
                 -- metric, not a survivability-aware one.
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
@@ -426,7 +427,7 @@ EverGear.SPEC_PROFILES = {
             -- placeholder.
             stats = { STRENGTH = 1.1, AGILITY = 1.8, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
@@ -449,7 +450,7 @@ EverGear.SPEC_PROFILES = {
             -- convention), not a mechanically-rescaled placeholder.
             stats = { STRENGTH = 1.1, AGILITY = 1.9, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
@@ -472,7 +473,7 @@ EverGear.SPEC_PROFILES = {
             -- for the zero-fill convention.
             stats = { STRENGTH = 1.1, AGILITY = 1.8, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
@@ -492,8 +493,9 @@ EverGear.SPEC_PROFILES = {
             -- sixtyupgrades-derived weights (same JSON given for both
             -- Discipline and Holy): every key the source JSON omitted is an
             -- explicit 0 here (confirmed convention), not a mechanically-
-            -- rescaled placeholder -- including SPELL_POWER, which this set
-            -- omits in favor of SPELL_DAMAGE/SPELL_HEALING alone. The
+            -- rescaled placeholder. (SPELL_POWER has no weight of
+            -- its own: ScoreItem scores it as SPELL_DAMAGE plus
+            -- SPELL_HEALING.) The
             -- source JSON's "mana" (0.07) is folded into MANA_REGEN per
             -- user confirmation.
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 1.16, SPIRIT = 0.83 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 1.0,
@@ -505,7 +507,7 @@ EverGear.SPEC_PROFILES = {
                 DEFENSE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                SPELL_POWER = 0, SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
+                SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
                 SPELL_CRIT_CHANCE = 0, SPELL_HASTE = 0, MANA_REGEN = 0.07, SPELL_PENETRATION = 0,
                 SPELL_DAMAGE = 1, THREAT_REDUCTION = 0,
                 HP5 = 0, MP5 = 3.5,
@@ -524,7 +526,7 @@ EverGear.SPEC_PROFILES = {
                 DEFENSE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                SPELL_POWER = 0, SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
+                SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
                 SPELL_CRIT_CHANCE = 0, SPELL_HASTE = 0, MANA_REGEN = 0.07, SPELL_PENETRATION = 0,
                 SPELL_DAMAGE = 1, THREAT_REDUCTION = 0,
                 HP5 = 0, MP5 = 3.5,
@@ -533,8 +535,9 @@ EverGear.SPEC_PROFILES = {
         ["Shadow"] = {  -- role: Caster DPS
             -- sixtyupgrades-derived weights: every key the source JSON
             -- omitted is an explicit 0 here (confirmed convention), not a
-            -- mechanically-rescaled placeholder -- including SPELL_POWER,
-            -- which this set omits in favor of SPELL_DAMAGE alone.
+            -- mechanically-rescaled placeholder. (SPELL_POWER has no weight of
+            -- its own: ScoreItem scores it as SPELL_DAMAGE plus
+            -- SPELL_HEALING.)
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.04, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 2.0,
             secondary = {
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
@@ -544,7 +547,7 @@ EverGear.SPEC_PROFILES = {
                 DEFENSE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                SPELL_POWER = 0, SPELL_HIT_CHANCE = 10, SPELL_CRIT_CHANCE = 2.4, SPELL_HASTE = 0,
+                SPELL_HIT_CHANCE = 10, SPELL_CRIT_CHANCE = 2.4, SPELL_HASTE = 0,
                 MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 1, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
@@ -556,8 +559,9 @@ EverGear.SPEC_PROFILES = {
         ["Elemental"] = {  -- role: Caster DPS
             -- sixtyupgrades-derived weights: every key the source JSON
             -- omitted is an explicit 0 here (confirmed convention), not a
-            -- mechanically-rescaled placeholder -- including SPELL_POWER,
-            -- which this set omits in favor of SPELL_DAMAGE alone.
+            -- mechanically-rescaled placeholder. (SPELL_POWER has no weight of
+            -- its own: ScoreItem scores it as SPELL_DAMAGE plus
+            -- SPELL_HEALING.)
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.13, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
@@ -567,7 +571,7 @@ EverGear.SPEC_PROFILES = {
                 DEFENSE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                SPELL_POWER = 0, SPELL_HIT_CHANCE = 10, SPELL_CRIT_CHANCE = 8, SPELL_HASTE = 0,
+                SPELL_HIT_CHANCE = 10, SPELL_CRIT_CHANCE = 8, SPELL_HASTE = 0,
                 MANA_REGEN = 0, SPELL_PENETRATION = 2.7, SPELL_DAMAGE = 1,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 1, THREAT_REDUCTION = 0,
@@ -581,7 +585,7 @@ EverGear.SPEC_PROFILES = {
             -- sixtyupgrades' "speed" (confirmed to mean the Haste stat).
             stats = { STRENGTH = 2, AGILITY = 1.17, STAMINA = 0, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
@@ -598,9 +602,9 @@ EverGear.SPEC_PROFILES = {
         ["Restoration"] = {  -- role: Healer (Spirit-primary for Shaman -- see CLASS_ROLE_PRIMARY_STAT)
             -- sixtyupgrades-derived weights: every key the source JSON
             -- omitted is an explicit 0 here (confirmed convention), not a
-            -- mechanically-rescaled placeholder -- including SPELL_POWER,
-            -- which this set omits in favor of SPELL_DAMAGE/SPELL_HEALING
-            -- alone. The source JSON's "mana" (0.07) is folded into
+            -- mechanically-rescaled placeholder. (SPELL_POWER has no weight of
+            -- its own: ScoreItem scores it as SPELL_DAMAGE plus
+            -- SPELL_HEALING.) The source JSON's "mana" (0.07) is folded into
             -- MANA_REGEN, same as Priest Holy/Discipline.
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.5, SPIRIT = 0.5 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
@@ -611,7 +615,7 @@ EverGear.SPEC_PROFILES = {
                 DEFENSE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                SPELL_POWER = 0, SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
+                SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
                 SPELL_CRIT_CHANCE = 0, SPELL_HASTE = 0, MANA_REGEN = 0.07, SPELL_PENETRATION = 0,
                 SPELL_DAMAGE = 1, THREAT_REDUCTION = 0,
                 HP5 = 0, MP5 = 3,
@@ -633,7 +637,7 @@ EverGear.SPEC_PROFILES = {
                 DEFENSE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                SPELL_POWER = 0, SPELL_HIT_CHANCE = 13, SPELL_CRIT_CHANCE = 12, SPELL_HASTE = 0,
+                SPELL_HIT_CHANCE = 13, SPELL_CRIT_CHANCE = 12, SPELL_HASTE = 0,
                 MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 1, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
@@ -643,8 +647,9 @@ EverGear.SPEC_PROFILES = {
         ["Fire"] = {  -- role: Caster DPS
             -- sixtyupgrades-derived weights: every key the source JSON
             -- omitted is an explicit 0 here (confirmed convention), not a
-            -- mechanically-rescaled placeholder -- including SPELL_POWER,
-            -- which this set omits in favor of SPELL_DAMAGE alone.
+            -- mechanically-rescaled placeholder. (SPELL_POWER has no weight of
+            -- its own: ScoreItem scores it as SPELL_DAMAGE plus
+            -- SPELL_HEALING.)
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.2, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 2.0,
             secondary = {
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
@@ -654,7 +659,7 @@ EverGear.SPEC_PROFILES = {
                 DEFENSE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                SPELL_POWER = 0, SPELL_HIT_CHANCE = 13, SPELL_CRIT_CHANCE = 12, SPELL_HASTE = 0,
+                SPELL_HIT_CHANCE = 13, SPELL_CRIT_CHANCE = 12, SPELL_HASTE = 0,
                 MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
                 FIRE_DAMAGE = 1, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
@@ -674,7 +679,7 @@ EverGear.SPEC_PROFILES = {
                 DEFENSE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                SPELL_POWER = 0, SPELL_HIT_CHANCE = 13.58, SPELL_CRIT_CHANCE = 10.95, SPELL_HASTE = 0,
+                SPELL_HIT_CHANCE = 13.58, SPELL_CRIT_CHANCE = 10.95, SPELL_HASTE = 0,
                 MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 1,
                 NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
@@ -687,8 +692,9 @@ EverGear.SPEC_PROFILES = {
             -- sixtyupgrades-derived weights (same JSON given for all 3
             -- Warlock specs): every key the source JSON omitted is an
             -- explicit 0 here (confirmed convention), not a mechanically-
-            -- rescaled placeholder -- including SPELL_POWER, which this set
-            -- omits in favor of SPELL_DAMAGE alone.
+            -- rescaled placeholder. (SPELL_POWER has no weight of
+            -- its own: ScoreItem scores it as SPELL_DAMAGE plus
+            -- SPELL_HEALING.)
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.28, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 2.0,
             secondary = {
                 ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
@@ -698,7 +704,7 @@ EverGear.SPEC_PROFILES = {
                 DEFENSE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                SPELL_POWER = 0, SPELL_HIT_CHANCE = 19.53, SPELL_CRIT_CHANCE = 12.64, SPELL_HASTE = 0,
+                SPELL_HIT_CHANCE = 19.53, SPELL_CRIT_CHANCE = 12.64, SPELL_HASTE = 0,
                 MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 1, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
@@ -718,7 +724,7 @@ EverGear.SPEC_PROFILES = {
                 DEFENSE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                SPELL_POWER = 0, SPELL_HIT_CHANCE = 19.53, SPELL_CRIT_CHANCE = 12.64, SPELL_HASTE = 0,
+                SPELL_HIT_CHANCE = 19.53, SPELL_CRIT_CHANCE = 12.64, SPELL_HASTE = 0,
                 MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 1, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
@@ -738,7 +744,7 @@ EverGear.SPEC_PROFILES = {
                 DEFENSE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                SPELL_POWER = 0, SPELL_HIT_CHANCE = 19.53, SPELL_CRIT_CHANCE = 12.64, SPELL_HASTE = 0,
+                SPELL_HIT_CHANCE = 19.53, SPELL_CRIT_CHANCE = 12.64, SPELL_HASTE = 0,
                 MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 1, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
@@ -750,8 +756,8 @@ EverGear.SPEC_PROFILES = {
         ["Balance"] = {  -- role: Caster DPS
             -- sixtyupgrades-derived weights: every key the source JSON
             -- omitted is an explicit 0 here (confirmed convention), not a
-            -- mechanically-rescaled placeholder -- including SPELL_POWER
-            -- and NATURE_DAMAGE (Balance's kit does both Arcane and Nature
+            -- mechanically-rescaled placeholder -- including
+            -- NATURE_DAMAGE (Balance's kit does both Arcane and Nature
             -- damage in practice, but this set only weights Arcane).
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.11, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
@@ -762,7 +768,7 @@ EverGear.SPEC_PROFILES = {
                 DEFENSE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                SPELL_POWER = 0, SPELL_HIT_CHANCE = 8.94, SPELL_CRIT_CHANCE = 6.59, SPELL_HASTE = 0,
+                SPELL_HIT_CHANCE = 8.94, SPELL_CRIT_CHANCE = 6.59, SPELL_HASTE = 0,
                 MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 1,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 1, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0, THREAT_REDUCTION = 0,
@@ -776,7 +782,7 @@ EverGear.SPEC_PROFILES = {
             -- (0.04) is folded into MANA_REGEN, same as the healer specs.
             stats = { STRENGTH = 2.2, AGILITY = 2.02, STAMINA = 0, INTELLECT = 0.67, SPIRIT = 0.08 }, armorWeight = 0, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0.04, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
@@ -811,7 +817,7 @@ EverGear.SPEC_PROFILES = {
             -- dropped rather than folded into Stamina.
             stats = { STRENGTH = 2.2, AGILITY = 1.57, STAMINA = 2.2, INTELLECT = 0, SPIRIT = 0 }, armorWeight = 0.4, dpsWeight = 14, rangedDpsWeight = 0,
             secondary = {
-                SPELL_POWER = 0, SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
+                SPELL_HEALING = 0, SPELL_HIT_CHANCE = 0, SPELL_CRIT_CHANCE = 0,
                 SPELL_HASTE = 0, MANA_REGEN = 0, SPELL_PENETRATION = 0, SPELL_DAMAGE = 0,
                 FIRE_DAMAGE = 0, SHADOW_DAMAGE = 0, ARCANE_DAMAGE = 0, FROST_DAMAGE = 0,
                 NATURE_DAMAGE = 0,
@@ -828,9 +834,9 @@ EverGear.SPEC_PROFILES = {
         ["Restoration"] = {  -- role: Healer (Spirit-primary for Druid -- see CLASS_ROLE_PRIMARY_STAT)
             -- sixtyupgrades-derived weights: every key the source JSON
             -- omitted is an explicit 0 here (confirmed convention), not a
-            -- mechanically-rescaled placeholder -- including SPELL_POWER,
-            -- which this set omits in favor of SPELL_DAMAGE/SPELL_HEALING
-            -- alone. The source JSON's "mana" (0.02) is folded into
+            -- mechanically-rescaled placeholder. (SPELL_POWER has no weight of
+            -- its own: ScoreItem scores it as SPELL_DAMAGE plus
+            -- SPELL_HEALING.) The source JSON's "mana" (0.02) is folded into
             -- MANA_REGEN, same as the other healer specs.
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.3, SPIRIT = 0.46 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
@@ -841,7 +847,7 @@ EverGear.SPEC_PROFILES = {
                 DEFENSE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                SPELL_POWER = 0, SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
+                SPELL_HEALING = 1, SPELL_HIT_CHANCE = 0,
                 SPELL_CRIT_CHANCE = 10, SPELL_HASTE = 0, MANA_REGEN = 0.02, SPELL_PENETRATION = 0,
                 SPELL_DAMAGE = 1, THREAT_REDUCTION = 0,
                 HP5 = 0, MP5 = 3,
@@ -922,26 +928,36 @@ end
 -- concept here; each spec's profile just names its own stats explicitly
 -- (see SPEC_PROFILES above), so a Warrior's grid says "Strength", not
 -- "Primary Stat".
+-- A stat's weight in the profile. The unmapped fallback is 0 -- see the comment
+-- above ScoreItem: a stat no profile has an opinion on (including a stray
+-- data-quality fabrication) should never contribute value by default.
+-- Previously 0.3/point, which is exactly how a fabricated SPELL_DAMAGE/
+-- SPELL_HEALING on Crested Scepter (Blackfathom Deeps, since corrected)
+-- skewed its score under every melee/tank profile that hadn't explicitly
+-- zeroed those keys.
+local function StatWeight(profile, statName)
+    if profile.stats[statName] then
+        return profile.stats[statName]
+    elseif profile.secondary[statName] then
+        return profile.secondary[statName]
+    end
+    return 0
+end
+
 local function ScoreItem(stats, profile, armorValue, dps, isRanged)
     local score = 0
 
     for statName, value in pairs(stats or {}) do
         if type(value) == "number" and not EXCLUDED_STAT_KEYS[statName] then
             local weight
-            if profile.stats[statName] then
-                weight = profile.stats[statName]
-            elseif profile.secondary[statName] then
-                weight = profile.secondary[statName]
+            if statName == "SPELL_POWER" then
+                -- "Increases damage and healing done by magical spells and
+                -- effects by up to X" is X spell damage plus X healing (the
+                -- game itself reports it that way), so it has no weight of
+                -- its own that could disagree with those two.
+                weight = StatWeight(profile, "SPELL_DAMAGE") + StatWeight(profile, "SPELL_HEALING")
             else
-                weight = 0  -- unmapped fallback -- see comment above ScoreItem:
-                            -- a stat no profile has an opinion on (including
-                            -- a stray data-quality fabrication) should never
-                            -- contribute value by default. Previously 0.3/
-                            -- point, which is exactly how a fabricated
-                            -- SPELL_DAMAGE/SPELL_HEALING on Crested Scepter
-                            -- (Blackfathom Deeps, since corrected) skewed its
-                            -- score under every melee/tank profile that
-                            -- hadn't explicitly zeroed those keys.
+                weight = StatWeight(profile, statName)
             end
             score = score + (value * weight)
         end
