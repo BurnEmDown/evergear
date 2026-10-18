@@ -80,7 +80,12 @@ local function RequiredLevel(item)
     return item.minLevel or (item.source and item.source.minLevel)
 end
 
+-- The item's quality from its data (the game's own, via the backend), so the
+-- rarity filter doesn't change as the client's item cache fills in; the cache
+-- only for items the data doesn't cover yet.
 local function Quality(itemId)
+    local item = EverGear.Items[itemId]
+    if item and item.quality then return item.quality end
     local _, _, quality = H.SafeGetItemInfo(itemId)
     return quality
 end
@@ -959,7 +964,7 @@ requester:SetScript("OnUpdate", function(self)
         requestIndex = requestIndex + 1
         local itemId = requestQueue[requestIndex]
         if not itemId then self:Hide() return end
-        if not Quality(itemId) then load(itemId) end
+        if not H.SafeGetItemInfo(itemId) then load(itemId) end
     end
 end)
 
