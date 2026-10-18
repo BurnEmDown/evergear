@@ -164,6 +164,11 @@ EverGear.ZONE_LEVEL_RANGES = {
     ["Azshara"] = { 45, 55 },              -- the Classic range; no Forever source yet
     ["Moonglade"] = { 51, 60 },            -- foreverdb.net
     ["Winterspring"] = { 53, 60 },         -- foreverdb.net
+    ["Searing Gorge"] = { 43, 50 },        -- the Classic ranges; no Forever source yet
+    ["Blasted Lands"] = { 45, 55 },
+    ["Felwood"] = { 48, 55 },
+    ["Un'Goro Crater"] = { 48, 55 },
+    ["Burning Steppes"] = { 50, 58 },
     ["Riverglades"] = { 35, 45 },          -- new in Forever, no published range: an
                                            -- estimate from its Powderfuse vendor's level 40 gear
     ["Stormwind City"] = { 1, 60 },
