@@ -1066,13 +1066,14 @@ end
 -- in the main window. But the far more common case -- the editor is open on
 -- whatever's live, same as it was opened on -- previously left it stuck on
 -- the old spec until closed and reopened, which this fixes by re-pointing it
--- at the new spec's own Default profile, same as a fresh ToggleProfileEditor
--- open would.
+-- at the new spec's active profile (the one the main window just switched to:
+-- the profile last used with that spec, or its default), same as a fresh
+-- ToggleProfileEditor open would.
 function EverGear:NotifyLiveSpecChanged(oldSpecName, newSpecName)
     if not editorFrame:IsShown() then return end
     local playerInfo = self:GetPlayerInfo()
     if editorClassToken == playerInfo.classToken and editorSpecName == oldSpecName then
         editorSpecName = newSpecName
-        SelectProfileForEditing(self:GetDefaultProfileId(editorClassToken, editorSpecName))
+        SelectProfileForEditing(self:GetCharDB().profileId or self:GetDefaultProfileId(editorClassToken, editorSpecName))
     end
 end
