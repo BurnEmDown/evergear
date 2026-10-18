@@ -262,6 +262,12 @@ UIDropDownMenu_SetWidth(specDropdown, 150)
 local RefreshProfileDropdown
 
 local function SpecDropdown_OnClick(self)
+    -- Read the clicked spec first: WoW's dropdowns share one set of menu
+    -- buttons, and RefreshProfileDropdown below rebuilds the profile
+    -- dropdown into them, so self.value is a profile id ("default") by the
+    -- time it returns. Reading it after that sent the profile editor to a
+    -- spec named "default" ("default Default"), stuck there for good.
+    local newSpec = self.value
     local charDB = EverGear:GetCharDB()
     local oldSpec = charDB.spec
     -- Remember the profile used with the spec being left (also covers
@@ -271,15 +277,15 @@ local function SpecDropdown_OnClick(self)
         charDB.profileBySpec = charDB.profileBySpec or {}
         charDB.profileBySpec[oldSpec] = charDB.profileId
     end
-    charDB.spec = self.value
+    charDB.spec = newSpec
     EverGear:SetActiveProfileId(EverGear:GetRememberedProfileId(EverGear:GetPlayerInfo().classToken, charDB.spec))
-    UIDropDownMenu_SetSelectedValue(specDropdown, self.value)
+    UIDropDownMenu_SetSelectedValue(specDropdown, newSpec)
     if RefreshProfileDropdown then RefreshProfileDropdown() end
     -- Re-points the EP profile editor at the new spec too, but only if it
     -- was still showing the spec we're switching away from -- see
     -- NotifyLiveSpecChanged's own comment (Core/ProfileEditor.lua) for why
     -- that guard matters.
-    if EverGear.NotifyLiveSpecChanged then EverGear:NotifyLiveSpecChanged(oldSpec, self.value) end
+    if EverGear.NotifyLiveSpecChanged then EverGear:NotifyLiveSpecChanged(oldSpec, newSpec) end
     EverGear:RefreshUI()
 end
 
@@ -324,8 +330,9 @@ profileLabel:SetText("EP Profile")
 profileLabel:SetTextColor(unpack(THEME.goldDim))
 
 local function ProfileDropdown_OnClick(self)
-    EverGear:SetActiveProfileId(self.value)
-    UIDropDownMenu_SetSelectedValue(profileDropdown, self.value)
+    local profileId = self.value  -- read first, see SpecDropdown_OnClick
+    EverGear:SetActiveProfileId(profileId)
+    UIDropDownMenu_SetSelectedValue(profileDropdown, profileId)
     EverGear:RefreshUI()
 end
 

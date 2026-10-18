@@ -714,8 +714,11 @@ UIDropDownMenu_Initialize(copyClassDropdown, function()
         info.text = CLASS_DISPLAY_NAMES[classToken]
         info.value = classToken
         info.func = function(self)
-            copyTargetClass = self.value
-            UIDropDownMenu_SetSelectedValue(copyClassDropdown, self.value)
+            -- Read the clicked class first: RefreshCopySpecDropdown rebuilds
+            -- the spec dropdown into the same shared menu buttons.
+            local classToken = self.value
+            copyTargetClass = classToken
+            UIDropDownMenu_SetSelectedValue(copyClassDropdown, classToken)
             RefreshCopySpecDropdown()
         end
         UIDropDownMenu_AddButton(info)
