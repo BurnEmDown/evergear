@@ -80,7 +80,12 @@ local function RequiredLevel(item)
     return item.minLevel or (item.source and item.source.minLevel)
 end
 
+-- The item's quality from its data (the game's own, via the backend), so the
+-- rarity filter doesn't change as the client's item cache fills in; the cache
+-- only for items the data doesn't cover yet.
 local function Quality(itemId)
+    local item = EverGear.Items[itemId]
+    if item and item.quality then return item.quality end
     local _, _, quality = H.SafeGetItemInfo(itemId)
     return quality
 end
@@ -119,6 +124,8 @@ local function SourceLabel(key)
     end
     if key == "none" then return "No source" end
     if key == "drop" then return "Drop" end
+    if key == "pvp" then return "PvP" end
+    if key == "reputation" then return "Reputation" end
     return key
 end
 
@@ -176,7 +183,7 @@ local function Matches(item)
     if filters.slot and item.slot ~= filters.slot then return false end
     if filters.type and TypeKey(item) ~= filters.type then return false end
     if filters.source and SourceKey(item) ~= filters.source then return false end
-    if filters.zone and not (item.source and item.source.zone == filters.zone) then return false end
+    if filters.zone and not EverGear.ZoneListHas(EverGear:GetSourceZones(item), filters.zone) then return false end
     if filters.quality ~= nil then
         local quality = Quality(item.id)
         if filters.quality == "unknown" then
@@ -957,7 +964,7 @@ requester:SetScript("OnUpdate", function(self)
         requestIndex = requestIndex + 1
         local itemId = requestQueue[requestIndex]
         if not itemId then self:Hide() return end
-        if not Quality(itemId) then load(itemId) end
+        if not H.SafeGetItemInfo(itemId) then load(itemId) end
     end
 end)
 

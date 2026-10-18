@@ -19,6 +19,7 @@ Core\JSON.lua
 Core\EPProfiles.lua
 Core\ProfileEditor.lua
 Core\UI.lua
+Core\Filters.lua
 Core\WishlistUI.lua
 Core\ZoneUpgrades.lua
 Core\Debug.lua
@@ -87,5 +88,9 @@ Data\Items_Orgrimmar.lua
 Data\Items_ThunderBluff.lua
 Data\Items_Undercity.lua
 Data\Items_DustwallowMarsh.lua
+Data\Items_PvPHonorVendors.lua
+Data\Items_BGReputation.lua
+Data\Items_ReputationVendors.lua
+Data\Items_TownVendors.lua
 Data\Cosmetics.lua
 Data\Enchants.lua

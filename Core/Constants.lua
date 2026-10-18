@@ -6,7 +6,7 @@ EverGear.ADDON_NAME = "EverGear"
 -- change, no matter how small -- 0.0.1 -> 0.0.2 -> 0.0.3, etc. Moving to
 -- 0.1.0 or 1.0.0 is the user's call alone; Claude may suggest it's time,
 -- but must never bump a minor/major version on its own initiative.
-EverGear.VERSION = "0.3.1"
+EverGear.VERSION = "0.4.0"
 
 -- Populated later from Data\*.lua files. Each entry keyed by numeric item id.
 -- Canonical item shape (mirrors evergear-backend/schema.md):
@@ -159,11 +159,24 @@ EverGear.ZONE_LEVEL_RANGES = {
     ["Badlands"] = { 36, 45 },
     ["Swamp of Sorrows"] = { 36, 43 },
     ["Dustwallow Marsh"] = { 36, 61 },
+    ["Feralas"] = { 43, 50 },              -- foreverdb.net's map list
+    ["Tanaris"] = { 44, 50 },              -- foreverdb.net
+    ["Azshara"] = { 45, 55 },              -- the Classic range; no Forever source yet
+    ["Moonglade"] = { 51, 60 },            -- foreverdb.net
+    ["Winterspring"] = { 53, 60 },         -- foreverdb.net
+    ["Searing Gorge"] = { 43, 50 },        -- the Classic ranges; no Forever source yet
+    ["Blasted Lands"] = { 45, 55 },
+    ["Felwood"] = { 48, 55 },
+    ["Un'Goro Crater"] = { 48, 55 },
+    ["Burning Steppes"] = { 50, 58 },
+    ["Riverglades"] = { 35, 45 },          -- new in Forever, no published range: an
+                                           -- estimate from its Powderfuse vendor's level 40 gear
     ["Stormwind City"] = { 1, 60 },
     ["Ironforge"] = { 1, 60 },
     ["Orgrimmar"] = { 1, 60 },
     ["Thunder Bluff"] = { 1, 60 },
     ["Undercity"] = { 1, 60 },
+    ["Darnassus"] = { 1, 60 },
     -- Dungeons
     ["Hall of Thanes"] = { 12, 16 },
     ["Ragefire Chasm"] = { 13, 17 },
@@ -190,7 +203,7 @@ EverGear.OTHER_FACTION_ZONES = {
     Alliance = { "Mulgore", "Durotar", "Tirisfal Glades", "The Barrens", "Silverpine Forest",
                  "Ragefire Chasm", "Orgrimmar", "Thunder Bluff", "Undercity" },
     Horde = { "Elwynn Forest", "Dun Morogh", "Westfall", "Loch Modan", "Teldrassil", "Darkshore",
-              "The Stockade", "Hall of Thanes", "Stormwind City", "Ironforge" },
+              "The Stockade", "Hall of Thanes", "Stormwind City", "Ironforge", "Darnassus" },
 }
 
 EverGear.SOURCE_TYPE_FILTERS = {

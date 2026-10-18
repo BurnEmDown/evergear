@@ -11,7 +11,7 @@
 --     armorWeight = 0.15,
 --     dpsWeight = 3.0,         -- melee weapon DPS (main hand / off hand)
 --     rangedDpsWeight = 0,     -- ranged-slot weapon DPS (bow/gun/crossbow/thrown/wand)
---     secondary = { ATTACK_POWER = 0.5, SPELL_POWER = 0, ... },
+--     secondary = { ATTACK_POWER = 0.5, SPELL_DAMAGE = 0, ... },
 --   }
 -- `stats` always names all 5 main stats explicitly by their real name --
 -- there's no more generic "primary stat" field here (removed per user
@@ -132,6 +132,18 @@ local function MergeWeightsOnto(base, overlay)
         elseif type(value) == "number" then
             merged[key] = EverGear:ClampWeight(value)
         end
+    end
+    -- Profiles saved or exported before spell power was scored as spell damage
+    -- plus healing (Upgrades.lua's ScoreItem) carry their own SPELL_POWER
+    -- weight. It becomes the spell damage weight when that one is 0, so such a
+    -- profile scores spell power items as before; either way the key goes, so
+    -- the editor doesn't show it.
+    local secondary = merged.secondary
+    if secondary and secondary.SPELL_POWER then
+        if secondary.SPELL_POWER > 0 and (secondary.SPELL_DAMAGE or 0) == 0 then
+            secondary.SPELL_DAMAGE = secondary.SPELL_POWER
+        end
+        secondary.SPELL_POWER = nil
     end
     return merged
 end
@@ -688,7 +700,7 @@ function EverGear:GetWeightFieldLayout(weights)
         ATTACK_POWER_VS_HUMANOIDS = "Physical Damage", ATTACK_POWER_VS_UNDEAD = "Physical Damage",
         -- Spell Damage (includes healing -- same "caster" stat family, and
         -- MP5, whose entire relevance is feeding spellcasting)
-        SPELL_POWER = "Spell Damage", SPELL_HEALING = "Spell Damage", SPELL_HIT_CHANCE = "Spell Damage",
+        SPELL_HEALING = "Spell Damage", SPELL_HIT_CHANCE = "Spell Damage",
         SPELL_CRIT_CHANCE = "Spell Damage", SPELL_HASTE = "Spell Damage", MANA_REGEN = "Spell Damage",
         SPELL_PENETRATION = "Spell Damage", SPELL_DAMAGE = "Spell Damage", FIRE_DAMAGE = "Spell Damage",
         SHADOW_DAMAGE = "Spell Damage", ARCANE_DAMAGE = "Spell Damage", FROST_DAMAGE = "Spell Damage",

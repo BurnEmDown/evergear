@@ -6,7 +6,7 @@ EverGear = EverGear or {}
 EverGear.Items = EverGear.Items or {}
 
 
--- Held back (no known source yet); used by debug mode only.
+-- Held back (no known source yet, or not confirmed); used by debug mode only.
 EverGear.PendingItems = EverGear.PendingItems or {}
 EverGear.PendingItems[5000] = "Coral Band"
 EverGear.PendingItems[5008] = "Quicksilver Ring"

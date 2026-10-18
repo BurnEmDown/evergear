@@ -14,21 +14,21 @@ EverGear = EverGear or {}
 local EDGE_OFFSET = 17
 
 local button = CreateFrame("Button", "EverGearMinimapButton", Minimap)
-button:SetSize(31, 31)
+button:SetSize(32, 32)
 button:SetFrameStrata("MEDIUM")
 button:SetFrameLevel(8)
 button:RegisterForClicks("LeftButtonUp")
 button:RegisterForDrag("LeftButton")
 button:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
 
--- Icon: the addon's own icon (Icon.tga, ships at the addon's root -- also
--- used as ## IconTexture in the .toc), replacing the old EMPTY_SLOT_TEXTURES
--- placeholder now that a real one exists. Drawn edge-to-edge with its own
--- circular border baked in, so no TexCoord cropping needed here.
+-- Icon: MinimapIcon.tga, the addon's icon (Icon.tga, also the .toc's
+-- ## IconTexture) cut to a circle with transparent corners. Icon.tga is a
+-- square with no alpha channel, so its dark corners showed outside the round
+-- border here.
 local icon = button:CreateTexture(nil, "BACKGROUND")
-icon:SetSize(20, 20)
+icon:SetSize(22, 22)
 icon:SetPoint("CENTER", 0, 0)
-icon:SetTexture("Interface\\AddOns\\EverGear\\Icon")
+icon:SetTexture("Interface\\AddOns\\EverGear\\MinimapIcon")
 
 -- Standard minimap-button ring border texture, same one Blizzard's own
 -- tracking/calendar buttons use.
