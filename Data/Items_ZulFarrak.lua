@@ -5,7 +5,6 @@
 EverGear = EverGear or {}
 EverGear.Items = EverGear.Items or {}
 
-EverGear.Items[11122] = {id = 11122, name = "Carrot on a Stick", slot = "TrinketSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 50, minLevel = nil, confirmed = true, unverified = true, bindType = "BoP", source = {type = "quest", zone = "Zul'Farrak", quest = "Gahz'rilla", minLevel = 40}, stats = {EQUIP_1 = "Increases mount speed by 3%."}, quality = 2}
 
 -- Held back (no known source yet, or not confirmed); used by debug mode only.
 EverGear.PendingItems = EverGear.PendingItems or {}
