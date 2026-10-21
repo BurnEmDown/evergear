@@ -1376,6 +1376,7 @@ function EverGear:GetPlayerStanding(factionId)
 end
 
 local function PassesFilterPanels(self, item, charDB, ignoreZone)
+    if item.unverified and (charDB.filters or {}).unconfirmed == false then return false end
     local filterKey = self:GetWeaponFilterKey(item)
     if filterKey and (charDB.weaponTypeFilter or {})[filterKey] == false then return false end
     local profession = item.source and item.source.type == "craft" and item.source.profession
@@ -1691,4 +1692,14 @@ function EverGear:GetSourceSummary(item)
         return source.zone and (source.zone .. " (" .. what .. ")") or what
     end
     return "Unknown source"
+end
+
+-- Items not seen in WoW Forever yet (item.unverified) get an orange
+-- "Unconfirmed" tag after their source, wherever the source is shown.
+EverGear.UNCONFIRMED_TAG = "  |cffff9933\194\183 Unconfirmed|r"
+local BaseSourceSummary = EverGear.GetSourceSummary
+function EverGear:GetSourceSummary(item)
+    local summary = BaseSourceSummary(self, item)
+    if item and item.unverified then summary = summary .. self.UNCONFIRMED_TAG end
+    return summary
 end
