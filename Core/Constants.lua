@@ -22,6 +22,10 @@ EverGear.VERSION = "0.3.1"
 --   ilvl = 5,
 --   minLevel = 3,
 --   confirmed = true,           -- verified in-game or listed by a tracker site (wowtbc.gg, wowhead...)
+--   unverified = true,          -- optional: in the WoW Forever game data but not seen in game yet
+--                                -- (above the beta's level cap). Shown with an orange
+--                                -- "Unconfirmed" tag, unless the player turns off "Show
+--                                -- unconfirmed items" in the Filters window.
 --   bindType = "BoE",           -- "BoE" / "BoP" / "BoU" / nil (unconfirmed -- treated as NOT
 --                                -- BoE by the "BoE only" profession filter in UI.lua, never
 --                                -- assumed). Currently only populated for crafted items:
