@@ -161,14 +161,19 @@ EverGear.ZONE_LEVEL_RANGES = {
     ["Dustwallow Marsh"] = { 36, 61 },
     ["Feralas"] = { 43, 50 },              -- foreverdb.net's map list
     ["Tanaris"] = { 44, 50 },              -- foreverdb.net
-    ["Azshara"] = { 45, 55 },              -- the Classic range; no Forever source yet
+    ["The Hinterlands"] = { 43, 50 },      -- foreverdb.net
+    ["Searing Gorge"] = { 47, 50 },        -- foreverdb.net
+    ["Blasted Lands"] = { 47, 59 },        -- foreverdb.net
+    ["Azshara"] = { 50, 57 },              -- foreverdb.net
     ["Moonglade"] = { 51, 60 },            -- foreverdb.net
+    ["Un'Goro Crater"] = { 51, 55 },       -- foreverdb.net
+    ["Felwood"] = { 52, 55 },              -- foreverdb.net
+    ["Burning Steppes"] = { 52, 59 },      -- foreverdb.net
+    ["Western Plaguelands"] = { 53, 59 },  -- foreverdb.net
     ["Winterspring"] = { 53, 60 },         -- foreverdb.net
-    ["Searing Gorge"] = { 43, 50 },        -- the Classic ranges; no Forever source yet
-    ["Blasted Lands"] = { 45, 55 },
-    ["Felwood"] = { 48, 55 },
-    ["Un'Goro Crater"] = { 48, 55 },
-    ["Burning Steppes"] = { 50, 58 },
+    ["Eastern Plaguelands"] = { 55, 60 },  -- foreverdb.net
+    ["Deadwind Pass"] = { 56, 60 },        -- foreverdb.net
+    ["Silithus"] = { 57, 60 },             -- foreverdb.net
     ["Riverglades"] = { 35, 45 },          -- new in Forever, no published range: an
                                            -- estimate from its Powderfuse vendor's level 40 gear
     ["Stormwind City"] = { 1, 60 },
@@ -195,6 +200,19 @@ EverGear.ZONE_LEVEL_RANGES = {
     ["Scarlet Monastery: Cathedral"] = { 36, 42 },
     ["Razorfen Kraul"] = { 25, 30 },
     ["Razorfen Downs"] = { 36, 42 },
+    -- Dungeons from here on: wowtbc.gg's WoW Forever dungeon list
+    ["Uldaman"] = { 42, 52 },
+    ["Zul'Farrak"] = { 44, 54 },
+    ["Maraudon"] = { 46, 55 },
+    ["The Temple of Atal'Hakkar"] = { 50, 60 },
+    ["Blackrock Depths"] = { 52, 60 },
+    ["Blackrock Spire: Lower"] = { 55, 60 },
+    ["Blackrock Spire: Upper"] = { 58, 60 },
+    ["Dire Maul: East"] = { 58, 60 },
+    ["Dire Maul: West"] = { 58, 60 },
+    ["Dire Maul: North"] = { 58, 60 },
+    ["Stratholme"] = { 58, 60 },
+    ["Scholomance"] = { 58, 60 },
 }
 
 -- The other faction's starting zones, capitals and faction-specific
