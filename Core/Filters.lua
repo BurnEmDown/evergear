@@ -370,6 +370,14 @@ professionAll:SetPoint("TOPLEFT", COLUMN_2 + INDENT, py - 4)
 local professionNone = SmallButton(sourcesPage, "None", 60, function() SetAllProfessions(false) end)
 professionNone:SetPoint("LEFT", professionAll, "RIGHT", 6, 0)
 
+-- Under the professions: items in the WoW Forever game data that nobody has
+-- seen in game yet (above the beta's level cap), tagged "Unconfirmed".
+py = py - 4 - 20 - 14
+local unconfirmedCheck = SourceCheck("unconfirmed", "Show unconfirmed items", COLUMN_2, py)
+Tooltip(unconfirmedCheck, "Show unconfirmed items", "Items that are in the WoW Forever game files but haven't been "
+    .. "seen in game yet, because they're above the beta's level cap. They're tagged |cffff9933Unconfirmed|r: "
+    .. "their stats come from the game, but where they drop and at what level may change.")
+
 local function RefreshSourcesPage()
     for _, cb in ipairs(sourceChecks) do cb:SetChecked(cb.isOn()) end
     SetEnabled(pvpRankCheck, pvpCheck:GetChecked())
@@ -637,6 +645,7 @@ function EverGear:GetActiveFilterSummary()
         if sources[key] == false then table.insert(active, "Sources") break end
     end
     if Table("pvpFilter").hidden and active[1] ~= "Sources" then table.insert(active, "Sources") end
+    if sources.unconfirmed == false then table.insert(active, "Unconfirmed items") end
     if next(HiddenFactions()) then table.insert(active, "Reputations") end
     for _, profName in ipairs(EverGear.PROFESSION_FILTER_LIST) do
         if Table("professionFilter")[profName] == false or Table("professionBoEOnly")[profName] then
