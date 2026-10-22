@@ -23,6 +23,7 @@ Core\Filters.lua
 Core\WishlistUI.lua
 Core\ZoneUpgrades.lua
 Core\Debug.lua
+Core\LiveItems.lua
 Core\ItemBrowser.lua
 Core\MinimapButton.lua
 Core\Tutorial.lua
