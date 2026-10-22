@@ -1604,8 +1604,11 @@ local function OnItemTooltip(tooltip)
     end
 
     local item = EverGear:GetItem(itemId)
-    if item and item.unverified then
+    local state = EverGear.GetUnconfirmedState and EverGear:GetUnconfirmedState(item)
+    if state == "pending" then
         tooltip:AddLine("EverGear: unconfirmed, not seen in WoW Forever yet", 1.00, 0.60, 0.20, true)
+    elseif state == "missing" then
+        tooltip:AddLine("EverGear: not in WoW Forever", 1.00, 0.25, 0.25, true)
     end
 
     -- Every vendor this character can buy it from, most convenient first (see

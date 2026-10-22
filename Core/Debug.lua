@@ -452,7 +452,9 @@ function EverGear:CompareLiveToDatabase(live, db)
             tostring(source.rank), rank.name, rank.rank)
     end
 
-    local g, d = NormalizeForCompare(live.stats), NormalizeForCompare(db.stats)
+    -- An unconfirmed item the game answered for scores with the game's stats
+    -- (LiveItems.lua); compare against what the data has (dataStats).
+    local g, d = NormalizeForCompare(live.stats), NormalizeForCompare(db.dataStats or db.stats)
     local keys = {}
     for k in pairs(g) do keys[k] = true end
     for k in pairs(d) do keys[k] = true end
@@ -817,7 +819,7 @@ local function OnItemTooltip(tooltip)
     EverGearDB.debugChecked = EverGearDB.debugChecked or {}
     EverGearDB.debugChecked[record.id] = #diffs > 0 and "differs" or "ok"
     if #diffs > 0 then
-        ShowFlaggedItem(record, "differs", diffs, notes, dbItem.stats)
+        ShowFlaggedItem(record, "differs", diffs, notes, dbItem.dataStats or dbItem.stats)
     end
     if EverGear.OnItemBrowserCheck then EverGear:OnItemBrowserCheck() end
 end
@@ -860,7 +862,7 @@ function EverGear:CheckItemAgainstGame(itemId)
     EverGearDB.debugChecked[itemId] = status
     if status == "differs" then
         local existing = Captures()[itemId]
-        StoreCapture(record, status, diffs, notes, dbItem.stats, existing and existing.sourceNote)
+        StoreCapture(record, status, diffs, notes, dbItem.dataStats or dbItem.stats, existing and existing.sourceNote)
     end
     return status
 end
@@ -952,6 +954,18 @@ function EverGear:HandleDebugCommand(arg)
     elseif arg == "items" then
         EverGear:ToggleItemBrowser()
         return
+    elseif arg == "unconfirmed" then
+        if not debugFrame then BuildWindow() end
+        local text, counts = EverGear:BuildUnconfirmedReportJSON()
+        print(string.format("|cff33ff99EverGear|r debug: unconfirmed items -- %d in the game and match, %d in the "
+            .. "game but differ, %d not in the game, %d not answered yet.", counts.ok, counts.differs,
+            counts.missing, counts.pending))
+        currentExportText = text
+        exportEditBox:SetText(text)
+        exportPopup:Show()
+        exportEditBox:SetFocus()
+        exportEditBox:HighlightText()
+        return
     elseif arg == "clear" then
         EverGearDB.debugCaptures = {}
         EverGearDB.debugEnchantCaptures = {}
@@ -972,6 +986,7 @@ function EverGear:HandleDebugCommand(arg)
         print("|cff33ff99EverGear|r debug mode |cff00ff00ON|r -- hover an item that's missing or wrong in the addon to flag it.")
         print("  /eg debug export  -- show captured items as JSON     /eg debug clear  -- forget captures")
         print("  /eg debug items  -- browse every item in EverGear's data")
+        print("  /eg debug unconfirmed  -- what the game says about EverGear's unconfirmed items, as JSON")
     else
         print("|cff33ff99EverGear|r debug mode |cffff4040OFF|r.")
         if debugFrame then debugFrame:Hide() end
