@@ -482,8 +482,13 @@ local zoneChecks = {}
 
 -- Every place named as an item source, split into dungeons and zones, each
 -- sorted by name ("The Deadmines" under D).
-function EverGear.CollectSourceZones()
+-- includeEmpty: also list the dungeons EverGear has no items from yet.
+function EverGear.CollectSourceZones(includeEmpty)
     local isDungeon, seen = {}, {}
+    for _, zone in ipairs(EverGear.DUNGEONS) do
+        isDungeon[zone] = true
+        if includeEmpty then seen[zone] = true end
+    end
     local faction = EverGear:GetPlayerInfo().faction
     for _, item in pairs(EverGear.Items) do
         local source = item.source

@@ -211,7 +211,13 @@ Draw = function()
     emptyText:SetShown(#list == 0)
     if #list == 0 then
         countText:SetText("")
-        emptyText:SetText(state.zone and ("No upgrades from " .. state.zone .. " for you right now.\n\nItems above your look-ahead level and ones your filters hide aren't counted.") or "Pick a zone or dungeon above.")
+        local text = "Pick a zone or dungeon above."
+        if state.zone and #EverGear:GetItemsForZone(state.zone, EverGear:GetPlayerInfo().faction) == 0 then
+            text = "EverGear doesn't have any items from " .. state.zone .. " yet."
+        elseif state.zone then
+            text = "No upgrades from " .. state.zone .. " for you right now.\n\nItems above your look-ahead level and ones your filters hide aren't counted."
+        end
+        emptyText:SetText(text)
     else
         countText:SetText(#list .. " upgrade" .. (#list == 1 and "" or "s"))
     end
@@ -239,7 +245,7 @@ end
 -- Zone list: "Dungeons" and "Zones" open sub-lists, each with the level range
 -- where one is known, and the character's own zone is offered on top.
 UIDropDownMenu_Initialize(zoneDropdown, function(_, level, menuList)
-    local dungeons, zones = EverGear.CollectSourceZones()
+    local dungeons, zones = EverGear.CollectSourceZones(true)
     level = level or 1
     local function AddZone(zone)
         local info = UIDropDownMenu_CreateInfo()
@@ -284,7 +290,7 @@ function EverGear:ToggleZoneUpgrades()
     if panel:IsShown() then panel:Hide() return end
     if not EverGear.Frame:IsShown() then EverGear:ToggleUI() end
     local here = GetRealZoneText and GetRealZoneText()
-    local dungeons, zones = EverGear.CollectSourceZones()
+    local dungeons, zones = EverGear.CollectSourceZones(true)
     local known = {}
     for _, z in ipairs(dungeons) do known[z] = true end
     for _, z in ipairs(zones) do known[z] = true end
