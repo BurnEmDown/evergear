@@ -370,13 +370,13 @@ professionAll:SetPoint("TOPLEFT", COLUMN_2 + INDENT, py - 4)
 local professionNone = SmallButton(sourcesPage, "None", 60, function() SetAllProfessions(false) end)
 professionNone:SetPoint("LEFT", professionAll, "RIGHT", 6, 0)
 
--- Under the professions: items in the WoW Forever game data that nobody has
--- seen in game yet (above the beta's level cap), tagged "Unconfirmed".
+-- Under the professions: items nobody has seen in WoW Forever yet (above the
+-- beta's level cap), tagged "Unconfirmed".
 py = py - 4 - 20 - 14
 local unconfirmedCheck = SourceCheck("unconfirmed", "Show unconfirmed items", COLUMN_2, py)
-Tooltip(unconfirmedCheck, "Show unconfirmed items", "Items that are in the WoW Forever game files but haven't been "
-    .. "seen in game yet, because they're above the beta's level cap. They're tagged |cffff9933Unconfirmed|r: "
-    .. "their stats come from the game, but where they drop and at what level may change.")
+Tooltip(unconfirmedCheck, "Show unconfirmed items", "Items nobody has seen in WoW Forever yet, because they're "
+    .. "above the beta's level cap. They're tagged |cffff9933Unconfirmed|r: where they drop, at what level and "
+    .. "their stats may change, and some dungeon loot from the original game may not be in WoW Forever at all.")
 
 local function RefreshSourcesPage()
     for _, cb in ipairs(sourceChecks) do cb:SetChecked(cb.isOn()) end
