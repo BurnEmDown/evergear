@@ -9,13 +9,22 @@
 - Quest rewards for level 30 to 60 quests, including new zones from
   Feralas and The Hinterlands to Winterspring and Silithus, and the
   dungeon set upgrade quests.
-- Dungeon loot from Razorfen Downs to Scholomance: Uldaman, Maraudon,
-  Blackrock Depths, Blackrock Spire, Stratholme and Scholomance, for the
-  items known to be in WoW Forever so far.
-- Unconfirmed items: gear above the beta's level cap that hasn't been seen
-  in game yet is tagged "Unconfirmed" in orange, with a line in its
-  tooltip. Turn off "Show unconfirmed items" in the Filters window
-  (Sources tab) to hide it.
+- Quest rewards below level 30 that were missing: in The Barrens,
+  Silverpine Forest, Wetlands, Darkshore, Stonetalon Mountains, Ashenvale,
+  Westfall and Dun Morogh, and from the warrior, mage, priest and druid
+  class quests.
+- Dungeon loot from Razorfen Downs, Uldaman, Blackrock Spire, Stratholme
+  and Scholomance, for the items known to be in WoW Forever so far.
+- Upgrades by Zone lists every WoW Forever dungeon, including The Drowned
+  City, Krol'dok Stronghold, Alcaz Prison, Blackmaw Hold and Shaper's
+  Terrace, with their level ranges. A dungeon EverGear has no items from
+  yet says so.
+- Unconfirmed items: gear EverGear hasn't seen in WoW Forever yet is
+  tagged "Unconfirmed" and checked against the game when you log in. If
+  the game has it, it's shown like any other item, with the game's stats;
+  if not, it isn't suggested. Turn off "Show unconfirmed items" in the
+  Filters window (Sources tab) to hide items the game hasn't answered for
+  yet.
 
 ### Fixed
 - Verigan's Fist was suggested to Horde paladins; it's an Alliance
