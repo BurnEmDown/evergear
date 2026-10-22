@@ -189,6 +189,15 @@ local function SourceDetail(item)
     return EverGear:GetSourceSummary(item)
 end
 
+-- Whether EverGear has any item from the zone that may be in the game: an
+-- unconfirmed item the game reported missing doesn't count.
+local function HasKnownItems(zone)
+    for _, item in ipairs(EverGear:GetItemsForZone(zone, EverGear:GetPlayerInfo().faction)) do
+        if not (EverGear.GetUnconfirmedState and EverGear:GetUnconfirmedState(item) == "missing") then return true end
+    end
+    return false
+end
+
 Draw = function()
     local list = state.list
     local maxOffset = MaxOffset()
@@ -212,7 +221,7 @@ Draw = function()
     if #list == 0 then
         countText:SetText("")
         local text = "Pick a zone or dungeon above."
-        if state.zone and #EverGear:GetItemsForZone(state.zone, EverGear:GetPlayerInfo().faction) == 0 then
+        if state.zone and not HasKnownItems(state.zone) then
             text = "EverGear doesn't have any items from " .. state.zone .. " yet."
         elseif state.zone then
             text = "No upgrades from " .. state.zone .. " for you right now.\n\nItems above your look-ahead level and ones your filters hide aren't counted."
