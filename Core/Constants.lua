@@ -6,7 +6,7 @@ EverGear.ADDON_NAME = "EverGear"
 -- change, no matter how small -- 0.0.1 -> 0.0.2 -> 0.0.3, etc. Moving to
 -- 0.1.0 or 1.0.0 is the user's call alone; Claude may suggest it's time,
 -- but must never bump a minor/major version on its own initiative.
-EverGear.VERSION = "0.4.0"
+EverGear.VERSION = "0.5.0"
 
 -- Populated later from Data\*.lua files. Each entry keyed by numeric item id.
 -- Canonical item shape (mirrors evergear-backend/schema.md):
@@ -22,6 +22,11 @@ EverGear.VERSION = "0.4.0"
 --   ilvl = 5,
 --   minLevel = 3,
 --   confirmed = true,           -- verified in-game or listed by a tracker site (wowtbc.gg, wowhead...)
+--   unverified = true,          -- optional: not seen in WoW Forever yet (above the beta's level
+--                                -- cap; Classic source, and for Classic dungeon loot that isn't
+--                                -- in the Forever game data, Classic stats). Shown with an orange
+--                                -- "Unconfirmed" tag, unless the player turns off "Show
+--                                -- unconfirmed items" in the Filters window.
 --   bindType = "BoE",           -- "BoE" / "BoP" / "BoU" / nil (unconfirmed -- treated as NOT
 --                                -- BoE by the "BoE only" profession filter in UI.lua, never
 --                                -- assumed). Currently only populated for crafted items:
@@ -161,14 +166,19 @@ EverGear.ZONE_LEVEL_RANGES = {
     ["Dustwallow Marsh"] = { 36, 61 },
     ["Feralas"] = { 43, 50 },              -- foreverdb.net's map list
     ["Tanaris"] = { 44, 50 },              -- foreverdb.net
-    ["Azshara"] = { 45, 55 },              -- the Classic range; no Forever source yet
+    ["The Hinterlands"] = { 43, 50 },      -- foreverdb.net
+    ["Searing Gorge"] = { 47, 50 },        -- foreverdb.net
+    ["Blasted Lands"] = { 47, 59 },        -- foreverdb.net
+    ["Azshara"] = { 50, 57 },              -- foreverdb.net
     ["Moonglade"] = { 51, 60 },            -- foreverdb.net
+    ["Un'Goro Crater"] = { 51, 55 },       -- foreverdb.net
+    ["Felwood"] = { 52, 55 },              -- foreverdb.net
+    ["Burning Steppes"] = { 52, 59 },      -- foreverdb.net
+    ["Western Plaguelands"] = { 53, 59 },  -- foreverdb.net
     ["Winterspring"] = { 53, 60 },         -- foreverdb.net
-    ["Searing Gorge"] = { 43, 50 },        -- the Classic ranges; no Forever source yet
-    ["Blasted Lands"] = { 45, 55 },
-    ["Felwood"] = { 48, 55 },
-    ["Un'Goro Crater"] = { 48, 55 },
-    ["Burning Steppes"] = { 50, 58 },
+    ["Eastern Plaguelands"] = { 55, 60 },  -- foreverdb.net
+    ["Deadwind Pass"] = { 56, 60 },        -- foreverdb.net
+    ["Silithus"] = { 57, 60 },             -- foreverdb.net
     ["Riverglades"] = { 35, 45 },          -- new in Forever, no published range: an
                                            -- estimate from its Powderfuse vendor's level 40 gear
     ["Stormwind City"] = { 1, 60 },
@@ -195,6 +205,38 @@ EverGear.ZONE_LEVEL_RANGES = {
     ["Scarlet Monastery: Cathedral"] = { 36, 42 },
     ["Razorfen Kraul"] = { 25, 30 },
     ["Razorfen Downs"] = { 36, 42 },
+    -- Dungeons from here on: wowtbc.gg's WoW Forever dungeon list
+    ["Uldaman"] = { 42, 52 },
+    ["Zul'Farrak"] = { 44, 54 },
+    ["Maraudon"] = { 46, 55 },
+    ["The Temple of Atal'Hakkar"] = { 50, 60 },
+    ["Blackrock Depths"] = { 52, 60 },
+    ["Blackrock Spire: Lower"] = { 55, 60 },
+    ["Blackrock Spire: Upper"] = { 58, 60 },
+    ["Dire Maul: East"] = { 58, 60 },
+    ["Dire Maul: West"] = { 58, 60 },
+    ["Dire Maul: North"] = { 58, 60 },
+    ["Stratholme"] = { 58, 60 },
+    ["Scholomance"] = { 58, 60 },
+    -- New in Forever (wowtbc.gg's list; no items in EverGear yet)
+    ["The Drowned City"] = { 35, 40 },
+    ["Krol'dok Stronghold"] = { 40, 45 },
+    ["Alcaz Prison"] = { 48, 53 },
+    ["Blackmaw Hold"] = { 55, 60 },
+    ["Shaper's Terrace"] = { 58, 60 },
+}
+
+-- Every dungeon in WoW Forever (wowtbc.gg's dungeon list). The Dungeons list
+-- shows all of them, even ones EverGear has no items from yet, and a place
+-- named here counts as a dungeon whatever its items' sources are.
+EverGear.DUNGEONS = {
+    "Hall of Thanes", "Ragefire Chasm", "Ruins of Lordaeron", "Wailing Caverns", "The Deadmines",
+    "Shadowfang Keep", "The Stockade", "Excavation Site: Wetlands", "Blackfathom Deeps", "City of Dalaran",
+    "Scarlet Monastery: Graveyard", "Gnomeregan", "Scarlet Monastery: Library", "Razorfen Kraul",
+    "Scarlet Monastery: Armory", "The Drowned City", "Scarlet Monastery: Cathedral", "Krol'dok Stronghold",
+    "Razorfen Downs", "Uldaman", "Zul'Farrak", "Maraudon", "Alcaz Prison", "The Temple of Atal'Hakkar",
+    "Blackrock Depths", "Blackmaw Hold", "Blackrock Spire: Lower", "Shaper's Terrace", "Dire Maul: East",
+    "Dire Maul: West", "Dire Maul: North", "Stratholme", "Blackrock Spire: Upper", "Scholomance",
 }
 
 -- The other faction's starting zones, capitals and faction-specific

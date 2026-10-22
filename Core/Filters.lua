@@ -370,6 +370,14 @@ professionAll:SetPoint("TOPLEFT", COLUMN_2 + INDENT, py - 4)
 local professionNone = SmallButton(sourcesPage, "None", 60, function() SetAllProfessions(false) end)
 professionNone:SetPoint("LEFT", professionAll, "RIGHT", 6, 0)
 
+-- Under the professions: items above the beta's level cap the game hasn't
+-- answered for yet, tagged "Unconfirmed" (LiveItems.lua).
+py = py - 4 - 20 - 14
+local unconfirmedCheck = SourceCheck("unconfirmed", "Show unconfirmed items", COLUMN_2, py)
+Tooltip(unconfirmedCheck, "Show unconfirmed items", "Items above the beta's level cap that EverGear is still "
+    .. "checking with the game, tagged |cffff9933Unconfirmed|r. Once the game sends an item's details, EverGear "
+    .. "uses its real stats and drops the tag; items that aren't in WoW Forever are left out.")
+
 local function RefreshSourcesPage()
     for _, cb in ipairs(sourceChecks) do cb:SetChecked(cb.isOn()) end
     SetEnabled(pvpRankCheck, pvpCheck:GetChecked())
@@ -474,8 +482,13 @@ local zoneChecks = {}
 
 -- Every place named as an item source, split into dungeons and zones, each
 -- sorted by name ("The Deadmines" under D).
-function EverGear.CollectSourceZones()
+-- includeEmpty: also list the dungeons EverGear has no items from yet.
+function EverGear.CollectSourceZones(includeEmpty)
     local isDungeon, seen = {}, {}
+    for _, zone in ipairs(EverGear.DUNGEONS) do
+        isDungeon[zone] = true
+        if includeEmpty then seen[zone] = true end
+    end
     local faction = EverGear:GetPlayerInfo().faction
     for _, item in pairs(EverGear.Items) do
         local source = item.source
@@ -637,6 +650,7 @@ function EverGear:GetActiveFilterSummary()
         if sources[key] == false then table.insert(active, "Sources") break end
     end
     if Table("pvpFilter").hidden and active[1] ~= "Sources" then table.insert(active, "Sources") end
+    if sources.unconfirmed == false then table.insert(active, "Unconfirmed items") end
     if next(HiddenFactions()) then table.insert(active, "Reputations") end
     for _, profName in ipairs(EverGear.PROFESSION_FILTER_LIST) do
         if Table("professionFilter")[profName] == false or Table("professionBoEOnly")[profName] then

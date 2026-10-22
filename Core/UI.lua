@@ -441,9 +441,8 @@ end)
 -- value (EverGearDB.lookaheadLevel) is an ABSOLUTE target level, not a delta,
 -- because the slider's own minimum has to track the player's current level
 -- (it rises as they level up) and a delta would drift out of sync with that.
--- Capped at 30 for now since that's roughly as far as the converted dungeon
--- data currently goes; raise LOOKAHEAD_MAX once higher-level zones are added.
-local LOOKAHEAD_MAX = 30
+-- Up to the level cap.
+local LOOKAHEAD_MAX = 60
 
 -- Every read/write below re-defaults defensively (via GetLookaheadMin() and
 -- "or" fallbacks) rather than trusting a one-time init -- in-game testing

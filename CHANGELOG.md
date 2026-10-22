@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.5.0] - 2026-10-22
+
+### Added
+- Level 60: the look-ahead slider goes up to level 60, and every zone and
+  dungeon up to level 60 has a level range for Current Level and Upgrades
+  by Zone.
+- Quest rewards for level 30 to 60 quests, including new zones from
+  Feralas and The Hinterlands to Winterspring and Silithus, and the
+  dungeon set upgrade quests.
+- Quest rewards below level 30 that were missing: in The Barrens,
+  Silverpine Forest, Wetlands, Darkshore, Stonetalon Mountains, Ashenvale,
+  Westfall and Dun Morogh, and from the warrior, mage, priest and druid
+  class quests.
+- Dungeon loot from Razorfen Downs, Uldaman, Blackrock Spire, Stratholme
+  and Scholomance, for the items known to be in WoW Forever so far.
+- Upgrades by Zone lists every WoW Forever dungeon, including The Drowned
+  City, Krol'dok Stronghold, Alcaz Prison, Blackmaw Hold and Shaper's
+  Terrace, with their level ranges. A dungeon EverGear has no items from
+  yet says so.
+- Unconfirmed items: gear EverGear hasn't seen in WoW Forever yet is
+  tagged "Unconfirmed" and checked against the game when you log in. If
+  the game has it, it's shown like any other item, with the game's stats;
+  if not, it isn't suggested. Turn off "Show unconfirmed items" in the
+  Filters window (Sources tab) to hide items the game hasn't answered for
+  yet.
+
+### Fixed
+- Verigan's Fist was suggested to Horde paladins; it's an Alliance
+  quest reward.
+- Verigan's Fist and the Orb and Staff of Soran'ruk (class quest rewards)
+  showed only one of the dungeons their quests need.
+
 ## [0.4.0] - 2026-10-18
 
 ### Added
