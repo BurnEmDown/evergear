@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.4.0] - 2026-10-18
+
+### Added
+- Filters window: one Filters button replaces the separate filter buttons
+  and the source checkboxes. It has three tabs:
+  - Sources: Quest, Vendor, World Drop, Dungeon Drop, Special, Craft (with
+    each profession and BoE Only), PvP and Reputation.
+  - Weapons: weapon types, with All, None and Usable Only.
+  - Zones: zones and dungeons, with Show All, Show None and Current Level.
+  The main window is a little shorter now that the checkboxes are gone.
+- PvP gear: the Premier honor gear from the PvP vendors, for levels 55 and
+  60. By default you only see what your PvP rank allows.
+- Battleground reputation gear from Arathi Basin and Darkspear Islands, for
+  levels 28 to 60.
+- Reputation vendor gear from Ratchet, Booty Bay, Gadgetzan, Powderfuse
+  and Everlook, plus The Watchers' signets and Defender of the Timbermaw.
+- Reputation in the Filters window: by default you only see gear your
+  standing allows. It lists your standing with every faction that has gear
+  for you, and you can turn each faction on or off.
+- White weapons and armor from the vendors in the starting zones and
+  capital cities.
+- Item tooltips list every vendor you can buy a vendor item from, with
+  their zones.
+
+### Fixed
+- Spell power items were scored as if spell power did nothing for most
+  caster and healer specs. Spell power now counts as both spell damage
+  and healing, so expect new upgrade suggestions for casters. The EP
+  profile editor no longer has a separate Spell Power weight; your saved
+  profiles are converted automatically.
+- Vendor items now say who sells them and where, and items sold only by
+  the other faction's vendors are no longer suggested.
+- With the EP profile editor open, changing spec could leave it showing
+  "default Default" and stop following spec changes. It now follows every
+  spec change and shows the same profile as the main window.
+- Fixed the appearance of the minimap button's icon.
+
 ## [0.3.1] - 2026-10-16
 
 ### Changed
