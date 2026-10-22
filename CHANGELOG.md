@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.5.0] - 2026-10-22
+
+### Added
+- Level 60: the look-ahead slider goes up to level 60, and every zone and
+  dungeon up to level 60 has a level range for Current Level and Upgrades
+  by Zone.
+- Quest rewards for level 30 to 60 quests, including new zones from
+  Feralas and The Hinterlands to Winterspring and Silithus, and the
+  dungeon set upgrade quests.
+- Dungeon loot from Razorfen Downs to Scholomance: Uldaman, Maraudon,
+  Blackrock Depths, Blackrock Spire, Stratholme and Scholomance, for the
+  items known to be in WoW Forever so far.
+- Unconfirmed items: gear above the beta's level cap that hasn't been seen
+  in game yet is tagged "Unconfirmed" in orange, with a line in its
+  tooltip. Turn off "Show unconfirmed items" in the Filters window
+  (Sources tab) to hide it.
+
+### Fixed
+- Verigan's Fist was suggested to Horde paladins; it's an Alliance
+  quest reward.
+- Verigan's Fist and the Orb and Staff of Soran'ruk (class quest rewards)
+  showed only one of the dungeons their quests need.
+
 ## [0.4.0] - 2026-10-18
 
 ### Added
