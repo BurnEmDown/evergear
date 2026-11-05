@@ -6,7 +6,7 @@ EverGear = EverGear or {}
 EverGear.Items = EverGear.Items or {}
 
 
--- Held back (no known source yet, or not confirmed); used by debug mode only.
+-- Held back (no known source yet); used by debug mode only.
 EverGear.PendingItems = EverGear.PendingItems or {}
 EverGear.PendingItems[5000] = "Coral Band"
 EverGear.PendingItems[5008] = "Quicksilver Ring"
@@ -69,3 +69,4 @@ EverGear.PendingItems[285253] = "Skyseer's Gloves"
 EverGear.PendingItems[285268] = "Scout Ranger's Boots"
 EverGear.PendingItems[286541] = "Bael'dun Tankard"
 EverGear.PendingItems[286568] = "Blisterpaw Bones"
+EverGear.PendingItems[4571] = "War Knife"
