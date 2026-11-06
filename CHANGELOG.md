@@ -1,5 +1,74 @@
 # Changelog
 
+## [0.5.0] - 2026-10-22
+
+### Added
+- Level 60: the look-ahead slider goes up to level 60, and every zone and
+  dungeon up to level 60 has a level range for Current Level and Upgrades
+  by Zone.
+- Quest rewards for level 30 to 60 quests, including new zones from
+  Feralas and The Hinterlands to Winterspring and Silithus, and the
+  dungeon set upgrade quests.
+- Quest rewards below level 30 that were missing: in The Barrens,
+  Silverpine Forest, Wetlands, Darkshore, Stonetalon Mountains, Ashenvale,
+  Westfall and Dun Morogh, and from the warrior, mage, priest and druid
+  class quests.
+- Dungeon loot from Razorfen Downs, Uldaman, Blackrock Spire, Stratholme
+  and Scholomance, for the items known to be in WoW Forever so far.
+- Upgrades by Zone lists every WoW Forever dungeon, including The Drowned
+  City, Krol'dok Stronghold, Alcaz Prison, Blackmaw Hold and Shaper's
+  Terrace, with their level ranges. A dungeon EverGear has no items from
+  yet says so.
+- Unconfirmed items: gear EverGear hasn't seen in WoW Forever yet is
+  tagged "Unconfirmed" and checked against the game when you log in. If
+  the game has it, it's shown like any other item, with the game's stats;
+  if not, it isn't suggested. Turn off "Show unconfirmed items" in the
+  Filters window (Sources tab) to hide items the game hasn't answered for
+  yet.
+
+### Fixed
+- Verigan's Fist was suggested to Horde paladins; it's an Alliance
+  quest reward.
+- Verigan's Fist and the Orb and Staff of Soran'ruk (class quest rewards)
+  showed only one of the dungeons their quests need.
+
+## [0.4.0] - 2026-10-18
+
+### Added
+- Filters window: one Filters button replaces the separate filter buttons
+  and the source checkboxes. It has three tabs:
+  - Sources: Quest, Vendor, World Drop, Dungeon Drop, Special, Craft (with
+    each profession and BoE Only), PvP and Reputation.
+  - Weapons: weapon types, with All, None and Usable Only.
+  - Zones: zones and dungeons, with Show All, Show None and Current Level.
+  The main window is a little shorter now that the checkboxes are gone.
+- PvP gear: the Premier honor gear from the PvP vendors, for levels 55 and
+  60. By default you only see what your PvP rank allows.
+- Battleground reputation gear from Arathi Basin and Darkspear Islands, for
+  levels 28 to 60.
+- Reputation vendor gear from Ratchet, Booty Bay, Gadgetzan, Powderfuse
+  and Everlook, plus The Watchers' signets and Defender of the Timbermaw.
+- Reputation in the Filters window: by default you only see gear your
+  standing allows. It lists your standing with every faction that has gear
+  for you, and you can turn each faction on or off.
+- White weapons and armor from the vendors in the starting zones and
+  capital cities.
+- Item tooltips list every vendor you can buy a vendor item from, with
+  their zones.
+
+### Fixed
+- Spell power items were scored as if spell power did nothing for most
+  caster and healer specs. Spell power now counts as both spell damage
+  and healing, so expect new upgrade suggestions for casters. The EP
+  profile editor no longer has a separate Spell Power weight; your saved
+  profiles are converted automatically.
+- Vendor items now say who sells them and where, and items sold only by
+  the other faction's vendors are no longer suggested.
+- With the EP profile editor open, changing spec could leave it showing
+  "default Default" and stop following spec changes. It now follows every
+  spec change and shows the same profile as the main window.
+- Fixed the appearance of the minimap button's icon.
+
 ## [0.3.1] - 2026-10-16
 
 ### Changed
