@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.5.1] - 2026-11-06
+
+### Added
+- Quest rewards that were missing, from in-game captures and the WoW Forever
+  database:
+  - The Barrens: Chol'aruk the Ravener (Chol'aruk's Trophy Sword, Big Bad
+    Basher, Quilboar Toothpick, Thornwoven Shield).
+  - Durotar: Bloodtalon Matriarch (Raptorscale Pants) and Stormy Potential
+    (Makeshift Stormcaller, Rezlak's Spare Knife).
+  - Tirisfal Glades: Rear Guard Patrol (Riptear's Cleaver, Riptear's Spare
+    Arm, Thrice-Stitched Flesh).
+  - Silverpine Forest: A Recipe For Death (Wise Gauntlets).
+- Debug mode: about 240 more WoW Forever items EverGear doesn't have yet
+  (Rare and above, below level 60) are listed as pending, so they can be
+  captured in game.
+
+### Fixed
+- Stats corrected from the game: Toughened Leather Armor (84 armor, 7 Spirit,
+  2 Stamina) and Runemender's Seal (6 Intellect, 6 Spirit, no Stamina).
+- The Theramore Expeditionary Force and Darkspear Raiders seals (Enriched
+  Seal, Volunteer's Lucky Seal, Darkspear Voodoo Seal, Relentless Raider's
+  Seal) no longer show mana per 5 seconds or resistances the game doesn't
+  give; they are Stamina only.
+
 ## [0.5.0] - 2026-10-22
 
 ### Added
