@@ -133,6 +133,7 @@ function EverGear:BuildUnconfirmedReportJSON()
                 entry._status = #diffs > 0 and "differs" or "ok"
                 entry._diffs = #diffs > 0 and diffs or nil
                 entry._addonStats = item.dataStats
+                if entry._status == "ok" then entry._tooltipLines = nil end
             else
                 entry = { id = id, name = item.name, _status = (state == "live") and "ok" or state }
             end
