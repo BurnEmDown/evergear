@@ -183,6 +183,7 @@ local function ReadTooltipStats(link)
     local equipN, onhitN, useN = 0, 0, 0
     local classes
     local requires, seenRequires = {}, {}
+    local lines = {}  -- every tooltip line as shown, kept in captures that differ
 
     local function Fragment(text)
         if not text or text == "" then return end
@@ -279,8 +280,11 @@ local function ReadTooltipStats(link)
     for i = 2, scanTooltip:NumLines() do
         local left = _G["EverGear_DebugScanTooltipTextLeft" .. i]
         local right = _G["EverGear_DebugScanTooltipTextRight" .. i]
-        Fragment(left and left:GetText())
-        Fragment(right and right:GetText())
+        local leftText, rightText = left and left:GetText(), right and right:GetText()
+        if leftText and leftText ~= "" then lines[#lines + 1] = StripColor(leftText) end
+        if rightText and rightText ~= "" then lines[#lines + 1] = StripColor(rightText) end
+        Fragment(leftText)
+        Fragment(rightText)
     end
 
     -- Green "+N Armor" is part of the item's armor; the database stores the total.
@@ -290,7 +294,7 @@ local function ReadTooltipStats(link)
         stats.BONUS_ARMOR = nil
     end
 
-    return stats, notes, classes, requires
+    return stats, notes, classes, requires, lines
 end
 
 local STANDINGS = { Neutral = true, Friendly = true, Honored = true, Revered = true, Exalted = true }
@@ -375,10 +379,13 @@ function EverGear:BuildLiveItemRecord(link, includeWhite)
         end
     end
 
-    local stats, tooltipNotes, classes, requires = ReadTooltipStats(link)
+    local stats, tooltipNotes, classes, requires, lines = ReadTooltipStats(link)
     for _, n in ipairs(tooltipNotes) do notes[#notes + 1] = n end
     record.stats = stats
     record.classes = classes
+    -- The tooltip as read, so a capture that differs shows what the game gave (keys
+    -- starting with "_" aren't part of the schema).
+    record._tooltipLines = lines
     -- What else the item needs, for whoever adds the capture (keys starting with "_"
     -- aren't part of the schema): the raw lines, plus the reputation / PvP rank read
     -- from them, which the comparison below checks against the item's source.
@@ -474,6 +481,35 @@ function EverGear:CompareLiveToDatabase(live, db)
         end
     end
     return diffs
+end
+
+-- An item's effect lines ("Equip: Restores 5 mana per 5 sec ...") are filled in by the
+-- game a moment after the tooltip is first asked for, so a read made right away can lack
+-- them: the capture then claims the game has no such stat (the Theramore and Darkspear
+-- seals, Nov 2026). So a check whose only differences are stats the data has and the
+-- read lacks is repeated a few times before it's believed; a difference that is the same
+-- every time is real.
+local EFFECT_RETRIES = 3
+local effectTries = {}
+
+local function OnlyMissingInGame(diffs)
+    if #diffs == 0 then return false end
+    for _, diff in ipairs(diffs) do
+        if not diff:find(", game has none$") then return false end
+    end
+    return true
+end
+
+-- True when this read should be repeated later (counts the attempt).
+local function ShouldRereadForEffects(itemId, diffs)
+    if not OnlyMissingInGame(diffs) then
+        effectTries[itemId] = nil
+        return false
+    end
+    local tries = effectTries[itemId] or 0
+    if tries >= EFFECT_RETRIES then return false end
+    effectTries[itemId] = tries + 1
+    return true
 end
 
 -- ===== Capture storage =====
@@ -789,32 +825,45 @@ end
 -- ===== Hover handling =====
 
 local lastLink
-local function OnItemTooltip(tooltip)
-    if not (EverGearDB and EverGearDB.debugMode) then return end
-    if not tooltip or not tooltip.GetItem or tooltip == scanTooltip then return end
-    local _, link = tooltip:GetItem()
-    if not link or link == lastLink then return end
-    lastLink = link
+local HOVER_REREAD_DELAY = 0.7
 
+-- Reads the hovered link and flags it. attempt is set on the delayed re-reads (see
+-- ShouldRereadForEffects): an item the data doesn't have is also read once more
+-- before it's shown, because its capture would otherwise keep a half-loaded tooltip.
+local function CheckHoveredLink(link, tooltip, attempt)
     local record, skipReason, notes = EverGear:BuildLiveItemRecord(link)
     if not record then
         if skipReason == "uncached" then lastLink = nil end  -- look again on the next hover
         return
     end
 
+    local function Later()
+        if not (C_Timer and C_Timer.After) then return false end
+        C_Timer.After(HOVER_REREAD_DELAY, function()
+            -- Only while the same item is still being shown.
+            local _, shown = tooltip:GetItem()
+            if shown ~= link then return end
+            CheckHoveredLink(link, tooltip, (attempt or 0) + 1)
+        end)
+        return true
+    end
+
     local dbItem = EverGear:GetItem(record.id)
-    if not dbItem and EverGear.PendingItems and EverGear.PendingItems[record.id] then
-        -- In the backend DB, deliberately not shipped yet. Popup is optional.
-        if EverGearDB.debugShowPending ~= false then
-            ShowFlaggedItem(record, "pending", nil, notes, nil)
+    local pending = not dbItem and EverGear.PendingItems and EverGear.PendingItems[record.id]
+    if not dbItem then
+        if not attempt and Later() then return end
+        if pending then
+            -- In the backend DB, deliberately not shipped yet. Popup is optional.
+            if EverGearDB.debugShowPending ~= false then
+                ShowFlaggedItem(record, "pending", nil, notes, nil)
+            end
+        else
+            ShowFlaggedItem(record, "missing", nil, notes, nil)
         end
         return
     end
-    if not dbItem then
-        ShowFlaggedItem(record, "missing", nil, notes, nil)
-        return
-    end
     local diffs = EverGear:CompareLiveToDatabase(record, dbItem)
+    if ShouldRereadForEffects(record.id, diffs) and Later() then return end
     -- Remembered so the item browser (ItemBrowser.lua) can show what's been checked.
     EverGearDB.debugChecked = EverGearDB.debugChecked or {}
     EverGearDB.debugChecked[record.id] = #diffs > 0 and "differs" or "ok"
@@ -822,6 +871,15 @@ local function OnItemTooltip(tooltip)
         ShowFlaggedItem(record, "differs", diffs, notes, dbItem.dataStats or dbItem.stats)
     end
     if EverGear.OnItemBrowserCheck then EverGear:OnItemBrowserCheck() end
+end
+
+local function OnItemTooltip(tooltip)
+    if not (EverGearDB and EverGearDB.debugMode) then return end
+    if not tooltip or not tooltip.GetItem or tooltip == scanTooltip then return end
+    local _, link = tooltip:GetItem()
+    if not link or link == lastLink then return end
+    lastLink = link
+    CheckHoveredLink(link, tooltip)
 end
 
 local function HookTooltips()
@@ -857,6 +915,8 @@ function EverGear:CheckItemAgainstGame(itemId)
     if not record then return nil, reason or "notEquippable" end
 
     local diffs = self:CompareLiveToDatabase(record, dbItem)
+    -- Possibly an effect line that hadn't loaded: the scan comes back to it later.
+    if ShouldRereadForEffects(itemId, diffs) then return nil, "uncached" end
     local status = #diffs > 0 and "differs" or "ok"
     EverGearDB.debugChecked = EverGearDB.debugChecked or {}
     EverGearDB.debugChecked[itemId] = status
