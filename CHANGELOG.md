@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.5.1] - 2026-11-07
+
+### Added
+- Quest rewards that were missing, from in-game captures and the WoW Forever
+  database:
+  - The Barrens: Chol'aruk the Ravener (Chol'aruk's Trophy Sword, Big Bad
+    Basher, Quilboar Toothpick, Thornwoven Shield).
+  - Durotar: Bloodtalon Matriarch (Raptorscale Pants) and Stormy Potential
+    (Makeshift Stormcaller, Rezlak's Spare Knife).
+  - Tirisfal Glades: Rear Guard Patrol (Riptear's Cleaver, Riptear's Spare
+    Arm, Thrice-Stitched Flesh).
+  - Silverpine Forest: A Recipe For Death (Wise Gauntlets).
+
+### Fixed
+- Stats corrected from the game: Toughened Leather Armor (84 armor, 7 Spirit,
+  2 Stamina) and Runemender's Seal (6 Intellect, 6 Spirit, no Stamina).
+
 ## [0.5.0] - 2026-10-22
 
 ### Added
