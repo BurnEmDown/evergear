@@ -56,9 +56,25 @@ local offset = 0
 -- check results.
 local mode = "items"
 
+-- Items that have no shipped data yet (unsourced / unconfirmed stubs, in
+-- EverGear.PendingItems as id -> name) are listed too, as bare entries, so
+-- they can be found and checked here. Built once; the data is static.
+local itemsWithPending
+local function ItemsWithPending()
+    if itemsWithPending then return itemsWithPending end
+    itemsWithPending = {}
+    for id, item in pairs(EverGear.Items) do itemsWithPending[id] = item end
+    for id, name in pairs(EverGear.PendingItems or {}) do
+        if not itemsWithPending[id] then
+            itemsWithPending[id] = { id = id, name = name, confirmed = false }
+        end
+    end
+    return itemsWithPending
+end
+
 local function Dataset()
     if mode == "enhancements" then return EverGear.Enchants or {} end
-    return EverGear.Items
+    return ItemsWithPending()
 end
 
 local function EntryId(entry)
@@ -970,7 +986,7 @@ end)
 
 local function RequestAllItems()
     requestQueue, requestIndex = {}, 0
-    for itemId in pairs(EverGear.Items) do requestQueue[#requestQueue + 1] = itemId end
+    for itemId in pairs(ItemsWithPending()) do requestQueue[#requestQueue + 1] = itemId end
     -- Kits, scopes and the like, for their icons on the Enhancements tab.
     for _, enchant in pairs(EverGear.Enchants or {}) do
         if enchant.itemId then requestQueue[#requestQueue + 1] = enchant.itemId end
