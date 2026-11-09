@@ -1005,7 +1005,8 @@ local function ScanArmorFromLink(itemLink)
         local line = _G["EverGear_ScanTooltipTextLeft" .. i]
         local text = line and line:GetText()
         if text then
-            local armor = text:match("^(%d+) Armor$")
+            -- Large values carry a thousands separator ("1,078 Armor" on a shield).
+            local armor = text:gsub("(%d),(%d%d%d)", "%1%2"):match("^(%d+) Armor$")
             if armor then return tonumber(armor) end
         end
     end
