@@ -5,3 +5,8 @@
 EverGear = EverGear or {}
 EverGear.Items = EverGear.Items or {}
 
+
+-- Held back (no known source yet, or not confirmed); used by debug mode only.
+EverGear.PendingItems = EverGear.PendingItems or {}
+EverGear.PendingItems[2040] = "Troll Protector"
+EverGear.PendingItems[9511] = "Bloodletter Scalpel"
