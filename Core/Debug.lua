@@ -825,7 +825,10 @@ end
 -- ===== Hover handling =====
 
 local lastLink
-local HOVER_REREAD_DELAY = 0.7
+-- Short, because the popup waits for it; and only one re-read when hovering (the
+-- item browser's "Check all" keeps its longer retry passes).
+local HOVER_REREAD_DELAY = 0.3
+local HOVER_MAX_REREADS = 1
 
 -- Reads the hovered link and flags it. attempt is set on the delayed re-reads (see
 -- ShouldRereadForEffects): an item the data doesn't have is also read once more
@@ -838,6 +841,7 @@ local function CheckHoveredLink(link, tooltip, attempt)
     end
 
     local function Later()
+        if (attempt or 0) >= HOVER_MAX_REREADS then return false end
         if not (C_Timer and C_Timer.After) then return false end
         C_Timer.After(HOVER_REREAD_DELAY, function()
             -- Only while the same item is still being shown.
