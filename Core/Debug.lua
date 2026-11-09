@@ -907,16 +907,28 @@ end
 -- Used by the item browser's "Check all" (ItemBrowser.lua).
 
 -- Checks one database item against the game through the hidden scan tooltip.
--- Returns "ok" or "differs"; a difference is captured right away (keeping any
+-- Returns "ok" or "differs"; a difference (or an item not in the addon yet) is captured right away (keeping any
 -- note already typed for it). Returns nil plus the reason when it can't be
 -- checked: "uncached" (ask the server, try again later), "suffix",
 -- "lowQuality" (gray) or "notEquippable". Unlike hovering, white items are checked too.
 function EverGear:CheckItemAgainstGame(itemId)
     local dbItem = self:GetItem(itemId)
-    if not dbItem then return nil, "unknown" end
+    local pending = not dbItem and self.PendingItems and self.PendingItems[itemId]
+    if not dbItem and not pending then return nil, "unknown" end
     local _, link = GetFullInfo(itemId)
     local record, reason, notes = self:BuildLiveItemRecord(link or ("item:" .. itemId), true)
     if not record then return nil, reason or "notEquippable" end
+
+    if not dbItem then
+        -- Not shipped (no source yet): nothing to compare with, so the game's
+        -- own data is captured as it is, the same as hovering would show it
+        -- (the source still has to be added by hand). Counts as "differs".
+        local existing = Captures()[itemId]
+        StoreCapture(record, "pending", nil, notes, nil, existing and existing.sourceNote)
+        EverGearDB.debugChecked = EverGearDB.debugChecked or {}
+        EverGearDB.debugChecked[itemId] = "differs"
+        return "differs"
+    end
 
     local diffs = self:CompareLiveToDatabase(record, dbItem)
     -- Possibly an effect line that hadn't loaded: the scan comes back to it later.
