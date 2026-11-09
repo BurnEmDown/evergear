@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.5.2] - 2026-11-09
+
+### Added
+- The Suggested Upgrades window scrolls when a slot has more than 5
+  upgrades: drag the scroll bar, click it to jump, or use the mouse wheel.
+- Items that were missing:
+  - Vile Protector (Compendium of the Fallen, Scarlet Monastery: Library,
+    Horde).
+  - Quilrager Throwing Axe (Agathelos the Raging, Razorfen Kraul).
+  - Transformative Cocoon (The Broodmother, Mulgore, Horde).
+  - Construct's Grips (world drop).
+
+### Fixed
+- Equipped items with 1,000 or more armor, such as shields, were read as
+  having no armor, so almost anything looked like an upgrade over them.
+
 ## [0.5.1] - 2026-11-07
 
 ### Added

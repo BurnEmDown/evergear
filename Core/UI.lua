@@ -1568,6 +1568,74 @@ function EverGear:HideUpgradeDetail(side)
     detailPanel:Hide()
 end
 
+-- ===== Scrolling the suggestions =====
+-- At most MAX_DETAIL_CANDIDATES rows show at once; with more candidates than
+-- that, a scroll bar appears (same look and handling as the Upgrades by Zone
+-- window's): drag the thumb, click the track to jump, or use the mouse wheel.
+local DETAIL_BAR_WIDTH = 8
+local detailScroll = { offset = 0, slot = nil, contentHeight = 0 }
+
+local detailBar = CreateFrame("Frame", "EverGearDetailScrollBar", detailPanel)
+detailBar:SetWidth(DETAIL_BAR_WIDTH)
+detailBar:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 16, DETAIL_CONTENT_TOP)
+local detailTrack = detailBar:CreateTexture(nil, "BACKGROUND")
+detailTrack:SetAllPoints()
+detailTrack:SetColorTexture(0, 0, 0, 0.5)
+local detailThumb = CreateFrame("Button", "EverGearDetailScrollThumb", detailBar)
+detailThumb:SetWidth(DETAIL_BAR_WIDTH)
+detailThumb:SetHeight(40)
+detailThumb:SetPoint("TOP", detailBar, "TOP", 0, 0)
+local detailThumbTexture = detailThumb:CreateTexture(nil, "OVERLAY")
+detailThumbTexture:SetAllPoints()
+detailThumbTexture:SetColorTexture(THEME.goldDim[1], THEME.goldDim[2], THEME.goldDim[3], 0.9)
+detailThumb:SetHitRectInsets(-4, -4, 0, 0)
+detailThumb:SetScript("OnEnter", function() detailThumbTexture:SetVertexColor(1.25, 1.25, 1.25) end)
+detailThumb:SetScript("OnLeave", function() detailThumbTexture:SetVertexColor(1, 1, 1) end)
+detailBar:Hide()
+
+local function DetailMaxOffset()
+    local btn = currentDetailSlot and slotButtons[currentDetailSlot]
+    local count = btn and btn.upgradeList and #btn.upgradeList or 0
+    return math.max(0, count - MAX_DETAIL_CANDIDATES)
+end
+local function DetailTravel() return math.max(1, (detailBar:GetHeight() or 0) - detailThumb:GetHeight()) end
+local function DetailCursorY()
+    local _, y = GetCursorPosition()
+    return y / detailBar:GetEffectiveScale()
+end
+
+local function DetailScrollTo(offset)
+    local new = math.max(0, math.min(math.floor(offset + 0.5), DetailMaxOffset()))
+    if new == detailScroll.offset then return end
+    detailScroll.offset = new
+    if currentDetailSlot then EverGear:ShowUpgradeDetail(currentDetailSlot) end
+end
+
+local detailDragStartY, detailDragStartOffset
+detailThumb:SetScript("OnMouseDown", function() detailDragStartY, detailDragStartOffset = DetailCursorY(), detailScroll.offset end)
+detailThumb:SetScript("OnUpdate", function()
+    if not detailDragStartY then return end
+    if not IsMouseButtonDown("LeftButton") then detailDragStartY = nil return end
+    DetailScrollTo(detailDragStartOffset + (detailDragStartY - DetailCursorY()) / DetailTravel() * DetailMaxOffset())
+end)
+detailThumb:SetScript("OnMouseUp", function() detailDragStartY = nil end)
+detailThumb:SetScript("OnHide", function() detailDragStartY = nil end)
+detailBar:EnableMouse(true)
+detailBar:SetHitRectInsets(-4, -4, 0, 0)
+detailBar:SetScript("OnMouseDown", function()
+    local top = detailBar:GetTop()
+    if not top then return end
+    DetailScrollTo(((top - DetailCursorY()) - detailThumb:GetHeight() / 2) / DetailTravel() * DetailMaxOffset())
+end)
+local function DetailOnWheel(_, delta)
+    if activeDetailTab == "enhancements" then return end
+    DetailScrollTo(detailScroll.offset - delta)
+end
+detailBar:EnableMouseWheel(true)
+detailBar:SetScript("OnMouseWheel", DetailOnWheel)
+detailPanel:EnableMouseWheel(true)
+detailPanel:SetScript("OnMouseWheel", DetailOnWheel)
+
 -- Hover version of a slot click: opens the slot's suggested upgrades, but
 -- only when there are some. Like a click, it leaves the Wanted, Gear Sets and
 -- EP profile windows open (the panel stacks below them). It doesn't open
@@ -1602,12 +1670,24 @@ function EverGear:ShowUpgradeDetail(slotToken)
 
     local candidates = btn.upgradeList or {}
     local shownCount = math.min(#candidates, MAX_DETAIL_CANDIDATES)
+    -- A different slot starts back at the top; the same slot (a refresh, a
+    -- late item-info reply) keeps its place, kept inside the list.
+    if detailScroll.slot ~= slotToken then
+        detailScroll.slot = slotToken
+        detailScroll.offset = 0
+        detailScroll.contentHeight = 0
+    end
+    detailScroll.offset = math.max(0, math.min(detailScroll.offset, DetailMaxOffset()))
+    local scrolls = #candidates > MAX_DETAIL_CANDIDATES
+    -- Hidden only when not needed: hiding it on every redraw would cancel a thumb drag.
+    if not scrolls or activeDetailTab == "enhancements" then detailBar:Hide() end
 
     if activeDetailTab == "enhancements" then
         for _, row in ipairs(detailRows) do row:Hide() end
         local yOffset = LayoutEnhancements(slotToken, DETAIL_CONTENT_TOP)
         detailPanel:SetHeight(math.max(150, -yOffset + 16))
     elseif shownCount == 0 then
+        detailBar:Hide()
         HideEnhancementRows()
         detailEmptyMessage:Show()
         for _, row in ipairs(detailRows) do row:Hide() end
@@ -1626,11 +1706,14 @@ function EverGear:ShowUpgradeDetail(slotToken)
         local ROW_GAP = 16
         local yOffset = DETAIL_CONTENT_TOP
 
+        -- With a scroll bar on the left, the rows start after it.
+        local rowLeft = scrolls and (16 + DETAIL_BAR_WIDTH + 6) or 16
         for i = 1, shownCount do
-            local candidate = candidates[i]
+            local candidate = candidates[detailScroll.offset + i]
             local row = GetOrCreateDetailRow(i)
             row:ClearAllPoints()
-            row:SetPoint("TOPLEFT", 16, yOffset)
+            row:SetPoint("TOPLEFT", rowLeft, yOffset)
+            row:SetWidth(DETAIL_WIDTH - rowLeft - 16)
             row:Show()
 
             local itemLink = BuildItemLink(candidate.item.id)
@@ -1668,7 +1751,23 @@ function EverGear:ShowUpgradeDetail(slotToken)
             detailRows[i]:Hide()
         end
 
-        detailPanel:SetHeight(-yOffset + 16)
+        -- While scrolling, the window only grows (rows wrap to different
+        -- heights), so it doesn't jump up and down under the mouse.
+        local contentHeight = -yOffset - ROW_GAP + DETAIL_CONTENT_TOP
+        if scrolls then
+            detailScroll.contentHeight = math.max(detailScroll.contentHeight, contentHeight)
+            contentHeight = detailScroll.contentHeight
+        end
+        detailPanel:SetHeight(contentHeight - DETAIL_CONTENT_TOP + ROW_GAP + 16)
+
+        if scrolls then
+            detailBar:SetHeight(math.max(20, contentHeight))
+            detailBar:Show()
+            local maxOffset = DetailMaxOffset()
+            detailThumb:SetHeight(math.max(20, detailBar:GetHeight() * MAX_DETAIL_CANDIDATES / #candidates))
+            detailThumb:ClearAllPoints()
+            detailThumb:SetPoint("TOP", detailBar, "TOP", 0, -(detailScroll.offset / maxOffset * DetailTravel()))
+        end
     end
 
     detailPanel:ClearAllPoints()

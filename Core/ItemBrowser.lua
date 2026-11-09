@@ -843,7 +843,7 @@ end
 -- debug window opens at the end on the last item that differed.
 
 local SCAN_PER_FRAME = 4
-local SCAN_RETRY_PASSES = 4
+local SCAN_RETRY_PASSES = 6
 local SCAN_RETRY_DELAY = 1.5
 
 local scan
