@@ -1157,6 +1157,10 @@ local RELIC_CLASS = { libram = "PALADIN", idol = "DRUID", relic = "SHAMAN" }
 -- per-class whitelist used for usability checks below, rather than keeping a
 -- second copy that could drift out of sync.
 EverGear.CLASS_USABLE_WEAPON_TYPES = CLASS_USABLE_WEAPON_TYPES
+
+-- Classes that can't use two-handed weapons at all, even of a weapon type they
+-- can use one-handed (a Rogue can use swords, but not two-handed ones).
+local CLASS_NO_TWO_HAND = { ROGUE = true }
 EverGear.CLASS_CAN_USE_SHIELD = CLASS_CAN_USE_SHIELD
 
 -- Some items are restricted to specific classes regardless of armor/weapon
@@ -1223,6 +1227,7 @@ end
 -- that same state on demand via the filter panel's "Usable Only" button.
 function EverGear:IsWeaponFilterKeyUsable(filterKey, classToken)
     local baseType = filterKey:match("^(.-):[12]h$") or filterKey
+    if CLASS_NO_TWO_HAND[classToken] and filterKey:match(":2h$") then return false end
     if baseType == "shield" then
         return CLASS_CAN_USE_SHIELD[classToken] == true
     end
@@ -1238,6 +1243,7 @@ end
 
 local function IsWeaponTypeAllowed(item, classToken)
     if not item.weaponType then return true end  -- not a weapon/shield
+    if item.isTwoHand and CLASS_NO_TWO_HAND[classToken] then return false end
     if item.weaponType == "shield" then
         return CLASS_CAN_USE_SHIELD[classToken] == true
     end
