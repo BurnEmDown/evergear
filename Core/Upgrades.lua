@@ -1140,7 +1140,7 @@ local CLASS_USABLE_WEAPON_TYPES = {
     WARRIOR = { axe = true, bow = true, gun = true, mace = true, polearm = true, sword = true, staff = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
     PALADIN = { axe = true, mace = true, polearm = true, sword = true, dagger = true },
     HUNTER  = { axe = true, bow = true, gun = true, polearm = true, sword = true, staff = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
-    ROGUE   = { bow = true, gun = true, mace = true, sword = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
+    ROGUE   = { axe = true, bow = true, gun = true, mace = true, sword = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
     PRIEST  = { mace = true, staff = true, dagger = true, wand = true },
     SHAMAN  = { axe = true, mace = true, staff = true, ["fist weapon"] = true, dagger = true },
     MAGE    = { sword = true, staff = true, dagger = true, wand = true },
@@ -1160,11 +1160,11 @@ EverGear.CLASS_USABLE_WEAPON_TYPES = CLASS_USABLE_WEAPON_TYPES
 
 -- The split weapon types (axe, mace, sword) a class can only use ONE-handed,
 -- which the whitelist above can't say because it has one entry per type: a
--- Rogue, Mage and Warlock use 1H swords but not 2H ones, a Priest 1H maces but
--- not 2H ones, a Rogue 1H maces but not 2H ones. Classes not listed here use
+-- Rogue (axes, maces, swords), Mage and Warlock (swords) and Priest (maces)
+-- use the 1H versions only. Classes not listed here use
 -- both lengths of every split type they have in the whitelist.
 local CLASS_ONE_HAND_ONLY = {
-    ROGUE   = { sword = true, mace = true },
+    ROGUE   = { axe = true, sword = true, mace = true },
     MAGE    = { sword = true },
     WARLOCK = { sword = true },
     PRIEST  = { mace = true },
