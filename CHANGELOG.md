@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.3] - 2026-11-10
+
+### Fixed
+- Rogues, Mages, Warlocks and Priests were suggested two-handed weapons
+  they can't use: 2H swords for Rogues, Mages and Warlocks, and 2H maces for
+  Rogues and Priests. The "Sword (2H)" and "Mace (2H)" filter rows now start
+  unchecked for those classes.
+- Rogues were not suggested one-handed axes or maces, and Druids were not
+  suggested polearms, even though they can use them.
+
 ## [0.5.2] - 2026-11-09
 
 ### Added
