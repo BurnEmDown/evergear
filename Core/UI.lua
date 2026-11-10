@@ -1858,8 +1858,7 @@ function EverGear:RefreshUI()
 
         local filtered = {}
         for _, candidate in ipairs(candidates) do
-            local sourceType = candidate.item.source and candidate.item.source.type
-            if GetSourceFilters()[sourceType] ~= false then
+            if self:IsSourceTypeEnabled(candidate.item, GetSourceFilters()) then
                 table.insert(filtered, candidate)
             end
         end
