@@ -1132,20 +1132,20 @@ local CLASS_ARMOR_UNLOCK_LEVEL = {
 -- Best-effort per-class weapon-type whitelist (TBC-era classic weapon
 -- skills), translated from item subclass IDs to our data's lowercase weapon-
 -- type strings. wowtbc.gg's raw item data doesn't distinguish one-hand from
--- two-hand for axes/maces/swords, so both are unioned into one entry here --
--- a known simplification (e.g. a class restricted to 1H axes only will also
--- see 2H axes suggested). Flag any class+weapon combo that looks wrong in
+-- two-hand for axes/maces/swords, so both are unioned into one entry here;
+-- classes that only use the one-handed version of a type are listed in
+-- CLASS_ONE_HAND_ONLY below. Flag any class+weapon combo that looks wrong in
 -- practice and we'll correct that specific entry.
 local CLASS_USABLE_WEAPON_TYPES = {
     WARRIOR = { axe = true, bow = true, gun = true, mace = true, polearm = true, sword = true, staff = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
     PALADIN = { axe = true, mace = true, polearm = true, sword = true, dagger = true },
     HUNTER  = { axe = true, bow = true, gun = true, polearm = true, sword = true, staff = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
-    ROGUE   = { bow = true, gun = true, sword = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
+    ROGUE   = { axe = true, bow = true, gun = true, mace = true, sword = true, ["fist weapon"] = true, dagger = true, thrown = true, crossbow = true },
     PRIEST  = { mace = true, staff = true, dagger = true, wand = true },
     SHAMAN  = { axe = true, mace = true, staff = true, ["fist weapon"] = true, dagger = true },
     MAGE    = { sword = true, staff = true, dagger = true, wand = true },
     WARLOCK = { sword = true, staff = true, dagger = true, wand = true },
-    DRUID   = { mace = true, staff = true, ["fist weapon"] = true, dagger = true },
+    DRUID   = { mace = true, polearm = true, staff = true, ["fist weapon"] = true, dagger = true },
 }
 
 local CLASS_CAN_USE_SHIELD = { WARRIOR = true, PALADIN = true, SHAMAN = true }
@@ -1157,6 +1157,18 @@ local RELIC_CLASS = { libram = "PALADIN", idol = "DRUID", relic = "SHAMAN" }
 -- per-class whitelist used for usability checks below, rather than keeping a
 -- second copy that could drift out of sync.
 EverGear.CLASS_USABLE_WEAPON_TYPES = CLASS_USABLE_WEAPON_TYPES
+
+-- The split weapon types (axe, mace, sword) a class can only use ONE-handed,
+-- which the whitelist above can't say because it has one entry per type: a
+-- Rogue (axes, maces, swords), Mage and Warlock (swords) and Priest (maces)
+-- use the 1H versions only. Classes not listed here use
+-- both lengths of every split type they have in the whitelist.
+local CLASS_ONE_HAND_ONLY = {
+    ROGUE   = { axe = true, sword = true, mace = true },
+    MAGE    = { sword = true },
+    WARLOCK = { sword = true },
+    PRIEST  = { mace = true },
+}
 EverGear.CLASS_CAN_USE_SHIELD = CLASS_CAN_USE_SHIELD
 
 -- Some items are restricted to specific classes regardless of armor/weapon
@@ -1223,6 +1235,8 @@ end
 -- that same state on demand via the filter panel's "Usable Only" button.
 function EverGear:IsWeaponFilterKeyUsable(filterKey, classToken)
     local baseType = filterKey:match("^(.-):[12]h$") or filterKey
+    local oneHandOnly = CLASS_ONE_HAND_ONLY[classToken]
+    if oneHandOnly and oneHandOnly[baseType] and filterKey:match(":2h$") then return false end
     if baseType == "shield" then
         return CLASS_CAN_USE_SHIELD[classToken] == true
     end
@@ -1238,6 +1252,8 @@ end
 
 local function IsWeaponTypeAllowed(item, classToken)
     if not item.weaponType then return true end  -- not a weapon/shield
+    local oneHandOnly = CLASS_ONE_HAND_ONLY[classToken]
+    if item.isTwoHand and oneHandOnly and oneHandOnly[item.weaponType] then return false end
     if item.weaponType == "shield" then
         return CLASS_CAN_USE_SHIELD[classToken] == true
     end
