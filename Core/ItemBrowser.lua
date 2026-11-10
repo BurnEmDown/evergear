@@ -499,10 +499,15 @@ end
 local function DistinctValues(keyOf, labelOf)
     local seen, list = {}, {}
     for _, item in pairs(Dataset()) do
-        local key = keyOf(item)
-        if key and not seen[key] then
-            seen[key] = true
-            list[#list + 1] = key
+        -- keyOf may return one key or a list of them (an item with altSources
+        -- has a zone per source).
+        local keys = keyOf(item)
+        if type(keys) ~= "table" then keys = { keys } end
+        for _, key in ipairs(keys) do
+            if key and not seen[key] then
+                seen[key] = true
+                list[#list + 1] = key
+            end
         end
     end
     table.sort(list, function(a, b) return labelOf(a) < labelOf(b) end)
@@ -697,7 +702,11 @@ local function BuildWindow()
     end, function() return filters.source and SourceLabel(filters.source) or "All" end)
 
     local zoneDropdown = CreateDropdown("EverGearItemBrowserZone", 100, "Zone", 440, ROW2_Y, function(dropdown, level, menuList)
-        local zones = DistinctValues(function(item) return item.source and item.source.zone end,
+        local zones = DistinctValues(function(item)
+            local zones = {}
+            for _, source in ipairs(EverGear:GetAllSources(item)) do zones[#zones + 1] = source.zone end
+            return zones
+        end,
             function(zone) return zone end)
         if level == 1 then
             AddOption(dropdown, "All", "zone", nil, level)

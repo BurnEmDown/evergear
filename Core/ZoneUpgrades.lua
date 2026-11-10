@@ -175,8 +175,8 @@ end
 
 -- What the source line says beyond the zone, which is already the header:
 -- the quest, the boss, or the kind of source.
-local function SourceDetail(item)
-    local source = item.source or {}
+local function SourceDetail(item, zone)
+    local source = EverGear:GetSourceForZone(item, zone) or {}
     if source.type == "quest" then
         local quest = source.quest
         if source.questByFaction then
@@ -214,7 +214,7 @@ Draw = function()
             row.iconFrame:SetBackdropBorderColor(r, g, b, 1)
             local hex = string.format("%02x%02x%02x", r * 255, g * 255, b * 255)
             row.name:SetText("|cff" .. hex .. item.name .. "|r  |cff20e626(+" .. math.floor(entry.gain + 0.5) .. ")|r")
-            row.info:SetText(SlotLabel(entry.slotToken) .. "  -  " .. SourceDetail(item))
+            row.info:SetText(SlotLabel(entry.slotToken) .. "  -  " .. SourceDetail(item, state.zone))
         end
     end
     emptyText:SetShown(#list == 0)

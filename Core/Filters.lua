@@ -491,10 +491,13 @@ function EverGear.CollectSourceZones(includeEmpty)
     end
     local faction = EverGear:GetPlayerInfo().faction
     for _, item in pairs(EverGear.Items) do
-        local source = item.source
         for _, zone in ipairs(EverGear:GetSourceZones(item, faction)) do
             seen[zone] = true
-            if source.type == "dungeonDrop" or source.type == "raidDrop" then isDungeon[zone] = true end
+        end
+        for _, source in ipairs(EverGear:GetAllSources(item)) do
+            if source.zone and (source.type == "dungeonDrop" or source.type == "raidDrop") then
+                isDungeon[source.zone] = true
+            end
         end
     end
     local dungeons, zones = {}, {}
