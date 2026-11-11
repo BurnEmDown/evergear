@@ -188,6 +188,10 @@ local function ReadTooltipStats(link)
     local function Fragment(text)
         if not text or text == "" then return end
         text = StripColor(text)
+        -- A line can end in a line break ("...Titan-forged enemy.\r\n" on Fist of Stone),
+        -- which would end up inside the stat text and break the generated data file.
+        text = text:gsub("^%s+", ""):gsub("%s+$", "")
+        if text == "" then return end
         -- Large numbers carry a thousands separator ("1,380 Armor" on a shield);
         -- drop it so the number patterns below match. Lines with a colon
         -- (Equip:, Use:, Classes: ...) are kept as the tooltip shows them.
