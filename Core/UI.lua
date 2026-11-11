@@ -572,6 +572,7 @@ lookaheadSlider:SetScript("OnValueChanged", function(self, value)
     UpdateLookaheadLabel(value)
     if syncingSlider then return end
     EverGear:GetCharDB().lookaheadLevel = value
+    if EverGear.OnLookaheadChanged then EverGear:OnLookaheadChanged() end
     EverGear:RefreshUI()
 end)
 

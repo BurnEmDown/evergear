@@ -471,8 +471,10 @@ local STEPS = {
         "Hide weapon types you don't want suggested. Usable Only keeps just the ones your class can use."),
     FiltersTabStep("zones", "Filters: zones and dungeons",
         "Hide items from zones and dungeons you won't visit. "
-            .. "Current Level keeps just the places meant for your level; click it again every few levels "
-            .. "to keep the list up to date. Or click Show All if you'd rather not filter by zone at all.", "below"),
+            .. "Current Level keeps just the places meant for your level; tick Update zones to my level "
+            .. "automatically to have it applied at every login and level-up. Look Ahead Level and its matching "
+            .. "option do the same for the level on the Look Ahead slider. Or click Show All if you'd rather "
+            .. "not filter by zone at all.", "below"),
     {
         title = "Upgrades by Zone",
         text = "Pick a zone or dungeon here to see every upgrade you can get there, for all your slots at once. "
