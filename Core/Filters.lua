@@ -511,9 +511,12 @@ function EverGear.CollectSourceZones(includeEmpty)
     return dungeons, zones
 end
 
+local autoZonesCheck   -- the "update zones to my level automatically" box, built with the tab
+
 local function RefreshZonesPage()
     local filters = Table("zoneFilter")
     for _, entry in ipairs(zoneChecks) do entry.cb:SetChecked(filters[entry.zone] ~= false) end
+    if autoZonesCheck then autoZonesCheck:SetChecked(EverGear:IsAutoZonesOn()) end
 end
 
 local function ZoneHeader(text, x)
@@ -544,22 +547,46 @@ local function SetAllZones(shown)
     Refresh()
 end
 
--- One-time: ticks the places whose level range includes the character's level
--- and unticks the rest, plus the other faction's starting zones and dungeons.
--- Clicking it again after leveling updates the ticks.
-local function FilterZonesToCurrentLevel()
-    local playerInfo = EverGear:GetPlayerInfo()
-    local level = playerInfo.level or 1
+-- Ticks the places whose level range includes the given level and unticks the
+-- rest, plus the other faction's starting zones and dungeons. Works from the
+-- item data, not from the Zones tab's checkboxes, so it also runs at login and
+-- on level-up before the tab was ever opened.
+function EverGear:ApplyZonesForLevel(level)
+    local playerInfo = self:GetPlayerInfo()
+    level = level or playerInfo.level or 1
     local otherFaction = {}
     for _, zone in ipairs(EverGear.OTHER_FACTION_ZONES[playerInfo.faction or ""] or {}) do
         otherFaction[zone] = true
     end
     local filters = Table("zoneFilter")
-    for _, entry in ipairs(zoneChecks) do
-        local range = EverGear.ZONE_LEVEL_RANGES[entry.zone]
-        local inRange = (not range) or (level >= range[1] and level <= range[2])
-        filters[entry.zone] = inRange and not otherFaction[entry.zone]
+    local dungeons, zones = EverGear.CollectSourceZones()
+    for _, list in ipairs({ dungeons, zones }) do
+        for _, zone in ipairs(list) do
+            local range = EverGear.ZONE_LEVEL_RANGES[zone]
+            local inRange = (not range) or (level >= range[1] and level <= range[2])
+            filters[zone] = inRange and not otherFaction[zone]
+        end
     end
+end
+
+-- Whether this character has "Update zones to my level automatically" ticked.
+function EverGear:IsAutoZonesOn()
+    return CharDB().autoZonesByLevel == true
+end
+
+-- Called at login and on level-up (Main.lua): when the character has the
+-- automatic option on, re-applies the Current Level selection for their level.
+-- newLevel: the level from PLAYER_LEVEL_UP, since UnitLevel can still return
+-- the old one at that moment.
+function EverGear:AutoUpdateZonesForLevel(newLevel)
+    if not self:IsAutoZonesOn() then return end
+    self:ApplyZonesForLevel(newLevel)
+    if self.SyncFiltersWindow then self:SyncFiltersWindow() end
+    if self.Frame and self.Frame:IsShown() then self:RefreshUI() end
+end
+
+local function FilterZonesToCurrentLevel()
+    EverGear:ApplyZonesForLevel()
     RefreshZonesPage()
     Refresh()
 end
@@ -597,8 +624,17 @@ local function BuildZonesPage()
     current:SetPoint("LEFT", none, "RIGHT", 8, 0)
     Tooltip(current, "Current Level", "Shows only the zones and dungeons meant for your current level, and hides the "
         .. "other faction's starting zones and dungeons. Click it again after leveling up to update.")
+    autoZonesCheck = Checkbox(zonesPage, "EverGearAutoZonesCheck", "Update zones to my level automatically",
+        left - 4, bottom - 54, function() return EverGear:IsAutoZonesOn() end,
+        function(on)
+            CharDB().autoZonesByLevel = on or nil
+            if on then EverGear:ApplyZonesForLevel() end
+        end, true)
+    Tooltip(autoZonesCheck, "Update zones to my level automatically",
+        "Off by default. When on, Current Level is applied for you every time you log in and every time you level up, "
+        .. "so the zones you ticked yourself are replaced each time. When off, the zones you tick are kept for this character.")
     zoneButtons = { all = all, none = none, current = current }
-    pageSizes.zones = { zoneLeft + 2 * ZONE_ZONE_COL_WIDTH + 8, -bottom + 66 }
+    pageSizes.zones = { zoneLeft + 2 * ZONE_ZONE_COL_WIDTH + 8, -bottom + 92 }
 end
 
 -- ===== Showing, switching and syncing =====
