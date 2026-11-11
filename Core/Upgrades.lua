@@ -1528,12 +1528,23 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink, options)
             local dpsValue = (item.stats and item.stats.WEAPON_DPS) or 0
             local score = ScoreItem(item.stats, profile, armorValue, dpsValue, isRangedSlot)
             if score > currentScore then
-                table.insert(candidates, { item = item, score = score })
+                table.insert(candidates, { item = item, score = score, requiredLevel = requiredLevel })
             end
         end
     end
 
-    table.sort(candidates, function(a, b) return a.score > b.score end)
+    -- Best score first. The panel shows the gain rounded to a whole number, so
+    -- items that show the same gain are ordered by the level they need, highest
+    -- first (a higher-level item is the better pick at the same worth), then
+    -- by exact score and item id so the order is stable.
+    table.sort(candidates, function(a, b)
+        local ra = math.floor(a.score - currentScore + 0.5)
+        local rb = math.floor(b.score - currentScore + 0.5)
+        if ra ~= rb then return ra > rb end
+        if a.requiredLevel ~= b.requiredLevel then return a.requiredLevel > b.requiredLevel end
+        if a.score ~= b.score then return a.score > b.score end
+        return a.item.id < b.item.id
+    end)
     return candidates, currentScore
 end
 
