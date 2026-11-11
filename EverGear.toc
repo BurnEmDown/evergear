@@ -50,6 +50,7 @@ Data\Items_RazorfenDowns.lua
 Data\Items_Uldaman.lua
 Data\Items_ZulFarrak.lua
 Data\Items_Maraudon.lua
+Data\Items_KroldokStronghold.lua
 Data\Items_TheTempleOfAtalHakkar.lua
 Data\Items_BlackrockDepths.lua
 Data\Items_BlackrockSpireLower.lua
