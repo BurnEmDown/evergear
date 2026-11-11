@@ -56,6 +56,9 @@ Data\Items_BlackrockSpireLower.lua
 Data\Items_DireMaulEast.lua
 Data\Items_DireMaulWest.lua
 Data\Items_DireMaulNorth.lua
+Data\Items_AlcazPrison.lua
+Data\Items_BlackmawHold.lua
+Data\Items_ShapersTerrace.lua
 Data\Items_Stratholme.lua
 Data\Items_BlackrockSpireUpper.lua
 Data\Items_Scholomance.lua
