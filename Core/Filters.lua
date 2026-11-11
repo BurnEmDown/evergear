@@ -511,12 +511,13 @@ function EverGear.CollectSourceZones(includeEmpty)
     return dungeons, zones
 end
 
-local autoZonesCheck   -- the "update zones to my level automatically" box, built with the tab
+local autoZonesCheck, autoLookaheadCheck   -- the two "update zones automatically" boxes, built with the tab
 
 local function RefreshZonesPage()
     local filters = Table("zoneFilter")
     for _, entry in ipairs(zoneChecks) do entry.cb:SetChecked(filters[entry.zone] ~= false) end
-    if autoZonesCheck then autoZonesCheck:SetChecked(EverGear:IsAutoZonesOn()) end
+    if autoZonesCheck then autoZonesCheck:SetChecked(CharDB().autoZonesByLevel == true) end
+    if autoLookaheadCheck then autoLookaheadCheck:SetChecked(CharDB().autoZonesByLookahead == true) end
 end
 
 local function ZoneHeader(text, x)
@@ -547,6 +548,11 @@ local function SetAllZones(shown)
     Refresh()
 end
 
+-- The cached zone lists: the item data never changes after load, so the walk
+-- over every item only has to happen once (the look-ahead slider can call this
+-- on every step of a drag).
+local cachedDungeons, cachedZones
+
 -- Ticks the places whose level range includes the given level and unticks the
 -- rest, plus the other faction's starting zones and dungeons. Works from the
 -- item data, not from the Zones tab's checkboxes, so it also runs at login and
@@ -559,8 +565,8 @@ function EverGear:ApplyZonesForLevel(level)
         otherFaction[zone] = true
     end
     local filters = Table("zoneFilter")
-    local dungeons, zones = EverGear.CollectSourceZones()
-    for _, list in ipairs({ dungeons, zones }) do
+    if not cachedDungeons then cachedDungeons, cachedZones = EverGear.CollectSourceZones() end
+    for _, list in ipairs({ cachedDungeons, cachedZones }) do
         for _, zone in ipairs(list) do
             local range = EverGear.ZONE_LEVEL_RANGES[zone]
             local inRange = (not range) or (level >= range[1] and level <= range[2])
@@ -569,24 +575,57 @@ function EverGear:ApplyZonesForLevel(level)
     end
 end
 
--- Whether this character has "Update zones to my level automatically" ticked.
-function EverGear:IsAutoZonesOn()
-    return CharDB().autoZonesByLevel == true
+-- The look-ahead level: the slider's target, never below the character's level
+-- (the slider's own minimum). currentLevel: pass the new level from
+-- PLAYER_LEVEL_UP, since UnitLevel can still return the old one at that moment.
+function EverGear:GetLookaheadZoneLevel(currentLevel)
+    currentLevel = currentLevel or self:GetPlayerInfo().level or 1
+    return math.max(currentLevel, CharDB().lookaheadLevel or currentLevel)
 end
 
--- Called at login and on level-up (Main.lua): when the character has the
--- automatic option on, re-applies the Current Level selection for their level.
--- newLevel: the level from PLAYER_LEVEL_UP, since UnitLevel can still return
--- the old one at that moment.
+-- Whether this character has one of the two "Update zones ... automatically"
+-- options ticked (they exclude each other).
+function EverGear:IsAutoZonesOn()
+    local db = CharDB()
+    return db.autoZonesByLevel == true or db.autoZonesByLookahead == true
+end
+
+-- Re-applies whichever automatic option is on. newLevel: see above.
+local function ApplyAutoZones(newLevel)
+    local db = CharDB()
+    if db.autoZonesByLookahead then
+        EverGear:ApplyZonesForLevel(EverGear:GetLookaheadZoneLevel(newLevel))
+    elseif db.autoZonesByLevel then
+        EverGear:ApplyZonesForLevel(newLevel)
+    end
+end
+
+-- Called at login and on level-up (Main.lua): when the character has an
+-- automatic option on, re-applies it for their level.
 function EverGear:AutoUpdateZonesForLevel(newLevel)
     if not self:IsAutoZonesOn() then return end
-    self:ApplyZonesForLevel(newLevel)
+    ApplyAutoZones(newLevel)
     if self.SyncFiltersWindow then self:SyncFiltersWindow() end
     if self.Frame and self.Frame:IsShown() then self:RefreshUI() end
 end
 
+-- Called by the look-ahead slider (UI.lua) when the player moves it: with the
+-- look-ahead option on, the zones follow the new target level. The slider
+-- refreshes the main window itself.
+function EverGear:OnLookaheadChanged()
+    if CharDB().autoZonesByLookahead ~= true then return end
+    ApplyAutoZones()
+    if self.SyncFiltersWindow then self:SyncFiltersWindow() end
+end
+
 local function FilterZonesToCurrentLevel()
     EverGear:ApplyZonesForLevel()
+    RefreshZonesPage()
+    Refresh()
+end
+
+local function FilterZonesToLookaheadLevel()
+    EverGear:ApplyZonesForLevel(EverGear:GetLookaheadZoneLevel())
     RefreshZonesPage()
     Refresh()
 end
@@ -624,17 +663,39 @@ local function BuildZonesPage()
     current:SetPoint("LEFT", none, "RIGHT", 8, 0)
     Tooltip(current, "Current Level", "Shows only the zones and dungeons meant for your current level, and hides the "
         .. "other faction's starting zones and dungeons. Click it again after leveling up to update.")
+    local lookahead = SmallButton(zonesPage, "Look Ahead Level", 120, FilterZonesToLookaheadLevel)
+    lookahead:SetPoint("LEFT", current, "RIGHT", 8, 0)
+    Tooltip(lookahead, "Look Ahead Level", "Like Current Level, but for the level on the Look Ahead slider in the main "
+        .. "window (your own level when Look Ahead is off).")
     autoZonesCheck = Checkbox(zonesPage, "EverGearAutoZonesCheck", "Update zones to my level automatically",
-        left - 4, bottom - 54, function() return EverGear:IsAutoZonesOn() end,
+        left - 4, bottom - 54, function() return CharDB().autoZonesByLevel == true end,
         function(on)
             CharDB().autoZonesByLevel = on or nil
-            if on then EverGear:ApplyZonesForLevel() end
+            if on then
+                CharDB().autoZonesByLookahead = nil
+                EverGear:ApplyZonesForLevel()
+            end
+            EverGear:SyncFiltersWindow()
         end, true)
     Tooltip(autoZonesCheck, "Update zones to my level automatically",
         "Off by default. When on, Current Level is applied for you every time you log in and every time you level up, "
         .. "so the zones you ticked yourself are replaced each time. When off, the zones you tick are kept for this character.")
-    zoneButtons = { all = all, none = none, current = current }
-    pageSizes.zones = { zoneLeft + 2 * ZONE_ZONE_COL_WIDTH + 8, -bottom + 92 }
+    autoLookaheadCheck = Checkbox(zonesPage, "EverGearAutoLookaheadCheck", "Update zones to my look-ahead level automatically",
+        left - 4, bottom - 78, function() return CharDB().autoZonesByLookahead == true end,
+        function(on)
+            CharDB().autoZonesByLookahead = on or nil
+            if on then
+                CharDB().autoZonesByLevel = nil
+                EverGear:ApplyZonesForLevel(EverGear:GetLookaheadZoneLevel())
+            end
+            EverGear:SyncFiltersWindow()
+        end, true)
+    Tooltip(autoLookaheadCheck, "Update zones to my look-ahead level automatically",
+        "Off by default, and it replaces the option above. When on, the zones follow the Look Ahead slider (or your own "
+        .. "level when it is off): they are updated when you move the slider, at login and at every level-up, so the "
+        .. "zones you ticked yourself are replaced each time.")
+    zoneButtons = { all = all, none = none, current = current, lookahead = lookahead }
+    pageSizes.zones = { zoneLeft + 2 * ZONE_ZONE_COL_WIDTH + 8, -bottom + 116 }
 end
 
 -- ===== Showing, switching and syncing =====

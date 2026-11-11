@@ -472,7 +472,8 @@ local STEPS = {
     FiltersTabStep("zones", "Filters: zones and dungeons",
         "Hide items from zones and dungeons you won't visit. "
             .. "Current Level keeps just the places meant for your level; tick Update zones to my level "
-            .. "automatically to have it applied at every login and level-up. Or click Show All if you'd rather "
+            .. "automatically to have it applied at every login and level-up. Look Ahead Level and its matching "
+            .. "option do the same for the level on the Look Ahead slider. Or click Show All if you'd rather "
             .. "not filter by zone at all.", "below"),
     {
         title = "Upgrades by Zone",
