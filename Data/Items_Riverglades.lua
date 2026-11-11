@@ -1,0 +1,10 @@
+-- GENERATED FILE. Do not hand-edit.
+-- Produced by evergear-backend/scripts/json_to_lua.py from imported/processed/riverglades.json (+ manual/riverglades.json overrides).
+-- Regenerate instead of editing this file directly.
+
+EverGear = EverGear or {}
+EverGear.Items = EverGear.Items or {}
+
+EverGear.Items[274952] = {id = 274952, name = "Jom-jom's Gabbar", slot = "MainHandSlot", armorType = nil, weaponType = "dagger", isTwoHand = false, classes = nil, ilvl = 42, minLevel = nil, confirmed = true, bindType = "BoP", source = {type = "quest", zone = "Riverglades", quest = "Jom-Jom's Escape"}, stats = {ONHIT_1 = "Launch a boulder, dealing 97 Physical damage.", WEAPON_DAMAGE = "32 - 60 Damage", WEAPON_DPS = 24.2, WEAPON_SPEED = 1.9}, _sourceNote = "Quest name from capture note; quest level not captured"}
+EverGear.Items[274955] = {id = 274955, name = "Clobrok's Block Rock", slot = "NeckSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 42, minLevel = nil, confirmed = true, bindType = "BoP", source = {type = "quest", zone = "Riverglades", quest = "Jom-Jom's Escape"}, stats = {BLOCK_VALUE = 10, STRENGTH = 7}, _sourceNote = "Quest name from capture note; quest level not captured", quality = 2}
+EverGear.Items[274963] = {id = 274963, name = "Rot-Covered Harpoon", slot = "MainHandSlot", armorType = nil, weaponType = "polearm", isTwoHand = true, classes = nil, ilvl = 42, minLevel = nil, confirmed = true, bindType = "BoP", source = {type = "quest", zone = "Riverglades", quest = "Wanted: Old Rot-Chum"}, stats = {ONHIT_1 = "Diseases target for 21 Nature damage every 1 sec for 7 sec. Deals 2 times as much damage to Aquatic enemies.", WEAPON_DAMAGE = "62 - 94 Damage", WEAPON_DPS = 31.2, WEAPON_SPEED = 2.5}, _sourceNote = "Quest name from capture note; quest level not captured", quality = 3}
