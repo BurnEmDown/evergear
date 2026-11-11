@@ -170,10 +170,39 @@ local function StripColor(text)
     return (text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
 end
 
+-- Reads the item-set block out of the tooltip lines, when the item has one:
+--   Krol'dok Battlegear (0/5)
+--     Krol'dok Warplate Helmet          (the pieces, indented)
+--     ...
+--   (2) Set: +100 Armor.               (the bonuses, by number of pieces worn)
+-- Returns { name, size, pieces = { names }, bonuses = { { pieces, text }, ... } }, or
+-- nil for an item without a set. The pieces are listed by name only, not by id.
+local function ParseSet(lines)
+    local set
+    for i, line in ipairs(lines) do
+        if not set then
+            local name, size = line:match("^(.+) %(%d+/(%d+)%)$")
+            if name and lines[i + 1] and lines[i + 1]:match("^%s%s+%S") then
+                set = { name = name, size = tonumber(size), pieces = {}, bonuses = {} }
+                local j = i + 1
+                while lines[j] and lines[j]:match("^%s%s+%S") do
+                    set.pieces[#set.pieces + 1] = lines[j]:match("^%s*(.-)%s*$")
+                    j = j + 1
+                end
+            end
+        else
+            local count, text = line:match("^%((%d+)%) Set: (.+)$")
+            if count then set.bonuses[#set.bonuses + 1] = { pieces = tonumber(count), text = text } end
+        end
+    end
+    return set
+end
+
 -- Reads one item link's tooltip into canonical-shaped stats. Returns stats, notes where
 -- notes lists lines worth a human look (school-damage wands and the like), the classes
 -- line, and every "Requires ..." line other than the level (reputation standing, PvP
--- rank, profession skill) as the tooltip shows it, minus the "Requires ".
+-- rank, profession skill) as the tooltip shows it, minus the "Requires ", and the
+-- tooltip lines plus the item's set (ParseSet) when it has one.
 local function ReadTooltipStats(link)
     scanTooltip:ClearLines()
     scanTooltip:SetOwner(UIParent, "ANCHOR_NONE")
@@ -298,7 +327,7 @@ local function ReadTooltipStats(link)
         stats.BONUS_ARMOR = nil
     end
 
-    return stats, notes, classes, requires, lines
+    return stats, notes, classes, requires, lines, ParseSet(lines)
 end
 
 local STANDINGS = { Neutral = true, Friendly = true, Honored = true, Revered = true, Exalted = true }
@@ -383,13 +412,16 @@ function EverGear:BuildLiveItemRecord(link, includeWhite)
         end
     end
 
-    local stats, tooltipNotes, classes, requires, lines = ReadTooltipStats(link)
+    local stats, tooltipNotes, classes, requires, lines, set = ReadTooltipStats(link)
     for _, n in ipairs(tooltipNotes) do notes[#notes + 1] = n end
     record.stats = stats
     record.classes = classes
     -- The tooltip as read, so a capture that differs shows what the game gave (keys
     -- starting with "_" aren't part of the schema).
     record._tooltipLines = lines
+    -- The item's set, as the tooltip lists it (name, size, piece names, bonuses by piece
+    -- count); not part of the item schema yet.
+    record._set = set
     -- What else the item needs, for whoever adds the capture (keys starting with "_"
     -- aren't part of the schema): the raw lines, plus the reputation / PvP rank read
     -- from them, which the comparison below checks against the item's source.
@@ -461,6 +493,13 @@ function EverGear:CompareLiveToDatabase(live, db)
     if source.type == "pvp" and rank and source.rank ~= rank.rank then
         diffs[#diffs + 1] = string.format("PvP rank: addon %s, game %s (rank %d)",
             tostring(source.rank), rank.name, rank.rank)
+    end
+
+    -- A set item whose set the data doesn't have yet is flagged, so hovering the pieces
+    -- captures the set (_set in the capture). Stops once EverGear.ItemSets has the set.
+    local set = live._set
+    if set and not (EverGear.ItemSets and EverGear.ItemSets[set.name]) then
+        diffs[#diffs + 1] = string.format("set: %s (%d pieces) is not in the data", set.name, set.size or 0)
     end
 
     -- An unconfirmed item the game answered for scores with the game's stats
