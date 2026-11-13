@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.5.4] - 2026-11-13
+
+### Added
+- About 670 new items from the new WoW Forever dungeons: Alcaz Prison,
+  Blackmaw Hold, Krol'dok Stronghold, The Drowned City and The Shaper's
+  Terrace, plus quest rewards from Riverglades, Razorfen Downs, Stranglethorn
+  Vale and Feralas.
+- Zones filter: two new checkboxes keep your zones matched to your level, or
+  to your look-ahead level, automatically. They update on login and when you
+  level up.
+- Items that can come from more than one place now list every source.
+
+### Changed
+- Suggested upgrades that give the same gain are now listed highest required
+  level first.
+
+### Fixed
+- Stats corrected on several items after checking them against the game.
+- Fixed a "unfinished string" error when loading the Maraudon data.
+
 ## [0.5.3] - 2026-11-10
 
 ### Fixed
