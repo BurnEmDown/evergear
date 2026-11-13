@@ -990,6 +990,60 @@ local function ScoreItem(stats, profile, armorValue, dps, isRanged)
     return score
 end
 
+
+-- ===== Set bonuses =====
+-- Names of everything worn, so a set's pieces can be counted.
+local function WornItemNames(self)
+    local worn = {}
+    for _, slotToken in ipairs(self.EQUIP_SLOTS) do
+        local link = self:GetEquippedItemLink(slotToken)
+        local name = link and link:match("%[(.-)%]")
+        if name then worn[name] = true end
+    end
+    return worn
+end
+
+local function CountWornPieces(variant, worn)
+    local count = 0
+    for _, pieceName in ipairs(variant.pieces) do
+        if worn[pieceName] then count = count + 1 end
+    end
+    return count
+end
+
+-- What the set bonuses are worth, in EP, if `candidate` replaces the equipped item:
+-- a piece that completes a threshold adds that bonus; taking off a piece of a set
+-- loses the bonus it gave. Only bonuses that are plain stats count (see
+-- EverGear.ParseBonusText). Returns the EP difference and a short note for the tooltip.
+local function SetBonusDelta(self, profile, worn, equippedName, equippedId, candidate)
+    local changes = {}  -- set name -> { variant, before, after }
+    local function Change(entry, step)
+        if not entry then return end
+        local c = changes[entry.setName]
+        if not c then
+            local count = CountWornPieces(entry.variant, worn)
+            c = { variant = entry.variant, before = count, after = count, setName = entry.setName }
+            changes[entry.setName] = c
+        end
+        c.after = c.after + step
+    end
+    if equippedName then Change(self:GetItemSet(equippedName, equippedId), -1) end
+    if not worn[candidate.name] then Change(self:GetItemSet(candidate.name, candidate.id), 1) end
+
+    local delta, notes = 0, {}
+    for _, c in pairs(changes) do
+        if c.after ~= c.before then
+            local function Value(count) return ScoreItem(self:GetSetBonusStats(c.variant, count), profile, 0, 0, false) end
+            local d = Value(c.after) - Value(c.before)
+            if d ~= 0 then
+                delta = delta + d
+                notes[#notes + 1] = string.format("%s (%d/%d)", c.setName, c.after, c.variant.size)
+            end
+        end
+    end
+    return delta, notes
+end
+
 -- ===== Live equipped-item stat reading =====
 -- GetItemStats() doesn't reliably expose an item's base Armor value -- the
 -- standard workaround is scanning a hidden tooltip's rendered text for the
@@ -1481,6 +1535,8 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink, options)
     end
     local isRangedSlot = (realSlotToken == "RangedSlot")
     local currentScore = ScoreItem(equippedStats, profile, equippedArmor, equippedDPS, isRangedSlot)
+    local worn = WornItemNames(self)
+    local equippedName = equippedItemLink and equippedItemLink:match("%[(.-)%]")
 
     -- A Tank spec whose class can wield a shield (Protection Warrior/Paladin) is
     -- meant to hold a shield in the off-hand. Off-hand-only WEAPONS (e.g. Shoni's
@@ -1526,9 +1582,14 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink, options)
         then
             local armorValue = (item.stats and item.stats.ARMOR) or 0
             local dpsValue = (item.stats and item.stats.WEAPON_DPS) or 0
-            local score = ScoreItem(item.stats, profile, armorValue, dpsValue, isRangedSlot)
+            local itemScore = ScoreItem(item.stats, profile, armorValue, dpsValue, isRangedSlot)
+            local setDelta, setNotes = SetBonusDelta(self, profile, worn, equippedName, equippedItemId, item)
+            local score = itemScore + setDelta
             if score > currentScore then
-                table.insert(candidates, { item = item, score = score, requiredLevel = requiredLevel })
+                table.insert(candidates, {
+                    item = item, score = score, requiredLevel = requiredLevel,
+                    itemScore = itemScore, setDelta = setDelta, setNotes = setNotes,
+                })
             end
         end
     end
