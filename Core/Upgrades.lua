@@ -1528,12 +1528,23 @@ function EverGear:GetUpgradesForSlot(realSlotToken, equippedItemLink, options)
             local dpsValue = (item.stats and item.stats.WEAPON_DPS) or 0
             local score = ScoreItem(item.stats, profile, armorValue, dpsValue, isRangedSlot)
             if score > currentScore then
-                table.insert(candidates, { item = item, score = score })
+                table.insert(candidates, { item = item, score = score, requiredLevel = requiredLevel })
             end
         end
     end
 
-    table.sort(candidates, function(a, b) return a.score > b.score end)
+    -- Best score first. The panel shows the gain rounded to a whole number, so
+    -- items that show the same gain are ordered by the level they need, highest
+    -- first (a higher-level item is the better pick at the same worth), then
+    -- by exact score and item id so the order is stable.
+    table.sort(candidates, function(a, b)
+        local ra = math.floor(a.score - currentScore + 0.5)
+        local rb = math.floor(b.score - currentScore + 0.5)
+        if ra ~= rb then return ra > rb end
+        if a.requiredLevel ~= b.requiredLevel then return a.requiredLevel > b.requiredLevel end
+        if a.score ~= b.score then return a.score > b.score end
+        return a.item.id < b.item.id
+    end)
     return candidates, currentScore
 end
 
@@ -1564,7 +1575,7 @@ function EverGear:GetWearableItemsForSlot(realSlotToken, maxLevel)
             and IsArmorTypeAllowed(item, playerInfo.classToken, proficiencyLevel)
             and IsWeaponTypeAllowed(item, playerInfo.classToken)
             and IsClassAllowed(item, playerInfo.classToken)
-            and sourceFilters[item.source and item.source.type] ~= false
+            and self:IsSourceTypeEnabled(item, sourceFilters)
             and PassesFilterPanels(self, item, charDB)
         then
             local stats = item.stats
@@ -1625,9 +1636,8 @@ function EverGear:GetUpgradesForZone(zoneName)
         local candidates, currentScore = self:GetUpgradesForSlot(slotToken, self:GetEquippedItemLink(slotToken), { ignoreZoneFilter = true })
         for _, candidate in ipairs(candidates) do
             local item = candidate.item
-            local sourceType = item.source and item.source.type
             if EverGear.ZoneListHas(self:GetSourceZones(item, self:GetPlayerInfo().faction), zoneName)
-                and sourceFilters[sourceType] ~= false then
+                and self:IsSourceTypeEnabled(item, sourceFilters) then
                 local gain = candidate.score - (currentScore or 0)
                 if not best[item.id] or gain > best[item.id].gain then
                     best[item.id] = { item = item, slotToken = slotToken, gain = gain }
@@ -1646,8 +1656,7 @@ end
 
 -- Human-readable one-liner for where an item comes from, used in the detail
 -- panel and in tooltips. Reads item.source (see Constants.lua for the shape).
-function EverGear:GetSourceSummary(item)
-    local source = item and item.source
+local function SingleSourceSummary(self, item, source)
     if not source then return "Unknown source" end
 
     if source.type == "quest" then
@@ -1716,6 +1725,18 @@ function EverGear:GetSourceSummary(item)
         return source.zone and (source.zone .. " (" .. what .. ")") or what
     end
     return "Unknown source"
+end
+
+-- One line for all of an item's sources: the primary, then any altSources
+-- (an item that drops from more than one place), separated by " / ".
+function EverGear:GetSourceSummary(item)
+    local sources = self:GetAllSources(item)
+    if #sources == 0 then return "Unknown source" end
+    local parts = {}
+    for _, source in ipairs(sources) do
+        parts[#parts + 1] = SingleSourceSummary(self, item, source)
+    end
+    return table.concat(parts, " / ")
 end
 
 -- Items not seen in WoW Forever yet (item.unverified) get a tag after their

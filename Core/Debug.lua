@@ -170,10 +170,39 @@ local function StripColor(text)
     return (text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
 end
 
+-- Reads the item-set block out of the tooltip lines, when the item has one:
+--   Krol'dok Battlegear (0/5)
+--     Krol'dok Warplate Helmet          (the pieces, indented)
+--     ...
+--   (2) Set: +100 Armor.               (the bonuses, by number of pieces worn)
+-- Returns { name, size, pieces = { names }, bonuses = { { pieces, text }, ... } }, or
+-- nil for an item without a set. The pieces are listed by name only, not by id.
+local function ParseSet(lines)
+    local set
+    for i, line in ipairs(lines) do
+        if not set then
+            local name, size = line:match("^(.+) %(%d+/(%d+)%)$")
+            if name and lines[i + 1] and lines[i + 1]:match("^%s%s+%S") then
+                set = { name = name, size = tonumber(size), pieces = {}, bonuses = {} }
+                local j = i + 1
+                while lines[j] and lines[j]:match("^%s%s+%S") do
+                    set.pieces[#set.pieces + 1] = lines[j]:match("^%s*(.-)%s*$")
+                    j = j + 1
+                end
+            end
+        else
+            local count, text = line:match("^%((%d+)%) Set: (.+)$")
+            if count then set.bonuses[#set.bonuses + 1] = { pieces = tonumber(count), text = text } end
+        end
+    end
+    return set
+end
+
 -- Reads one item link's tooltip into canonical-shaped stats. Returns stats, notes where
 -- notes lists lines worth a human look (school-damage wands and the like), the classes
 -- line, and every "Requires ..." line other than the level (reputation standing, PvP
--- rank, profession skill) as the tooltip shows it, minus the "Requires ".
+-- rank, profession skill) as the tooltip shows it, minus the "Requires ", and the
+-- tooltip lines plus the item's set (ParseSet) when it has one.
 local function ReadTooltipStats(link)
     scanTooltip:ClearLines()
     scanTooltip:SetOwner(UIParent, "ANCHOR_NONE")
@@ -188,6 +217,10 @@ local function ReadTooltipStats(link)
     local function Fragment(text)
         if not text or text == "" then return end
         text = StripColor(text)
+        -- A line can end in a line break ("...Titan-forged enemy.\r\n" on Fist of Stone),
+        -- which would end up inside the stat text and break the generated data file.
+        text = text:gsub("^%s+", ""):gsub("%s+$", "")
+        if text == "" then return end
         -- Large numbers carry a thousands separator ("1,380 Armor" on a shield);
         -- drop it so the number patterns below match. Lines with a colon
         -- (Equip:, Use:, Classes: ...) are kept as the tooltip shows them.
@@ -294,7 +327,7 @@ local function ReadTooltipStats(link)
         stats.BONUS_ARMOR = nil
     end
 
-    return stats, notes, classes, requires, lines
+    return stats, notes, classes, requires, lines, ParseSet(lines)
 end
 
 local STANDINGS = { Neutral = true, Friendly = true, Honored = true, Revered = true, Exalted = true }
@@ -379,13 +412,16 @@ function EverGear:BuildLiveItemRecord(link, includeWhite)
         end
     end
 
-    local stats, tooltipNotes, classes, requires, lines = ReadTooltipStats(link)
+    local stats, tooltipNotes, classes, requires, lines, set = ReadTooltipStats(link)
     for _, n in ipairs(tooltipNotes) do notes[#notes + 1] = n end
     record.stats = stats
     record.classes = classes
     -- The tooltip as read, so a capture that differs shows what the game gave (keys
     -- starting with "_" aren't part of the schema).
     record._tooltipLines = lines
+    -- The item's set, as the tooltip lists it (name, size, piece names, bonuses by piece
+    -- count); not part of the item schema yet.
+    record._set = set
     -- What else the item needs, for whoever adds the capture (keys starting with "_"
     -- aren't part of the schema): the raw lines, plus the reputation / PvP rank read
     -- from them, which the comparison below checks against the item's source.
@@ -457,6 +493,13 @@ function EverGear:CompareLiveToDatabase(live, db)
     if source.type == "pvp" and rank and source.rank ~= rank.rank then
         diffs[#diffs + 1] = string.format("PvP rank: addon %s, game %s (rank %d)",
             tostring(source.rank), rank.name, rank.rank)
+    end
+
+    -- A set item whose set the data doesn't have yet is flagged, so hovering the pieces
+    -- captures the set (_set in the capture). Stops once EverGear.ItemSets has the set.
+    local set = live._set
+    if set and not (EverGear.ItemSets and EverGear.ItemSets[set.name]) then
+        diffs[#diffs + 1] = string.format("set: %s (%d pieces) is not in the data", set.name, set.size or 0)
     end
 
     -- An unconfirmed item the game answered for scores with the game's stats
@@ -907,16 +950,28 @@ end
 -- Used by the item browser's "Check all" (ItemBrowser.lua).
 
 -- Checks one database item against the game through the hidden scan tooltip.
--- Returns "ok" or "differs"; a difference is captured right away (keeping any
+-- Returns "ok" or "differs"; a difference (or an item not in the addon yet) is captured right away (keeping any
 -- note already typed for it). Returns nil plus the reason when it can't be
 -- checked: "uncached" (ask the server, try again later), "suffix",
 -- "lowQuality" (gray) or "notEquippable". Unlike hovering, white items are checked too.
 function EverGear:CheckItemAgainstGame(itemId)
     local dbItem = self:GetItem(itemId)
-    if not dbItem then return nil, "unknown" end
+    local pending = not dbItem and self.PendingItems and self.PendingItems[itemId]
+    if not dbItem and not pending then return nil, "unknown" end
     local _, link = GetFullInfo(itemId)
     local record, reason, notes = self:BuildLiveItemRecord(link or ("item:" .. itemId), true)
     if not record then return nil, reason or "notEquippable" end
+
+    if not dbItem then
+        -- Not shipped (no source yet): nothing to compare with, so the game's
+        -- own data is captured as it is, the same as hovering would show it
+        -- (the source still has to be added by hand). Counts as "differs".
+        local existing = Captures()[itemId]
+        StoreCapture(record, "pending", nil, notes, nil, existing and existing.sourceNote)
+        EverGearDB.debugChecked = EverGearDB.debugChecked or {}
+        EverGearDB.debugChecked[itemId] = "differs"
+        return "differs"
+    end
 
     local diffs = self:CompareLiveToDatabase(record, dbItem)
     -- Possibly an effect line that hadn't loaded: the scan comes back to it later.

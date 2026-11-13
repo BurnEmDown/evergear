@@ -122,22 +122,62 @@ function EverGear:IsSourceAvailableToFaction(item, faction)
     return true
 end
 
--- The zones the item comes from for the faction: its usable vendors' zones,
--- or source.zone. Empty for items not tied to a place (crafted, world drops).
-function EverGear:GetSourceZones(item, faction)
-    local source = item.source
-    if not source then return {} end
-    if source.vendors then
-        local zones, seen = {}, {}
-        for _, vendor in ipairs(self:GetUsableVendors(item, faction)) do
-            if vendor.zone and not seen[vendor.zone] then
-                seen[vendor.zone] = true
-                table.insert(zones, vendor.zone)
-            end
-        end
-        return zones
+-- Every way to get the item: item.source first, then item.altSources, extra
+-- sources for items that drop from more than one place (e.g. two bosses in
+-- different dungeons). Empty when the item has no source.
+function EverGear:GetAllSources(item)
+    local sources = {}
+    if not item or not item.source then return sources end
+    sources[1] = item.source
+    for _, alt in ipairs(item.altSources or {}) do
+        sources[#sources + 1] = alt
     end
-    return source.zone and { source.zone } or {}
+    return sources
+end
+
+-- The source that applies in a zone: the one whose zone matches, else the
+-- primary source. Lets a zone's list name the boss that drops it there.
+function EverGear:GetSourceForZone(item, zoneName)
+    for _, source in ipairs(self:GetAllSources(item)) do
+        if source.zone == zoneName then return source end
+    end
+    return item and item.source
+end
+
+-- Whether any of the item's sources is switched on in a source-type filter
+-- table (type -> false when off).
+function EverGear:IsSourceTypeEnabled(item, filters)
+    local sources = self:GetAllSources(item)
+    if #sources == 0 then return true end
+    for _, source in ipairs(sources) do
+        if filters[source.type] ~= false then return true end
+    end
+    return false
+end
+
+-- The zones the item comes from for the faction: its usable vendors' zones,
+-- or the zone of each source (the primary and any altSources). Empty for
+-- items not tied to a place (crafted, world drops).
+function EverGear:GetSourceZones(item, faction)
+    local sources = self:GetAllSources(item)
+    if #sources == 0 then return {} end
+    local zones, seen = {}, {}
+    local function Add(zone)
+        if zone and not seen[zone] then
+            seen[zone] = true
+            table.insert(zones, zone)
+        end
+    end
+    for _, source in ipairs(sources) do
+        if source.vendors then
+            for _, vendor in ipairs(self:GetUsableVendors({ source = source }, faction)) do
+                Add(vendor.zone)
+            end
+        else
+            Add(source.zone)
+        end
+    end
+    return zones
 end
 
 local function HasZone(zones, zoneName)

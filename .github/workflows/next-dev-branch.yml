@@ -1,0 +1,29 @@
+# After every push to master (a release), create the branch the next version's
+# work goes on: dev-<version> (for example dev-0.5.2 after the 0.5.2 release),
+# straight from master, so it starts level with it. Old dev branches are left
+# alone; delete them by hand when you like.
+name: Create the next dev branch
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  branch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create dev-<version> from master
+        run: |
+          VERSION=$(grep -oP 'EverGear\.VERSION = "\K[^"]+' Core/Constants.lua)
+          if [ -z "$VERSION" ]; then echo "No version found in Core/Constants.lua"; exit 1; fi
+          BRANCH="dev-$VERSION"
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            echo "$BRANCH already exists, nothing to do."
+            exit 0
+          fi
+          git push origin "HEAD:refs/heads/$BRANCH"
+          echo "Created $BRANCH from master."

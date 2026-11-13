@@ -13,6 +13,11 @@ loader:SetScript("OnEvent", function(_, event, loadedAddon)
         -- Character name/realm are reliably available now; make the spec and profile
         -- dropdowns show what this character actually has saved.
         if EverGear.SyncSpecAndProfileDropdowns then EverGear:SyncSpecAndProfileDropdowns() end
+        -- Characters with "Update zones to my level automatically" on get their zone filter refreshed.
+        if EverGear.AutoUpdateZonesForLevel then EverGear:AutoUpdateZonesForLevel() end
+    elseif event == "PLAYER_LEVEL_UP" and EverGear.AutoUpdateZonesForLevel and EverGear:IsAutoZonesOn() then
+        -- loadedAddon is the new level here (the event's first argument).
+        EverGear:AutoUpdateZonesForLevel(loadedAddon)
     elseif EverGear.Frame and EverGear.Frame:IsShown() then
         EverGear:RefreshUI()
     end
