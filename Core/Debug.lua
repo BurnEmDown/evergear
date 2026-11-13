@@ -175,7 +175,8 @@ end
 --     Krol'dok Warplate Helmet          (the pieces, indented)
 --     ...
 --   (2) Set: +100 Armor.               (the bonuses, by number of pieces worn)
--- Returns { name, size, pieces = { names }, bonuses = { { pieces, text }, ... } }, or
+-- Returns { name, size, pieces = { names }, bonuses = { { pieces, text }, ... } } (plus
+-- completeBonuses = { text, ... } when the set was complete and the counts are hidden), or
 -- nil for an item without a set. The pieces are listed by name only, not by id.
 local function ParseSet(lines)
     local set
@@ -192,7 +193,18 @@ local function ParseSet(lines)
             end
         else
             local count, text = line:match("^%((%d+)%) Set: (.+)$")
-            if count then set.bonuses[#set.bonuses + 1] = { pieces = tonumber(count), text = text } end
+            if count then
+                set.bonuses[#set.bonuses + 1] = { pieces = tonumber(count), text = text }
+            else
+                -- With every piece worn (5/5) the game drops the "(n)" counts, so the number
+                -- of pieces each bonus needs isn't known: keep the texts apart in the order the
+                -- game lists them, instead of leaving the set looking like it has no bonuses.
+                local active = line:match("^Set: (.+)$")
+                if active then
+                    set.completeBonuses = set.completeBonuses or {}
+                    set.completeBonuses[#set.completeBonuses + 1] = active
+                end
+            end
         end
     end
     return set
