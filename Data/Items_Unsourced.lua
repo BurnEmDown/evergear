@@ -160,9 +160,6 @@ EverGear.PendingItems[270117] = "Shapeshifter's Helm"
 EverGear.PendingItems[270118] = "Cindercloth Gown"
 EverGear.PendingItems[270123] = "Ragnar's Favorite Hat"
 EverGear.PendingItems[270225] = "Jewel of the Guard Captain"
-EverGear.PendingItems[271719] = "Furs of the Earthen Ring"
-EverGear.PendingItems[271732] = "Dirt-Heavy Bracers"
-EverGear.PendingItems[271740] = "Knife-Polishing Rag"
 EverGear.PendingItems[271800] = "Scavenged Magram Armament"
 EverGear.PendingItems[271801] = "Abandoned Ferocity"
 EverGear.PendingItems[271804] = "Soulsplatter Mace"
@@ -278,7 +275,6 @@ EverGear.PendingItems[280085] = "Tunnelweb Pincer"
 EverGear.PendingItems[280605] = "Tidebringer's Claw"
 EverGear.PendingItems[280607] = "Lightning's Grasp"
 EverGear.PendingItems[280696] = "Elementalist's Guard"
-EverGear.PendingItems[280805] = "Serrated Raptor Claw"
 EverGear.PendingItems[281279] = "Hailgiant's Fists"
 EverGear.PendingItems[281291] = "Mathystra Channeling Orb"
 EverGear.PendingItems[281292] = "Onu's Patience"
@@ -365,18 +361,10 @@ EverGear.PendingItems[286554] = "Warleader's Signet"
 EverGear.PendingItems[286568] = "Blisterpaw Bones"
 EverGear.PendingItems[286639] = "Ambassador's Bloodrobes"
 EverGear.PendingItems[286640] = "High Priestess's Kilt"
-EverGear.PendingItems[286978] = "Rotmender's Garb"
-EverGear.PendingItems[286982] = "Unearthed Barrier"
-EverGear.PendingItems[286983] = "Ancient Cleaver"
-EverGear.PendingItems[286984] = "Mark of the Marsh"
-EverGear.PendingItems[286985] = "Thicket Bindings"
-EverGear.PendingItems[286986] = "Abandoned Leggings"
 EverGear.PendingItems[286987] = "Violet Sorcerer's Sandals"
 EverGear.PendingItems[286988] = "Violet Sorcerer's Leggings"
 EverGear.PendingItems[286989] = "Violet Sorcerer's Wraps"
-EverGear.PendingItems[286990] = "Arcane Remnant Leggings"
 EverGear.PendingItems[286991] = "Roused Nature Footwraps"
-EverGear.PendingItems[286994] = "Tattered Kirin Tor Cloak"
 EverGear.PendingItems[286996] = "City Guard's Tarnished Blade"
 EverGear.PendingItems[287019] = "Defias Enforcer's Mask"
 EverGear.PendingItems[287020] = "Defias Enforcer's Chest"
@@ -385,7 +373,6 @@ EverGear.PendingItems[287028] = "Tormented Cuffs"
 EverGear.PendingItems[287032] = "Den Champion's Binding"
 EverGear.PendingItems[287034] = "Grove Subjugator's Blade"
 EverGear.PendingItems[287036] = "Satyr's Touch"
-EverGear.PendingItems[287068] = "Excavated Dagger"
 EverGear.HeldItems[4571] = {id = 4571, name = "War Knife", slot = "MainHandSlot", armorType = nil, weaponType = "dagger", isTwoHand = false, classes = nil, ilvl = 17, minLevel = 12, confirmed = true, bindType = "BoE", source = nil, stats = {WEAPON_DAMAGE = "10 - 19 Damage", WEAPON_DPS = 8.5, WEAPON_SPEED = 1.7}, quality = 2}
 EverGear.HeldItems[5000] = {id = 5000, name = "Coral Band", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 26, minLevel = 21, confirmed = true, bindType = "BoE", source = nil, stats = {STAMINA = 4, INTELLECT = 3}, quality = 2}
 EverGear.HeldItems[5008] = {id = 5008, name = "Quicksilver Ring", slot = "FingerSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 36, minLevel = 31, confirmed = true, bindType = "BoE", source = nil, stats = {AGILITY = 7, SPIRIT = 3}, quality = 2}
@@ -537,9 +524,6 @@ EverGear.HeldItems[270117] = {id = 270117, name = "Shapeshifter's Helm", slot = 
 EverGear.HeldItems[270118] = {id = 270118, name = "Cindercloth Gown", slot = "ChestSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 54, minLevel = nil, confirmed = true, bindType = nil, source = nil, stats = {ARMOR = 77, INTELLECT = 24, STAMINA = 16}, quality = 3}
 EverGear.HeldItems[270123] = {id = 270123, name = "Ragnar's Favorite Hat", slot = "HeadSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 55, minLevel = nil, confirmed = true, bindType = nil, source = nil, stats = {ARMOR = 117, HIT_CHANCE = 0.5, SPELL_POWER = 20, STAMINA = 11}}
 EverGear.HeldItems[270225] = {id = 270225, name = "Jewel of the Guard Captain", slot = "TrinketSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 51, minLevel = nil, confirmed = true, bindType = "BoP", source = nil, stats = {CRIT_CHANCE = 0.5, EQUIP_1 = "Increases damage and healing done by magical spells and effects by up to 8. This effect is tripled in Forest and Grassland areas."}, quality = 2}
-EverGear.HeldItems[271719] = {id = 271719, name = "Furs of the Earthen Ring", slot = "BackSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 24, confirmed = true, bindType = nil, source = nil, stats = {ARMOR = 25, INTELLECT = 5, SPIRIT = 5, STRENGTH = 5}, quality = 3}
-EverGear.HeldItems[271732] = {id = 271732, name = "Dirt-Heavy Bracers", slot = "WristSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 24, confirmed = true, bindType = nil, source = nil, stats = {ARMOR = 43, ATTACK_POWER = 10, SPIRIT = 4}, quality = 3}
-EverGear.HeldItems[271740] = {id = 271740, name = "Knife-Polishing Rag", slot = "WristSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 24, confirmed = true, bindType = nil, source = nil, stats = {ARMOR = 20, SPELL_POWER = 6, SPIRIT = 4}, quality = 3}
 EverGear.HeldItems[271800] = {id = 271800, name = "Scavenged Magram Armament", slot = "MainHandSlot", armorType = nil, weaponType = "polearm", isTwoHand = true, classes = nil, ilvl = 42, minLevel = 35, confirmed = true, bindType = nil, source = nil, stats = {AGILITY = 5, ATTACK_POWER = 12, STAMINA = 14, WEAPON_DAMAGE = "89 - 134 Damage", WEAPON_DPS = 37.2, WEAPON_SPEED = 3}, quality = 3}
 EverGear.HeldItems[271801] = {id = 271801, name = "Abandoned Ferocity", slot = "MainHandSlot", armorType = nil, weaponType = "axe", isTwoHand = true, classes = nil, ilvl = 42, minLevel = 35, confirmed = true, bindType = nil, source = nil, stats = {AGILITY = 4, STAMINA = 12, STRENGTH = 10, WEAPON_DAMAGE = "95 - 143 Damage", WEAPON_DPS = 37.2, WEAPON_SPEED = 3.2}, quality = 3}
 EverGear.HeldItems[271804] = {id = 271804, name = "Soulsplatter Mace", slot = "MainHandSlot", armorType = nil, weaponType = "mace", isTwoHand = false, classes = nil, ilvl = 42, minLevel = 35, confirmed = true, bindType = nil, source = nil, stats = {INTELLECT = 6, SPELL_POWER = 48, SPIRIT = 1, STAMINA = 3, WEAPON_DAMAGE = "27 - 41 Damage", WEAPON_DPS = 18.9, WEAPON_SPEED = 1.8}, quality = 3}
@@ -655,7 +639,6 @@ EverGear.HeldItems[280085] = {id = 280085, name = "Tunnelweb Pincer", slot = "Ma
 EverGear.HeldItems[280605] = {id = 280605, name = "Tidebringer's Claw", slot = "MainHandSlot", armorType = nil, weaponType = "fist weapon", isTwoHand = false, classes = nil, ilvl = 40, minLevel = nil, confirmed = true, bindType = nil, source = nil, stats = {SPELL_DAMAGE = 28, SPELL_HEALING = 86, STAMINA = 5, WEAPON_DAMAGE = "30 - 57 Damage", WEAPON_DPS = 18.1, WEAPON_SPEED = 2.4, EQUIP_1 = "Increases the critical strike chance of your Healing Wave and Lesser Healing Wave spells by 2%."}, quality = 3}
 EverGear.HeldItems[280607] = {id = 280607, name = "Lightning's Grasp", slot = "MainHandSlot", armorType = nil, weaponType = "fist weapon", isTwoHand = false, classes = nil, ilvl = 40, minLevel = nil, confirmed = true, bindType = nil, source = nil, stats = {INTELLECT = 6, SPELL_POWER = 46, WEAPON_DAMAGE = "28 - 52 Damage", WEAPON_DPS = 18.2, WEAPON_SPEED = 2.2, EQUIP_1 = "Increases the critical strike chance of your Lightning Bolt spell by 1%."}, quality = 3}
 EverGear.HeldItems[280696] = {id = 280696, name = "Elementalist's Guard", slot = "SecondaryHandSlot", armorType = nil, weaponType = "shield", isTwoHand = nil, classes = nil, ilvl = 40, minLevel = nil, confirmed = true, bindType = nil, source = nil, stats = {ARMOR = 1078, BLOCK_VALUE = 20, INTELLECT = 6, MP5 = 2, STAMINA = 9}, quality = 3}
-EverGear.HeldItems[280805] = {id = 280805, name = "Serrated Raptor Claw", slot = "MainHandSlot", armorType = nil, weaponType = "dagger", isTwoHand = false, classes = nil, ilvl = 33, minLevel = 24, confirmed = true, bindType = nil, source = nil, stats = {AGILITY = 3, ATTACK_POWER = 6, WEAPON_DAMAGE = "19 - 36 Damage", WEAPON_DPS = 17.2, WEAPON_SPEED = 1.6}, quality = 3}
 EverGear.HeldItems[281279] = {id = 281279, name = "Hailgiant's Fists", slot = "HandsSlot", armorType = "Plate", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 60, minLevel = nil, confirmed = true, bindType = "BoP", source = nil, stats = {ARMOR = 356, STAMINA = 14, STRENGTH = 12}, quality = 2}
 EverGear.HeldItems[281291] = {id = 281291, name = "Mathystra Channeling Orb", slot = "SecondaryHandSlot", armorType = nil, weaponType = "offhand", isTwoHand = nil, classes = nil, ilvl = 21, minLevel = nil, confirmed = true, bindType = nil, source = nil, stats = {INTELLECT = 5, STAMINA = 3}, quality = 3}
 EverGear.HeldItems[281292] = {id = 281292, name = "Onu's Patience", slot = "SecondaryHandSlot", armorType = nil, weaponType = "offhand", isTwoHand = nil, classes = nil, ilvl = 21, minLevel = nil, confirmed = true, bindType = nil, source = nil, stats = {SPIRIT = 5, STAMINA = 3}, quality = 3}
@@ -742,18 +725,10 @@ EverGear.HeldItems[286554] = {id = 286554, name = "Warleader's Signet", slot = "
 EverGear.HeldItems[286568] = {id = 286568, name = "Blisterpaw Bones", slot = "NeckSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 45, minLevel = 40, confirmed = true, bindType = "BoE", source = nil, stats = {ATTACK_POWER_VS_HUMANOIDS = 20, ATTACK_POWER_VS_BEASTS = 20}, quality = 2}
 EverGear.HeldItems[286639] = {id = 286639, name = "Ambassador's Bloodrobes", slot = "ChestSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 38, minLevel = 33, confirmed = true, bindType = nil, source = nil, stats = {ARMOR = 55, EQUIP_1 = "Your spells pierce 4 Magical Resistance.", SPIRIT = 6, STAMINA = 12}, quality = 3}
 EverGear.HeldItems[286640] = {id = 286640, name = "High Priestess's Kilt", slot = "LegsSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 59, minLevel = nil, confirmed = false, bindType = nil, source = nil, stats = {}}
-EverGear.HeldItems[286978] = {id = 286978, name = "Rotmender's Garb", slot = "ChestSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 23, minLevel = 18, confirmed = true, bindType = nil, source = nil, stats = {ARMOR = 41, INTELLECT = 10, SPELL_DAMAGE = 4, SPELL_HEALING = 11}, quality = 3}
-EverGear.HeldItems[286982] = {id = 286982, name = "Unearthed Barrier", slot = "SecondaryHandSlot", armorType = nil, weaponType = "shield", isTwoHand = nil, classes = nil, ilvl = 32, minLevel = 27, confirmed = true, bindType = nil, source = nil, stats = {ARMOR = 699, BLOCK_VALUE = 15, EQUIP_1 = "Deals 6 to 38 Nature damage every time you block. Damage is doubled in swamps.", STAMINA = 8}}
-EverGear.HeldItems[286983] = {id = 286983, name = "Ancient Cleaver", slot = "MainHandSlot", armorType = nil, weaponType = "axe", isTwoHand = true, classes = nil, ilvl = 33, minLevel = 28, confirmed = true, bindType = nil, source = nil, stats = {SPELL_POWER = 14, STRENGTH = 12, WEAPON_DAMAGE = "80 - 120 Damage", WEAPON_DPS = 27.8, WEAPON_SPEED = 3.6}}
-EverGear.HeldItems[286984] = {id = 286984, name = "Mark of the Marsh", slot = "NeckSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 28, confirmed = true, bindType = nil, source = nil, stats = {AGILITY = 8, STRENGTH = 5}}
-EverGear.HeldItems[286985] = {id = 286985, name = "Thicket Bindings", slot = "WristSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = 26, confirmed = true, bindType = nil, source = nil, stats = {ARMOR = 46, HIT_CHANCE = 0.5, STAMINA = 8}}
-EverGear.HeldItems[286986] = {id = 286986, name = "Abandoned Leggings", slot = "LegsSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 31, minLevel = 26, confirmed = true, bindType = nil, source = nil, stats = {ARMOR = 42, EQUIP_1 = "Your spells pierce 4 Magical Resistance.", SPIRIT = 6, STAMINA = 8}}
 EverGear.HeldItems[286987] = {id = 286987, name = "Violet Sorcerer's Sandals", slot = "FeetSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 28, confirmed = true, bindType = nil, source = nil, stats = {ARMOR = 34, INTELLECT = 11, STAMINA = 7}}
 EverGear.HeldItems[286988] = {id = 286988, name = "Violet Sorcerer's Leggings", slot = "LegsSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 34, minLevel = 29, confirmed = true, bindType = nil, source = nil, stats = {ARMOR = 44, INTELLECT = 13, SPELL_POWER = 12, SPIRIT = 5}}
 EverGear.HeldItems[286989] = {id = 286989, name = "Violet Sorcerer's Wraps", slot = "HandsSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 28, confirmed = true, bindType = nil, source = nil, stats = {ARMOR = 31, HIT_CHANCE = 1, INTELLECT = 9}}
-EverGear.HeldItems[286990] = {id = 286990, name = "Arcane Remnant Leggings", slot = "LegsSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 28, confirmed = true, bindType = nil, source = nil, stats = {ARCANE_DAMAGE = 17, ARMOR = 95, INTELLECT = 12}}
 EverGear.HeldItems[286991] = {id = 286991, name = "Roused Nature Footwraps", slot = "FeetSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 32, minLevel = 27, confirmed = true, bindType = nil, source = nil, stats = {ARMOR = 73, SPELL_DAMAGE = 4, SPELL_HEALING = 13, SPIRIT = 9, STAMINA = 6}}
-EverGear.HeldItems[286994] = {id = 286994, name = "Tattered Kirin Tor Cloak", slot = "BackSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 28, confirmed = true, bindType = nil, source = nil, stats = {ARMOR = 25, HIT_CHANCE = 0.5, INTELLECT = 8}}
 EverGear.HeldItems[286996] = {id = 286996, name = "City Guard's Tarnished Blade", slot = "MainHandSlot", armorType = nil, weaponType = "sword", isTwoHand = false, classes = nil, ilvl = 34, minLevel = 29, confirmed = true, bindType = nil, source = nil, stats = {SPELL_POWER = 5, STAMINA = 6, WEAPON_DAMAGE = "39 - 73 Damage", WEAPON_DPS = 22.4, WEAPON_SPEED = 2.5}}
 EverGear.HeldItems[287019] = {id = 287019, name = "Defias Enforcer's Mask", slot = "HeadSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 53, minLevel = 48, confirmed = true, bindType = "BoE", source = nil, stats = {ARMOR = 124, ATTACK_POWER = 30, EQUIP_1 = "Reduces chance to be Dodged or Parried by 1.0%.", STAMINA = 20}, _sourceNote = "Capturer noted 'not confirmed' on this item, so its dungeon is unsure"}
 EverGear.HeldItems[287020] = {id = 287020, name = "Defias Enforcer's Chest", slot = "ChestSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 54, minLevel = 49, confirmed = true, bindType = "BoE", source = nil, stats = {AGILITY = 22, ARMOR = 156, STAMINA = 11, STRENGTH = 14}, _sourceNote = "Capturer noted 'not confirmed' on this item, so its dungeon is unsure"}
@@ -762,4 +737,3 @@ EverGear.HeldItems[287028] = {id = 287028, name = "Tormented Cuffs", slot = "Wri
 EverGear.HeldItems[287032] = {id = 287032, name = "Den Champion's Binding", slot = "WaistSlot", armorType = "Plate", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 57, minLevel = 52, confirmed = true, bindType = "BoE", source = nil, stats = {ARMOR = 336, SPELL_POWER = 14, SPIRIT = 8, STRENGTH = 16}, _sourceNote = "No dungeon in the capture notes"}
 EverGear.HeldItems[287034] = {id = 287034, name = "Grove Subjugator's Blade", slot = "MainHandSlot", armorType = nil, weaponType = "dagger", isTwoHand = false, classes = nil, ilvl = 60, minLevel = 55, confirmed = true, bindType = "BoE", source = nil, stats = {CRIT_CHANCE = 1, SPELL_POWER = 68, SPIRIT = -10, STAMINA = 6, WEAPON_DAMAGE = "33 - 62 Damage", WEAPON_DPS = 26.4, WEAPON_SPEED = 1.8}, _sourceNote = "No dungeon in the capture notes"}
 EverGear.HeldItems[287036] = {id = 287036, name = "Satyr's Touch", slot = "RangedSlot", armorType = nil, weaponType = "wand", isTwoHand = nil, classes = nil, ilvl = 59, minLevel = 54, confirmed = true, bindType = "BoE", source = nil, stats = {HIT_CHANCE = 0.5, STAMINA = 9, WEAPON_DAMAGE = "77 - 145 Damage", WEAPON_DPS = 58.4, WEAPON_SPEED = 1.9}, _sourceNote = "No dungeon in the capture notes"}
-EverGear.HeldItems[287068] = {id = 287068, name = "Excavated Dagger", slot = "RangedSlot", armorType = nil, weaponType = "thrown", isTwoHand = nil, classes = nil, ilvl = 33, minLevel = 28, confirmed = true, bindType = nil, source = nil, stats = {AGILITY = 4, STRENGTH = 4, WEAPON_DAMAGE = "24 - 45 Damage", WEAPON_DPS = 19.2, WEAPON_SPEED = 1.8}}
