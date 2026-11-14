@@ -37,4 +37,6 @@ EverGear.Items[274648] = {id = 274648, name = "The Desert Rose", slot = "Trinket
 
 -- Held back (no known source yet, or not confirmed); used by debug mode only.
 EverGear.PendingItems = EverGear.PendingItems or {}
+EverGear.HeldItems = EverGear.HeldItems or {}
 EverGear.PendingItems[9483] = "Flaming Incinerator"
+EverGear.HeldItems[9483] = {id = 9483, name = "Flaming Incinerator", slot = "RangedSlot", armorType = nil, weaponType = "wand", isTwoHand = false, classes = nil, ilvl = 49, minLevel = nil, confirmed = false, bindType = "BoE", source = {type = "dungeonDrop", zone = "Zul'Farrak", boss = "Trash"}, stats = {}}

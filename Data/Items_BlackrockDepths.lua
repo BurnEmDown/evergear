@@ -130,6 +130,10 @@ EverGear.Items[22256] = {id = 22256, name = "Mana Shaping Handwraps", slot = "Ha
 
 -- Held back (no known source yet, or not confirmed); used by debug mode only.
 EverGear.PendingItems = EverGear.PendingItems or {}
+EverGear.HeldItems = EverGear.HeldItems or {}
 EverGear.PendingItems[22317] = "Lefty's Brass Knuckle"
 EverGear.PendingItems[22330] = "Shroud of Arcane Mastery"
 EverGear.PendingItems[22318] = "Malgen's Long Bow"
+EverGear.HeldItems[22317] = {id = 22317, name = "Lefty's Brass Knuckle", slot = "MainHandSlot", armorType = nil, weaponType = "fist weapon", isTwoHand = false, classes = nil, ilvl = 61, minLevel = nil, confirmed = false, bindType = "BoP", source = {type = "dungeonDrop", zone = "Blackrock Depths", boss = "Theldren"}, stats = {STRENGTH = 5, AGILITY = 12, WEAPON_DAMAGE = "42 - 78 Damage", WEAPON_SPEED = 1.5, WEAPON_DPS = 40}}
+EverGear.HeldItems[22330] = {id = 22330, name = "Shroud of Arcane Mastery", slot = "BackSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 61, minLevel = nil, confirmed = false, bindType = "BoP", source = {type = "dungeonDrop", zone = "Blackrock Depths", boss = "Theldren"}, stats = {ARMOR = 43, STAMINA = 10, INTELLECT = 11}}
+EverGear.HeldItems[22318] = {id = 22318, name = "Malgen's Long Bow", slot = "RangedSlot", armorType = nil, weaponType = "bow", isTwoHand = nil, classes = nil, ilvl = 61, minLevel = nil, confirmed = false, bindType = "BoP", source = {type = "dungeonDrop", zone = "Blackrock Depths", boss = "Theldren"}, stats = {STAMINA = 4, WEAPON_DAMAGE = "63 - 118 Damage", WEAPON_SPEED = 2.9, WEAPON_DPS = 31.21}}
