@@ -1742,7 +1742,8 @@ local function SingleSourceSummary(self, item, source)
         return "Quest: " .. questName
     elseif source.type == "dungeonDrop" or source.type == "raidDrop" then
         if source.boss then
-            return (source.zone or "Unknown zone") .. " (" .. source.boss .. ")"
+            -- source.rare: the boss is a rare spawn, so don't count on it.
+            return (source.zone or "Unknown zone") .. " (" .. source.boss .. (source.rare and ", rare spawn" or "") .. ")"
         end
         return source.zone or "Unknown zone"
     elseif source.type == "vendor" then
