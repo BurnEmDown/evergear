@@ -56,14 +56,24 @@ local offset = 0
 -- check results.
 local mode = "items"
 
--- Items that have no shipped data yet (unsourced / unconfirmed stubs, in
--- EverGear.PendingItems as id -> name) are listed too, as bare entries, so
--- they can be found and checked here. Built once; the data is static.
+-- Held-back items (no source yet, or not confirmed) are in EverGear.HeldItems
+-- with their full data, and in EverGear.PendingItems as id -> name. They are
+-- never in EverGear.Items, so suggestions don't see them, but they are listed
+-- here (flagged unconfirmed) so they can be found and checked. Built once; the
+-- data is static.
 local itemsWithPending
 local function ItemsWithPending()
     if itemsWithPending then return itemsWithPending end
     itemsWithPending = {}
     for id, item in pairs(EverGear.Items) do itemsWithPending[id] = item end
+    for id, held in pairs(EverGear.HeldItems or {}) do
+        if not itemsWithPending[id] then
+            local copy = {}
+            for k, v in pairs(held) do copy[k] = v end
+            copy.confirmed = false
+            itemsWithPending[id] = copy
+        end
+    end
     for id, name in pairs(EverGear.PendingItems or {}) do
         if not itemsWithPending[id] then
             itemsWithPending[id] = { id = id, name = name, confirmed = false }
@@ -100,7 +110,7 @@ end
 -- rarity filter doesn't change as the client's item cache fills in; the cache
 -- only for items the data doesn't cover yet.
 local function Quality(itemId)
-    local item = EverGear.Items[itemId]
+    local item = EverGear.Items[itemId] or (EverGear.HeldItems and EverGear.HeldItems[itemId])
     if item and item.quality then return item.quality end
     local _, _, quality = H.SafeGetItemInfo(itemId)
     return quality

@@ -104,67 +104,8 @@ end
 -- "Increases damage done by Nature spells" etc. share names with the school list above;
 -- NATURE_DAMAGE is intentionally included.
 
--- Parses the text after "Equip: " into a list of { key, value } stats, or nil if it's not a
--- pattern we know -- those stay as raw EQUIP_n text, which is how the database stores them
--- too. Matching is case-insensitive ("Restores 2 Mana" / "Restores 2 mana").
-local function ParseEquipText(text)
-    local t = text:lower()
-    local v, w
-    v, w = t:match("^increases healing done by up to (%d+) and damage done by up to (%d+) for all magical spells and effects%.?$")
-    if v then return { { "SPELL_HEALING", tonumber(v) }, { "SPELL_DAMAGE", tonumber(w) } } end
-    v = t:match("^increases damage done by magical spells and effects by up to (%d+)%.?$")
-    if v then return { { "SPELL_DAMAGE", tonumber(v) } } end
-    v = t:match("^increases damage and healing done by magical spells and effects by up to (%d+)%.?$")
-    if v then return { { "SPELL_POWER", tonumber(v) } } end
-    v = t:match("^increases healing done by spells and effects by up to (%d+)%.?$")
-        or t:match("^increases healing done by magical spells and effects by up to (%d+)%.?$")
-    if v then return { { "SPELL_HEALING", tonumber(v) } } end
-    v = t:match("^increases attack power by (%d+)%.?$") or t:match("^%+(%d+) attack power%.?$")
-    if v then return { { "ATTACK_POWER", tonumber(v) } } end
-    v, w = t:match("^%+(%d+) attack power against (%a+)%.?$")
-    if v then return { { "ATTACK_POWER_VS_" .. w:upper(), tonumber(v) } } end
-    v = t:match("^increases ranged attack power by (%d+)%.?$") or t:match("^%+(%d+) ranged attack power%.?$")
-    if v then return { { "RANGED_ATTACK_POWER", tonumber(v) } } end
-    v = t:match("^restores (%d+) mana per 5 sec%.?$")
-    if v then return { { "MP5", tonumber(v) } } end
-    -- Darkspear Islands trinkets: a base value plus more "in Forest and Grassland
-    -- areas". The database keeps the base value, which is what counts anywhere else.
-    v = t:match("^restores (%d+) mana per 5 sec%. restores an additional %d+ mana per 5 sec in .+$")
-    if v then return { { "MP5", tonumber(v) } } end
-    v = t:match("^increases all resistances by (%d+)%. gain an additional %d+ to all resistances in .+$")
-    if v then
-        local list = {}
-        for _, school in ipairs({ "FIRE", "FROST", "NATURE", "SHADOW", "ARCANE" }) do
-            list[#list + 1] = { school .. "_RESISTANCE", tonumber(v) }
-        end
-        return list
-    end
-    v = t:match("^restores (%d+) health per 5 sec%.?$")
-    if v then return { { "HP5", tonumber(v) } } end
-    v = t:match("^increased defense %+(%d+)%.?$")
-    if v then return { { "DEFENSE", tonumber(v) } } end
-    v = t:match("^increases the block value of your shield by (%d+)%.?$")
-    if v then return { { "BLOCK_VALUE", tonumber(v) } } end
-    v = t:match("^improves your chance to hit by ([%d.]+)%%%.?$")
-    if v then return { { "HIT_CHANCE", tonumber(v) } } end
-    v = t:match("^improves your chance to get a critical strike by ([%d.]+)%%%.?$")
-    if v then return { { "CRIT_CHANCE", tonumber(v) } } end
-    v = t:match("^increases your chance to dodge an attack by ([%d.]+)%%%.?$")
-    if v then return { { "DODGE_CHANCE", tonumber(v) } } end
-    v = t:match("^increases your chance to parry an attack by ([%d.]+)%%%.?$")
-    if v then return { { "PARRY_CHANCE", tonumber(v) } } end
-    v = t:match("^increases your chance to block attacks with a shield by ([%d.]+)%%%.?$")
-    if v then return { { "BLOCK_CHANCE", tonumber(v) } } end
-    v = t:match("^improves your chance to hit with spells by ([%d.]+)%%%.?$")
-    if v then return { { "SPELL_HIT_CHANCE", tonumber(v) } } end
-    v = t:match("^improves your chance to get a critical strike with spells by ([%d.]+)%%%.?$")
-    if v then return { { "SPELL_CRIT_CHANCE", tonumber(v) } } end
-    for _, school in ipairs(SCHOOLS) do
-        v = t:match("^increases damage done by " .. school:lower() .. " spells and effects by up to (%d+)%.?$")
-        if v then return { { SCHOOL_UPPER[school] .. "_DAMAGE", tonumber(v) } } end
-    end
-    return nil
-end
+-- Parsing "Equip:" text into stats lives in Core/SetBonuses.lua (set bonuses use it too).
+local ParseEquipText = EverGear.ParseEquipText
 
 local function StripColor(text)
     return (text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
@@ -175,7 +116,8 @@ end
 --     Krol'dok Warplate Helmet          (the pieces, indented)
 --     ...
 --   (2) Set: +100 Armor.               (the bonuses, by number of pieces worn)
--- Returns { name, size, pieces = { names }, bonuses = { { pieces, text }, ... } }, or
+-- Returns { name, size, pieces = { names }, bonuses = { { pieces, text }, ... } } (plus
+-- completeBonuses = { text, ... } when the set was complete and the counts are hidden), or
 -- nil for an item without a set. The pieces are listed by name only, not by id.
 local function ParseSet(lines)
     local set
@@ -192,7 +134,18 @@ local function ParseSet(lines)
             end
         else
             local count, text = line:match("^%((%d+)%) Set: (.+)$")
-            if count then set.bonuses[#set.bonuses + 1] = { pieces = tonumber(count), text = text } end
+            if count then
+                set.bonuses[#set.bonuses + 1] = { pieces = tonumber(count), text = text }
+            else
+                -- With every piece worn (5/5) the game drops the "(n)" counts, so the number
+                -- of pieces each bonus needs isn't known: keep the texts apart in the order the
+                -- game lists them, instead of leaving the set looking like it has no bonuses.
+                local active = line:match("^Set: (.+)$")
+                if active then
+                    set.completeBonuses = set.completeBonuses or {}
+                    set.completeBonuses[#set.completeBonuses + 1] = active
+                end
+            end
         end
     end
     return set

@@ -9,6 +9,7 @@
 ## SavedVariables: EverGearDB
 
 Core\Constants.lua
+Core\SetBonuses.lua
 Core\Database.lua
 Core\Character.lua
 Core\Equipment.lua
@@ -128,3 +129,4 @@ Data\Items_ReputationVendors.lua
 Data\Items_TownVendors.lua
 Data\Cosmetics.lua
 Data\Enchants.lua
+Data\ItemSets.lua
