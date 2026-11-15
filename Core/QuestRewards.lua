@@ -154,6 +154,18 @@ local function RecordTurnIn(rewards, unread)
     end
     Records()[QuestKey(questId, title, zone)] = record
 
+    -- Always say that the turn-in was seen, so it's clear the feature is working.
+    local known = 0
+    for _, item in pairs(record.items) do
+        if item.inAddon then known = known + 1 end
+    end
+    local message = string.format("|cff33ff99EverGear|r debug: recorded \"%s\" (%s) -- %d reward item(s), %d already in the addon.",
+        title or "?", zone or "?", #rewards, known)
+    if unread > 0 then
+        message = message .. string.format(" %d reward(s) couldn't be read, hover them in the window.", unread)
+    end
+    print(message)
+
     for _, reward in ipairs(rewards) do
         CaptureItem(reward, quest, record)
     end
