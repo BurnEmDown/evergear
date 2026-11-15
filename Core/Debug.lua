@@ -18,6 +18,7 @@
 -- Commands: /eg debug [on|off]   toggle debug mode
 --           /eg debug export     open the JSON box with everything captured
 --           /eg debug clear      forget all captures
+--           /eg debug scanlog    capture the rewards of every quest in the quest log
 --           /eg debug quests     open the JSON box with every quest turn-in recorded
 --
 -- Items with a random suffix ("of the Monkey", ...) are skipped: their tooltip stats
@@ -1090,6 +1091,9 @@ function EverGear:HandleDebugCommand(arg)
         exportEditBox:SetFocus()
         exportEditBox:HighlightText()
         return
+    elseif arg == "scanlog" then
+        EverGear:ScanQuestLog()
+        return
     elseif arg == "quests" then
         if not debugFrame then BuildWindow() end
         local text, count = EverGear:BuildQuestRewardsJSON()
@@ -1128,6 +1132,7 @@ function EverGear:HandleDebugCommand(arg)
         print("|cff33ff99EverGear|r debug mode |cff00ff00ON|r -- hover an item that's missing or wrong in the addon to flag it.")
         print("  /eg debug export  -- show captured items as JSON     /eg debug clear  -- forget captures")
         print("  /eg debug items  -- browse every item in EverGear's data")
+        print("  /eg debug scanlog  -- capture the rewards of every quest in your quest log")
         print("  Turning in a quest captures its reward items automatically.  /eg debug quests  -- every turn-in recorded, as JSON")
         print("  /eg debug unconfirmed  -- what the game says about EverGear's unconfirmed items, as JSON")
     else
