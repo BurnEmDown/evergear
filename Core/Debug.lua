@@ -12,9 +12,13 @@
 --   * Every capture is also kept in EverGearDB.debugCaptures, which the game writes to
 --     WTF\Account\<account>\SavedVariables\EverGear.lua on /reload or logout.
 --
+-- Quest rewards are captured on their own: opening a quest's reward window (QuestRewards.lua)
+-- captures every reward item the addon doesn't have or has wrong, with the quest it came from.
+--
 -- Commands: /eg debug [on|off]   toggle debug mode
 --           /eg debug export     open the JSON box with everything captured
 --           /eg debug clear      forget all captures
+--           /eg debug quests     open the JSON box with every quest turn-in recorded
 --
 -- Items with a random suffix ("of the Monkey", ...) are skipped: their tooltip stats
 -- belong to that one roll, not to the base item the database describes. They're spotted
@@ -554,6 +558,7 @@ function EverGear:BuildCaptureJSON()
         record._notes = (entry.notes and #entry.notes > 0) and entry.notes or nil
         record._addonStats = entry.addonStats
         record._capturedAtLevel = entry.level
+        record._quest = entry.quest
         out[tostring(id)] = record
     end
     -- Enchants that differ: what EverGear has next to the game's own text.
@@ -939,6 +944,53 @@ function EverGear:CheckItemAgainstGame(itemId)
     return status
 end
 
+-- ===== Quest rewards =====
+-- Used by QuestRewards.lua, which reads a quest's reward window when it's turned in.
+-- Like CheckItemAgainstGame, but also takes an item EverGear has never heard of (that
+-- is the point: a reward Forever added to a quest). quest = { title, id, level,
+-- playerLevel, zone, subzone, npc, faction }, saved with the capture as "_quest" so
+-- the backend knows which quest to file the item under.
+-- Returns "missing" / "pending" / "differs" when something was captured, "ok" when the
+-- addon already has the item exactly as the game shows it (plus the quest the addon
+-- files it under), or nil plus a reason: "uncached" (try again later), "suffix",
+-- "lowQuality" or "notEquippable" (not gear EverGear tracks).
+function EverGear:CaptureQuestRewardItem(itemId, link, quest)
+    local dbItem = self:GetItem(itemId)
+    local pending = not dbItem and self.PendingItems and self.PendingItems[itemId]
+    local record, reason, notes = self:BuildLiveItemRecord(link or ("item:" .. itemId), true)
+    if not record then return nil, reason or "notEquippable" end
+
+    local existing = Captures()[itemId]
+    local sourceNote = existing and existing.sourceNote
+    if not sourceNote or sourceNote == "" then
+        sourceNote = string.format('quest "%s" in %s', quest.title or "?", quest.zone or "?")
+    end
+
+    local status, diffs, addonStats
+    if not dbItem then
+        status = pending and "pending" or "missing"
+    else
+        diffs = self:CompareLiveToDatabase(record, dbItem)
+        if ShouldRereadForEffects(itemId, diffs) then return nil, "uncached" end
+        status = #diffs > 0 and "differs" or "ok"
+        addonStats = dbItem.dataStats or dbItem.stats
+    end
+
+    if status == "ok" then
+        EverGearDB.debugChecked = EverGearDB.debugChecked or {}
+        EverGearDB.debugChecked[itemId] = "ok"
+        -- An earlier capture of this item stays as it is, but learns the quest.
+        if existing and not existing.quest then existing.quest = quest end
+        return "ok"
+    end
+    StoreCapture(record, status, diffs, notes, addonStats, sourceNote)
+    Captures()[itemId].quest = quest
+    EverGearDB.debugChecked = EverGearDB.debugChecked or {}
+    EverGearDB.debugChecked[itemId] = "differs"
+    RefreshCaptureUI()
+    return status
+end
+
 -- ===== Enchant checks =====
 -- For the item browser's Enhancements section: compares an enchant's numbers
 -- in EverGear's data (stats, armor, weapon damage, health / mana) with the
@@ -1038,6 +1090,24 @@ function EverGear:HandleDebugCommand(arg)
         exportEditBox:SetFocus()
         exportEditBox:HighlightText()
         return
+    elseif arg == "quests" then
+        if not debugFrame then BuildWindow() end
+        local text, count = EverGear:BuildQuestRewardsJSON()
+        if count == 0 then
+            print("|cff33ff99EverGear|r debug: no quest turn-ins recorded yet.")
+            return
+        end
+        print("|cff33ff99EverGear|r debug: " .. count .. " quest turn-ins recorded (/eg debug quests clear to forget them).")
+        currentExportText = text
+        exportEditBox:SetText(text)
+        exportPopup:Show()
+        exportEditBox:SetFocus()
+        exportEditBox:HighlightText()
+        return
+    elseif arg == "quests clear" then
+        EverGearDB.questRewards = {}
+        print("|cff33ff99EverGear|r debug: recorded quest turn-ins cleared.")
+        return
     elseif arg == "clear" then
         EverGearDB.debugCaptures = {}
         EverGearDB.debugEnchantCaptures = {}
@@ -1058,6 +1128,7 @@ function EverGear:HandleDebugCommand(arg)
         print("|cff33ff99EverGear|r debug mode |cff00ff00ON|r -- hover an item that's missing or wrong in the addon to flag it.")
         print("  /eg debug export  -- show captured items as JSON     /eg debug clear  -- forget captures")
         print("  /eg debug items  -- browse every item in EverGear's data")
+        print("  Turning in a quest captures its reward items automatically.  /eg debug quests  -- every turn-in recorded, as JSON")
         print("  /eg debug unconfirmed  -- what the game says about EverGear's unconfirmed items, as JSON")
     else
         print("|cff33ff99EverGear|r debug mode |cffff4040OFF|r.")
