@@ -241,6 +241,9 @@ EverGear.PendingItems[280696] = "Elementalist's Guard"
 EverGear.PendingItems[281279] = "Hailgiant's Fists"
 EverGear.PendingItems[281291] = "Mathystra Channeling Orb"
 EverGear.PendingItems[281292] = "Onu's Patience"
+EverGear.PendingItems[281298] = "Ti'ik's Tattered Trousers"
+EverGear.PendingItems[281299] = "Profane Ritual Robes"
+EverGear.PendingItems[281301] = "Sacrificial Shackles"
 EverGear.PendingItems[281628] = "Blade of Bandarion"
 EverGear.PendingItems[281636] = "Museum Keeper's Chain"
 EverGear.PendingItems[281637] = "Antique Bulwark"
@@ -561,6 +564,9 @@ EverGear.HeldItems[280696] = {id = 280696, name = "Elementalist's Guard", slot =
 EverGear.HeldItems[281279] = {id = 281279, name = "Hailgiant's Fists", slot = "HandsSlot", armorType = "Plate", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 60, minLevel = nil, confirmed = true, bindType = "BoP", source = nil, stats = {ARMOR = 356, STAMINA = 14, STRENGTH = 12}, quality = 2}
 EverGear.HeldItems[281291] = {id = 281291, name = "Mathystra Channeling Orb", slot = "SecondaryHandSlot", armorType = nil, weaponType = "offhand", isTwoHand = nil, classes = nil, ilvl = 21, minLevel = nil, confirmed = true, bindType = nil, source = nil, stats = {INTELLECT = 5, STAMINA = 3}, quality = 3}
 EverGear.HeldItems[281292] = {id = 281292, name = "Onu's Patience", slot = "SecondaryHandSlot", armorType = nil, weaponType = "offhand", isTwoHand = nil, classes = nil, ilvl = 21, minLevel = nil, confirmed = true, bindType = nil, source = nil, stats = {SPIRIT = 5, STAMINA = 3}, quality = 3}
+EverGear.HeldItems[281298] = {id = 281298, name = "Ti'ik's Tattered Trousers", slot = "LegsSlot", armorType = "Cloth", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 49, minLevel = nil, confirmed = true, bindType = "BoP", source = nil, stats = {ARMOR = 56, INTELLECT = 16, SPIRIT = 11}, _sourceNote = "quest reward from Witch Doctor Ti'ik in The Hinterlands (Horde); quest name and level unknown, so held back", quality = 2}
+EverGear.HeldItems[281299] = {id = 281299, name = "Profane Ritual Robes", slot = "ChestSlot", armorType = "Leather", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 49, minLevel = nil, confirmed = true, bindType = "BoP", source = nil, stats = {AGILITY = 17, ARMOR = 131, STAMINA = 9}, _sourceNote = "quest reward from Witch Doctor Ti'ik in The Hinterlands (Horde); quest name and level unknown, so held back", quality = 2}
+EverGear.HeldItems[281301] = {id = 281301, name = "Sacrificial Shackles", slot = "WristSlot", armorType = "Plate", weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 49, minLevel = nil, confirmed = true, bindType = "BoP", source = nil, stats = {ARMOR = 206, INTELLECT = 9, STAMINA = 7}, _sourceNote = "quest reward from Witch Doctor Ti'ik in The Hinterlands (Horde); quest name and level unknown, so held back", quality = 2}
 EverGear.HeldItems[281628] = {id = 281628, name = "Blade of Bandarion", slot = "MainHandSlot", armorType = nil, weaponType = "sword", isTwoHand = false, classes = {"PALADIN"}, ilvl = 52, minLevel = nil, confirmed = true, bindType = nil, source = nil, stats = {STAMINA = 11, STRENGTH = 5, WEAPON_DAMAGE = "48 - 90 Damage", WEAPON_DPS = 34.5, WEAPON_SPEED = 2}, quality = 3}
 EverGear.HeldItems[281636] = {id = 281636, name = "Museum Keeper's Chain", slot = "NeckSlot", armorType = nil, weaponType = nil, isTwoHand = nil, classes = nil, ilvl = 58, minLevel = nil, confirmed = true, bindType = nil, source = nil, stats = {INTELLECT = 10, SPELL_POWER = 11, STAMINA = 10}, quality = 3}
 EverGear.HeldItems[281637] = {id = 281637, name = "Antique Bulwark", slot = "SecondaryHandSlot", armorType = nil, weaponType = "shield", isTwoHand = nil, classes = nil, ilvl = 58, minLevel = nil, confirmed = true, bindType = nil, source = nil, stats = {ARMOR = 1994, BLOCK_VALUE = 36, DEFENSE = 8, STAMINA = 13}, quality = 3}
