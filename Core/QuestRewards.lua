@@ -240,47 +240,132 @@ local function ReadLogRewards()
     return list, unread
 end
 
-local function ScanOnce(quiet)
-    local needed = { "GetNumQuestLogEntries", "GetQuestLogTitle", "SelectQuestLogEntry",
-        "GetNumQuestLogChoices", "GetNumQuestLogRewards", "GetQuestLogItemLink" }
-    for _, name in ipairs(needed) do
-        if not _G[name] then return nil, "this client has no " .. name end
+-- The quest log has two APIs: the classic one (GetQuestLogTitle, SelectQuestLogEntry, ...) and
+-- the newer C_QuestLog one that WoW Forever's client is expected to use. These wrappers use
+-- whichever the client has.
+local function LogEntryCount()
+    if C_QuestLog and C_QuestLog.GetNumQuestLogEntries then return (C_QuestLog.GetNumQuestLogEntries()) end
+    if GetNumQuestLogEntries then return (GetNumQuestLogEntries()) end
+end
+
+-- { title, level, isHeader, isCollapsed, questId } for log entry i, or nil.
+local function LogEntry(i)
+    if C_QuestLog and C_QuestLog.GetInfo then
+        local info = C_QuestLog.GetInfo(i)
+        if not info then return nil end
+        return { title = info.title, level = info.level, isHeader = info.isHeader,
+                 isCollapsed = info.isCollapsed, questId = info.questID }
     end
-    local selected = GetQuestLogSelection and GetQuestLogSelection() or 0
-    local zone, quests, withItems, unreadTotal, collapsed = nil, 0, 0, 0, 0
-    for i = 1, (GetNumQuestLogEntries()) do
+    if GetQuestLogTitle then
         local title, level, _, isHeader, isCollapsed, _, _, questId = GetQuestLogTitle(i)
-        if isHeader then
-            zone = title
-            if isCollapsed then collapsed = collapsed + 1 end
-        elseif title then
-            SelectQuestLogEntry(i)
-            local rewards, unread = ReadLogRewards()
+        if not title then return nil end
+        return { title = title, level = level, isHeader = isHeader, isCollapsed = isCollapsed, questId = questId }
+    end
+end
+
+-- What is selected in the quest log now: a quest id (newer API) or an index (classic).
+local function LogSelection()
+    if C_QuestLog and C_QuestLog.GetSelectedQuest then return C_QuestLog.GetSelectedQuest() end
+    if GetQuestLogSelection then return GetQuestLogSelection() end
+end
+
+local function SelectLogEntry(i, entry)
+    if C_QuestLog and C_QuestLog.SetSelectedQuest and entry.questId then
+        C_QuestLog.SetSelectedQuest(entry.questId)
+    elseif SelectQuestLogEntry then
+        SelectQuestLogEntry(i)
+    end
+end
+
+local function RestoreSelection(previous)
+    if not previous or previous == 0 then return end
+    if C_QuestLog and C_QuestLog.SetSelectedQuest then
+        C_QuestLog.SetSelectedQuest(previous)
+    elseif SelectQuestLogEntry then
+        SelectQuestLogEntry(previous)
+    end
+end
+
+local function ReadLogRewards(questId)
+    local list, unread = {}, 0
+    local function scan(kind, count)
+        for i = 1, count or 0 do
+            local link = GetQuestLogItemLink and GetQuestLogItemLink(kind, i, questId)
+            local name
+            if kind == "reward" and GetQuestLogRewardInfo then
+                name = GetQuestLogRewardInfo(i, questId)
+            elseif kind == "choice" and GetQuestLogChoiceInfo then
+                name = GetQuestLogChoiceInfo(i, questId)
+            end
+            local id = IdFromLink(link)
+            if id then
+                list[#list + 1] = { id = id, link = link, name = name, kind = kind }
+            else
+                unread = unread + 1
+            end
+        end
+    end
+    scan("choice", GetNumQuestLogChoices and GetNumQuestLogChoices(questId))
+    scan("reward", GetNumQuestLogRewards and GetNumQuestLogRewards(questId))
+    return list, unread
+end
+
+-- Names of the calls the scan needs that this client doesn't have.
+local function MissingForScan()
+    local missing = {}
+    local function need(label, ok) if not ok then missing[#missing + 1] = label end end
+    need("a quest log entry count (GetNumQuestLogEntries or C_QuestLog.GetNumQuestLogEntries)",
+        LogEntryCount ~= nil and ((C_QuestLog and C_QuestLog.GetNumQuestLogEntries) or GetNumQuestLogEntries))
+    need("a way to read log entries (GetQuestLogTitle or C_QuestLog.GetInfo)",
+        (C_QuestLog and C_QuestLog.GetInfo) or GetQuestLogTitle)
+    need("a way to select a log entry (SelectQuestLogEntry or C_QuestLog.SetSelectedQuest)",
+        (C_QuestLog and C_QuestLog.SetSelectedQuest) or SelectQuestLogEntry)
+    need("GetNumQuestLogChoices", GetNumQuestLogChoices)
+    need("GetNumQuestLogRewards", GetNumQuestLogRewards)
+    need("GetQuestLogItemLink", GetQuestLogItemLink)
+    return missing
+end
+
+local function ScanOnce()
+    local selected = LogSelection()
+    local zone, quests, withItems, unreadTotal, collapsed = nil, 0, 0, 0, 0
+    for i = 1, (LogEntryCount() or 0) do
+        local entry = LogEntry(i)
+        if entry and entry.isHeader then
+            zone = entry.title
+            if entry.isCollapsed then collapsed = collapsed + 1 end
+        elseif entry and entry.title then
+            SelectLogEntry(i, entry)
+            local questId = (entry.questId and entry.questId > 0) and entry.questId or nil
+            local rewards, unread = ReadLogRewards(questId)
             quests = quests + 1
             unreadTotal = unreadTotal + unread
             if #rewards > 0 then withItems = withItems + 1 end
             Record({
-                title = title,
-                id = (questId and questId > 0) and questId or nil,
-                level = level,
+                title = entry.title,
+                id = questId,
+                level = entry.level,
                 playerLevel = UnitLevel("player"),
                 zone = zone,
                 faction = UnitFactionGroup and UnitFactionGroup("player") or nil,
             }, rewards, unread, "log", true)
         end
     end
-    if selected and selected > 0 then SelectQuestLogEntry(selected) end
+    RestoreSelection(selected)
     return { quests = quests, withItems = withItems, unread = unreadTotal, collapsed = collapsed }
 end
 
 -- /eg debug scanlog. Runs twice, the second time after a moment, because item links
 -- that weren't loaded the first time usually are by then.
 function EverGear:ScanQuestLog()
-    local result, problem = ScanOnce()
-    if not result then
-        print("|cff33ff99EverGear|r debug: can't scan the quest log -- " .. problem .. ".")
+    local missing = MissingForScan()
+    if #missing > 0 then
+        print("|cff33ff99EverGear|r debug: can't scan the quest log -- this client has no:")
+        for _, label in ipairs(missing) do print("  " .. label) end
+        print("  Run /eg debug api and send me its output.")
         return
     end
+    local result = ScanOnce()
     print(string.format("|cff33ff99EverGear|r debug: scanned %d quests in your log, %d with item rewards.",
         result.quests, result.withItems))
     if result.collapsed > 0 then
@@ -295,4 +380,28 @@ function EverGear:ScanQuestLog()
             end
         end)
     end
+end
+
+-- /eg debug api: which of the game calls EverGear's quest features use this client has.
+function EverGear:PrintQuestApi()
+    local names = {
+        "GetNumQuestLogEntries", "GetQuestLogTitle", "SelectQuestLogEntry", "GetQuestLogSelection",
+        "GetNumQuestLogChoices", "GetNumQuestLogRewards", "GetQuestLogItemLink",
+        "GetQuestLogChoiceInfo", "GetQuestLogRewardInfo",
+        "GetNumQuestChoices", "GetNumQuestRewards", "GetQuestItemLink", "GetQuestItemInfo",
+        "GetQuestID", "GetTitleText",
+    }
+    local cNames = { "GetNumQuestLogEntries", "GetInfo", "GetSelectedQuest", "SetSelectedQuest",
+        "GetLogIndexForQuestID", "GetQuestInfo", "IsQuestFlaggedCompleted" }
+    local have, missing = {}, {}
+    for _, name in ipairs(names) do
+        if _G[name] then have[#have + 1] = name else missing[#missing + 1] = name end
+    end
+    for _, name in ipairs(cNames) do
+        local label = "C_QuestLog." .. name
+        if C_QuestLog and C_QuestLog[name] then have[#have + 1] = label else missing[#missing + 1] = label end
+    end
+    print("|cff33ff99EverGear|r debug: quest API check")
+    print("  available: " .. (#have > 0 and table.concat(have, ", ") or "none"))
+    print("  missing: " .. (#missing > 0 and table.concat(missing, ", ") or "none"))
 end

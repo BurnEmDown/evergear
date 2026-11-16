@@ -18,6 +18,7 @@
 -- Commands: /eg debug [on|off]   toggle debug mode
 --           /eg debug export     open the JSON box with everything captured
 --           /eg debug clear      forget all captures
+--           /eg debug api        which quest-related game calls this client has
 --           /eg debug scanlog    capture the rewards of every quest in the quest log
 --           /eg debug quests     open the JSON box with every quest turn-in recorded
 --
@@ -1090,6 +1091,9 @@ function EverGear:HandleDebugCommand(arg)
         exportPopup:Show()
         exportEditBox:SetFocus()
         exportEditBox:HighlightText()
+        return
+    elseif arg == "api" then
+        EverGear:PrintQuestApi()
         return
     elseif arg == "scanlog" then
         EverGear:ScanQuestLog()
