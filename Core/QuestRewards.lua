@@ -163,12 +163,13 @@ local function Record(quest, rewards, unread, source, quiet)
     end
 end
 
-local function RecordTurnIn(rewards, unread)
+-- The quest the open quest window (turn-in or quest description) is about.
+local function WindowQuestMeta()
     local title = GetTitleText and GetTitleText() or nil
     local questId = GetQuestID and GetQuestID() or nil
     if questId == 0 then questId = nil end
     local zone = (GetRealZoneText and GetRealZoneText()) or (GetZoneText and GetZoneText()) or nil
-    Record({
+    return {
         title = title,
         id = questId,
         level = QuestLogLevel(questId, title),
@@ -177,7 +178,11 @@ local function RecordTurnIn(rewards, unread)
         subzone = GetSubZoneText and GetSubZoneText() or nil,
         npc = (UnitName and (UnitName("questnpc") or UnitName("npc"))) or nil,
         faction = UnitFactionGroup and UnitFactionGroup("player") or nil,
-    }, rewards, unread, "turn-in")
+    }
+end
+
+local function RecordTurnIn(rewards, unread)
+    Record(WindowQuestMeta(), rewards, unread, "turn-in")
 end
 
 -- Reads the window now, and again a few times while some reward links haven't
@@ -404,4 +409,78 @@ function EverGear:PrintQuestApi()
     print("|cff33ff99EverGear|r debug: quest API check")
     print("  available: " .. (#have > 0 and table.concat(have, ", ") or "none"))
     print("  missing: " .. (#missing > 0 and table.concat(missing, ", ") or "none"))
+end
+
+-- ===== Hovering a quest reward =====
+-- Hovering a reward item in the quest log (or in a quest window) captures it, with the
+-- quest as its source, without the debug popup. Only an item shown on a quest's own
+-- reward button counts: the button must be a "choice" or "reward" button AND the link
+-- the game reports for that button must be the item under the cursor. An item hovered
+-- anywhere else (a bag, a vendor, chat) never matches, whatever quest is selected.
+
+local function IsInside(frame, ancestor)
+    for _ = 1, 12 do
+        if not frame then return false end
+        if frame == ancestor then return true end
+        frame = frame.GetParent and frame:GetParent() or nil
+    end
+    return false
+end
+
+-- Meta for the quest selected in the quest log, or nil.
+local function SelectedLogQuest()
+    local selected = LogSelection()
+    if not selected or selected == 0 then return nil end
+    local byId = C_QuestLog and C_QuestLog.GetSelectedQuest ~= nil
+    local zone
+    for i = 1, (LogEntryCount() or 0) do
+        local entry = LogEntry(i)
+        if entry and entry.isHeader then
+            zone = entry.title
+        elseif entry and ((byId and entry.questId == selected) or (not byId and i == selected)) then
+            return {
+                title = entry.title,
+                id = (entry.questId and entry.questId > 0) and entry.questId or nil,
+                level = entry.level,
+                playerLevel = UnitLevel("player"),
+                zone = zone,
+                faction = UnitFactionGroup and UnitFactionGroup("player") or nil,
+            }
+        end
+    end
+    return nil
+end
+
+-- The quest whose reward button `owner` is, if the item shown is the one on that button.
+local function QuestForHoveredReward(owner, itemId)
+    if type(owner) ~= "table" then return nil end
+    local kind = owner.type
+    if kind ~= "choice" and kind ~= "reward" then return nil end
+    local index = owner.GetID and owner:GetID()
+    if not index or index < 1 then return nil end
+
+    if QuestFrame and IsInside(owner, QuestFrame) then
+        local link = GetQuestItemLink and GetQuestItemLink(kind, index)
+        if IdFromLink(link) ~= itemId then return nil end
+        return WindowQuestMeta()
+    end
+
+    local quest = SelectedLogQuest()
+    if not quest then return nil end
+    local link = GetQuestLogItemLink and GetQuestLogItemLink(kind, index, quest.id)
+    if IdFromLink(link) ~= itemId then return nil end
+    return quest
+end
+
+-- Called by the hover handler in Debug.lua. Returns true when the hovered item is a quest
+-- reward (it is then captured here and the usual popup is skipped), false otherwise.
+function EverGear:CaptureHoveredQuestReward(tooltip, link)
+    local itemId = IdFromLink(link)
+    if not itemId or not tooltip or not tooltip.GetOwner then return false end
+    local quest = QuestForHoveredReward(tooltip:GetOwner(), itemId)
+    if not quest then return false end
+    local name = link:match("%[(.-)%]")
+    local record = { items = { [tostring(itemId)] = {} } }
+    CaptureItem({ id = itemId, link = link, name = name }, quest, record)
+    return true
 end

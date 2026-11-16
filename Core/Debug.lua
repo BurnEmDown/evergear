@@ -12,7 +12,7 @@
 --   * Every capture is also kept in EverGearDB.debugCaptures, which the game writes to
 --     WTF\Account\<account>\SavedVariables\EverGear.lua on /reload or logout.
 --
--- Quest rewards are captured on their own: opening a quest's reward window (QuestRewards.lua)
+-- Quest rewards are captured on their own (hovering one in the quest log counts too): opening a quest's reward window (QuestRewards.lua)
 -- captures every reward item the addon doesn't have or has wrong, with the quest it came from.
 --
 -- Commands: /eg debug [on|off]   toggle debug mode
@@ -886,6 +886,9 @@ local function OnItemTooltip(tooltip)
     local _, link = tooltip:GetItem()
     if not link or link == lastLink then return end
     lastLink = link
+    -- A quest reward on a quest's own reward button is captured with its quest as the source
+    -- (QuestRewards.lua) and needs no popup. Any other item takes the normal path below.
+    if EverGear.CaptureHoveredQuestReward and EverGear:CaptureHoveredQuestReward(tooltip, link) then return end
     CheckHoveredLink(link, tooltip)
 end
 
