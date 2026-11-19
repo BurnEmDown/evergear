@@ -9,6 +9,7 @@
 ## SavedVariables: EverGearDB
 
 Core\Constants.lua
+Core\SetBonuses.lua
 Core\Database.lua
 Core\Character.lua
 Core\Equipment.lua
@@ -23,6 +24,7 @@ Core\Filters.lua
 Core\WishlistUI.lua
 Core\ZoneUpgrades.lua
 Core\Debug.lua
+Core\QuestRewards.lua
 Core\LiveItems.lua
 Core\ItemBrowser.lua
 Core\MinimapButton.lua
@@ -128,3 +130,4 @@ Data\Items_ReputationVendors.lua
 Data\Items_TownVendors.lua
 Data\Cosmetics.lua
 Data\Enchants.lua
+Data\ItemSets.lua

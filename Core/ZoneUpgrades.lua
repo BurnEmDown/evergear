@@ -184,7 +184,7 @@ local function SourceDetail(item, zone)
         end
         return "Quest: " .. (quest or "?")
     end
-    if source.boss then return source.boss end
+    if source.boss then return source.rare and (source.boss .. " (rare spawn)") or source.boss end
     if source.npc then return source.npc end
     return EverGear:GetSourceSummary(item)
 end

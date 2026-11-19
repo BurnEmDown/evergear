@@ -171,7 +171,7 @@ local pvpCheck = Checkbox(sourcesPage, "EverGearFilter_pvp", "PvP", 16, y,
     function() return not Table("pvpFilter").hidden end,
     function(on) Table("pvpFilter").hidden = not on or nil end)
 Tooltip(pvpCheck, "PvP", "Gear from the PvP honor vendors, bought with Honor and Marks of Honor, and from the "
-    .. "battleground reputation vendors (Arathi Basin, Darkspear Islands).")
+    .. "battleground reputation vendors (Arathi Basin, Alterac Valley, Darkspear Islands).")
 table.insert(sourceChecks, pvpCheck)
 y = y - ROW
 local pvpRankCheck = Checkbox(sourcesPage, "EverGearFilterPvPRank", "Only what my rank allows", 16 + INDENT, y + 2,

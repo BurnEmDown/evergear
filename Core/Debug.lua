@@ -12,9 +12,15 @@
 --   * Every capture is also kept in EverGearDB.debugCaptures, which the game writes to
 --     WTF\Account\<account>\SavedVariables\EverGear.lua on /reload or logout.
 --
+-- Quest rewards are captured on their own (hovering one in the quest log counts too): opening a quest's reward window (QuestRewards.lua)
+-- captures every reward item the addon doesn't have or has wrong, with the quest it came from.
+--
 -- Commands: /eg debug [on|off]   toggle debug mode
 --           /eg debug export     open the JSON box with everything captured
 --           /eg debug clear      forget all captures
+--           /eg debug api        which quest-related game calls this client has
+--           /eg debug scanlog    capture the rewards of every quest in the quest log
+--           /eg debug quests     open the JSON box with every quest turn-in recorded
 --
 -- Items with a random suffix ("of the Monkey", ...) are skipped: their tooltip stats
 -- belong to that one roll, not to the base item the database describes. They're spotted
@@ -104,67 +110,8 @@ end
 -- "Increases damage done by Nature spells" etc. share names with the school list above;
 -- NATURE_DAMAGE is intentionally included.
 
--- Parses the text after "Equip: " into a list of { key, value } stats, or nil if it's not a
--- pattern we know -- those stay as raw EQUIP_n text, which is how the database stores them
--- too. Matching is case-insensitive ("Restores 2 Mana" / "Restores 2 mana").
-local function ParseEquipText(text)
-    local t = text:lower()
-    local v, w
-    v, w = t:match("^increases healing done by up to (%d+) and damage done by up to (%d+) for all magical spells and effects%.?$")
-    if v then return { { "SPELL_HEALING", tonumber(v) }, { "SPELL_DAMAGE", tonumber(w) } } end
-    v = t:match("^increases damage done by magical spells and effects by up to (%d+)%.?$")
-    if v then return { { "SPELL_DAMAGE", tonumber(v) } } end
-    v = t:match("^increases damage and healing done by magical spells and effects by up to (%d+)%.?$")
-    if v then return { { "SPELL_POWER", tonumber(v) } } end
-    v = t:match("^increases healing done by spells and effects by up to (%d+)%.?$")
-        or t:match("^increases healing done by magical spells and effects by up to (%d+)%.?$")
-    if v then return { { "SPELL_HEALING", tonumber(v) } } end
-    v = t:match("^increases attack power by (%d+)%.?$") or t:match("^%+(%d+) attack power%.?$")
-    if v then return { { "ATTACK_POWER", tonumber(v) } } end
-    v, w = t:match("^%+(%d+) attack power against (%a+)%.?$")
-    if v then return { { "ATTACK_POWER_VS_" .. w:upper(), tonumber(v) } } end
-    v = t:match("^increases ranged attack power by (%d+)%.?$") or t:match("^%+(%d+) ranged attack power%.?$")
-    if v then return { { "RANGED_ATTACK_POWER", tonumber(v) } } end
-    v = t:match("^restores (%d+) mana per 5 sec%.?$")
-    if v then return { { "MP5", tonumber(v) } } end
-    -- Darkspear Islands trinkets: a base value plus more "in Forest and Grassland
-    -- areas". The database keeps the base value, which is what counts anywhere else.
-    v = t:match("^restores (%d+) mana per 5 sec%. restores an additional %d+ mana per 5 sec in .+$")
-    if v then return { { "MP5", tonumber(v) } } end
-    v = t:match("^increases all resistances by (%d+)%. gain an additional %d+ to all resistances in .+$")
-    if v then
-        local list = {}
-        for _, school in ipairs({ "FIRE", "FROST", "NATURE", "SHADOW", "ARCANE" }) do
-            list[#list + 1] = { school .. "_RESISTANCE", tonumber(v) }
-        end
-        return list
-    end
-    v = t:match("^restores (%d+) health per 5 sec%.?$")
-    if v then return { { "HP5", tonumber(v) } } end
-    v = t:match("^increased defense %+(%d+)%.?$")
-    if v then return { { "DEFENSE", tonumber(v) } } end
-    v = t:match("^increases the block value of your shield by (%d+)%.?$")
-    if v then return { { "BLOCK_VALUE", tonumber(v) } } end
-    v = t:match("^improves your chance to hit by ([%d.]+)%%%.?$")
-    if v then return { { "HIT_CHANCE", tonumber(v) } } end
-    v = t:match("^improves your chance to get a critical strike by ([%d.]+)%%%.?$")
-    if v then return { { "CRIT_CHANCE", tonumber(v) } } end
-    v = t:match("^increases your chance to dodge an attack by ([%d.]+)%%%.?$")
-    if v then return { { "DODGE_CHANCE", tonumber(v) } } end
-    v = t:match("^increases your chance to parry an attack by ([%d.]+)%%%.?$")
-    if v then return { { "PARRY_CHANCE", tonumber(v) } } end
-    v = t:match("^increases your chance to block attacks with a shield by ([%d.]+)%%%.?$")
-    if v then return { { "BLOCK_CHANCE", tonumber(v) } } end
-    v = t:match("^improves your chance to hit with spells by ([%d.]+)%%%.?$")
-    if v then return { { "SPELL_HIT_CHANCE", tonumber(v) } } end
-    v = t:match("^improves your chance to get a critical strike with spells by ([%d.]+)%%%.?$")
-    if v then return { { "SPELL_CRIT_CHANCE", tonumber(v) } } end
-    for _, school in ipairs(SCHOOLS) do
-        v = t:match("^increases damage done by " .. school:lower() .. " spells and effects by up to (%d+)%.?$")
-        if v then return { { SCHOOL_UPPER[school] .. "_DAMAGE", tonumber(v) } } end
-    end
-    return nil
-end
+-- Parsing "Equip:" text into stats lives in Core/SetBonuses.lua (set bonuses use it too).
+local ParseEquipText = EverGear.ParseEquipText
 
 local function StripColor(text)
     return (text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
@@ -175,7 +122,8 @@ end
 --     Krol'dok Warplate Helmet          (the pieces, indented)
 --     ...
 --   (2) Set: +100 Armor.               (the bonuses, by number of pieces worn)
--- Returns { name, size, pieces = { names }, bonuses = { { pieces, text }, ... } }, or
+-- Returns { name, size, pieces = { names }, bonuses = { { pieces, text }, ... } } (plus
+-- completeBonuses = { text, ... } when the set was complete and the counts are hidden), or
 -- nil for an item without a set. The pieces are listed by name only, not by id.
 local function ParseSet(lines)
     local set
@@ -192,7 +140,18 @@ local function ParseSet(lines)
             end
         else
             local count, text = line:match("^%((%d+)%) Set: (.+)$")
-            if count then set.bonuses[#set.bonuses + 1] = { pieces = tonumber(count), text = text } end
+            if count then
+                set.bonuses[#set.bonuses + 1] = { pieces = tonumber(count), text = text }
+            else
+                -- With every piece worn (5/5) the game drops the "(n)" counts, so the number
+                -- of pieces each bonus needs isn't known: keep the texts apart in the order the
+                -- game lists them, instead of leaving the set looking like it has no bonuses.
+                local active = line:match("^Set: (.+)$")
+                if active then
+                    set.completeBonuses = set.completeBonuses or {}
+                    set.completeBonuses[#set.completeBonuses + 1] = active
+                end
+            end
         end
     end
     return set
@@ -601,6 +560,7 @@ function EverGear:BuildCaptureJSON()
         record._notes = (entry.notes and #entry.notes > 0) and entry.notes or nil
         record._addonStats = entry.addonStats
         record._capturedAtLevel = entry.level
+        record._quest = entry.quest
         out[tostring(id)] = record
     end
     -- Enchants that differ: what EverGear has next to the game's own text.
@@ -926,6 +886,9 @@ local function OnItemTooltip(tooltip)
     local _, link = tooltip:GetItem()
     if not link or link == lastLink then return end
     lastLink = link
+    -- A quest reward on a quest's own reward button is captured with its quest as the source
+    -- (QuestRewards.lua) and needs no popup. Any other item takes the normal path below.
+    if EverGear.CaptureHoveredQuestReward and EverGear:CaptureHoveredQuestReward(tooltip, link) then return end
     CheckHoveredLink(link, tooltip)
 end
 
@@ -983,6 +946,53 @@ function EverGear:CheckItemAgainstGame(itemId)
         local existing = Captures()[itemId]
         StoreCapture(record, status, diffs, notes, dbItem.dataStats or dbItem.stats, existing and existing.sourceNote)
     end
+    return status
+end
+
+-- ===== Quest rewards =====
+-- Used by QuestRewards.lua, which reads a quest's reward window when it's turned in.
+-- Like CheckItemAgainstGame, but also takes an item EverGear has never heard of (that
+-- is the point: a reward Forever added to a quest). quest = { title, id, level,
+-- playerLevel, zone, subzone, npc, faction }, saved with the capture as "_quest" so
+-- the backend knows which quest to file the item under.
+-- Returns "missing" / "pending" / "differs" when something was captured, "ok" when the
+-- addon already has the item exactly as the game shows it (plus the quest the addon
+-- files it under), or nil plus a reason: "uncached" (try again later), "suffix",
+-- "lowQuality" or "notEquippable" (not gear EverGear tracks).
+function EverGear:CaptureQuestRewardItem(itemId, link, quest)
+    local dbItem = self:GetItem(itemId)
+    local pending = not dbItem and self.PendingItems and self.PendingItems[itemId]
+    local record, reason, notes = self:BuildLiveItemRecord(link or ("item:" .. itemId), true)
+    if not record then return nil, reason or "notEquippable" end
+
+    local existing = Captures()[itemId]
+    local sourceNote = existing and existing.sourceNote
+    if not sourceNote or sourceNote == "" then
+        sourceNote = string.format('quest "%s" in %s', quest.title or "?", quest.zone or "?")
+    end
+
+    local status, diffs, addonStats
+    if not dbItem then
+        status = pending and "pending" or "missing"
+    else
+        diffs = self:CompareLiveToDatabase(record, dbItem)
+        if ShouldRereadForEffects(itemId, diffs) then return nil, "uncached" end
+        status = #diffs > 0 and "differs" or "ok"
+        addonStats = dbItem.dataStats or dbItem.stats
+    end
+
+    if status == "ok" then
+        EverGearDB.debugChecked = EverGearDB.debugChecked or {}
+        EverGearDB.debugChecked[itemId] = "ok"
+        -- An earlier capture of this item stays as it is, but learns the quest.
+        if existing and not existing.quest then existing.quest = quest end
+        return "ok"
+    end
+    StoreCapture(record, status, diffs, notes, addonStats, sourceNote)
+    Captures()[itemId].quest = quest
+    EverGearDB.debugChecked = EverGearDB.debugChecked or {}
+    EverGearDB.debugChecked[itemId] = "differs"
+    RefreshCaptureUI()
     return status
 end
 
@@ -1085,6 +1095,30 @@ function EverGear:HandleDebugCommand(arg)
         exportEditBox:SetFocus()
         exportEditBox:HighlightText()
         return
+    elseif arg == "api" then
+        EverGear:PrintQuestApi()
+        return
+    elseif arg == "scanlog" then
+        EverGear:ScanQuestLog()
+        return
+    elseif arg == "quests" then
+        if not debugFrame then BuildWindow() end
+        local text, count = EverGear:BuildQuestRewardsJSON()
+        if count == 0 then
+            print("|cff33ff99EverGear|r debug: no quest turn-ins recorded yet.")
+            return
+        end
+        print("|cff33ff99EverGear|r debug: " .. count .. " quest turn-ins recorded (/eg debug quests clear to forget them).")
+        currentExportText = text
+        exportEditBox:SetText(text)
+        exportPopup:Show()
+        exportEditBox:SetFocus()
+        exportEditBox:HighlightText()
+        return
+    elseif arg == "quests clear" then
+        EverGearDB.questRewards = {}
+        print("|cff33ff99EverGear|r debug: recorded quest turn-ins cleared.")
+        return
     elseif arg == "clear" then
         EverGearDB.debugCaptures = {}
         EverGearDB.debugEnchantCaptures = {}
@@ -1105,6 +1139,8 @@ function EverGear:HandleDebugCommand(arg)
         print("|cff33ff99EverGear|r debug mode |cff00ff00ON|r -- hover an item that's missing or wrong in the addon to flag it.")
         print("  /eg debug export  -- show captured items as JSON     /eg debug clear  -- forget captures")
         print("  /eg debug items  -- browse every item in EverGear's data")
+        print("  /eg debug scanlog  -- capture the rewards of every quest in your quest log")
+        print("  Turning in a quest captures its reward items automatically.  /eg debug quests  -- every turn-in recorded, as JSON")
         print("  /eg debug unconfirmed  -- what the game says about EverGear's unconfirmed items, as JSON")
     else
         print("|cff33ff99EverGear|r debug mode |cffff4040OFF|r.")

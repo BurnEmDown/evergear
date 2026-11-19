@@ -1178,6 +1178,10 @@ local function GetOrCreateDetailRow(index)
         if self.itemLink then
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:SetHyperlink(self.itemLink)
+            if self.setNotes and #self.setNotes > 0 then
+                GameTooltip:AddLine(" ")
+                GameTooltip:AddLine("Set bonus counted in the gain: " .. table.concat(self.setNotes, ", "), 0.4, 0.8, 1, true)
+            end
             GameTooltip:Show()
         end
     end)
@@ -1740,7 +1744,17 @@ function EverGear:ShowUpgradeDetail(slotToken)
 
             local delta = math.floor((candidate.score - (btn.currentScore or 0)) + 0.5)
             local nameHex = string.format("%02x%02x%02x", qr * 255, qg * 255, qb * 255)
-            row.nameText:SetText("|cff" .. nameHex .. candidate.item.name .. "|r  |cff20e626(+" .. delta .. ")|r")
+            -- Part of the gain can come from a set bonus: show what the item itself gives
+            -- and what the set adds (or takes away), so the two aren't mixed up.
+            local gainText = "+" .. delta
+            row.icon.setNotes = nil
+            local setDelta = candidate.setDelta or 0
+            if math.abs(setDelta) >= 0.5 then
+                local setPart = math.floor(setDelta + 0.5)
+                gainText = string.format("+%d: %+d item, %+d set", delta, delta - setPart, setPart)
+                row.icon.setNotes = candidate.setNotes
+            end
+            row.nameText:SetText("|cff" .. nameHex .. candidate.item.name .. "|r  |cff20e626(" .. gainText .. ")|r")
             row.sourceText:SetText(EverGear:GetSourceSummary(candidate.item))
 
             local textHeight = row.nameText:GetStringHeight() + 4 + row.sourceText:GetStringHeight()
