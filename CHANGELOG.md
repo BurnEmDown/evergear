@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.5.5] - 2026-11-19
+
+### Added
+- Set bonuses now count when the addon compares items. If a piece would
+  complete a set bonus, or taking off a piece would lose one, the Suggested
+  Upgrades gain includes it. The gain shows what the item gives and what the
+  set adds or takes away (for example "+12: +8 item, +4 set"), and the
+  tooltip names the set.
+- About 190 new items, including:
+  - Quest rewards: Blackrock Depths (including the Horde quests), Sunken
+    Temple, Un'Goro Crater, Stranglethorn Vale and Feralas.
+  - The Shaper's Terrace, Zul'Farrak and other dungeon drops that were
+    missing.
+  - Alterac Valley reputation rewards (Frostwolf Clan).
+  - Runecloth Gloves (Tailoring).
+- Drops from rare-spawn bosses are now labelled "rare spawn" in the source
+  line.
+
+### Changed
+- The PvP filter tooltip now lists Alterac Valley among the battlegrounds
+  with reputation vendors.
+
+### Fixed
+- Several items that were wrongly marked as not in WoW Forever (Limb Cleaver,
+  Crypt Demon Bracers, Sunborne Cape, Nightfall Gloves, Stalwart Clutch) now
+  show up in suggestions.
+- Stats and sources corrected on a number of items after checking them in
+  the game.
+
 ## [0.5.4] - 2026-11-13
 
 ### Added
