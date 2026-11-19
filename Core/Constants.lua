@@ -179,6 +179,8 @@ EverGear.ZONE_LEVEL_RANGES = {
     ["Eastern Plaguelands"] = { 55, 60 },  -- foreverdb.net
     ["Deadwind Pass"] = { 56, 60 },        -- foreverdb.net
     ["Silithus"] = { 57, 60 },             -- foreverdb.net
+    ["Mount Hyjal"] = { 56, 60 },          -- new in Forever, no published range: an estimate
+                                           -- from the captured quest levels (56-58)
     ["Riverglades"] = { 35, 45 },          -- new in Forever, no published range: an
                                            -- estimate from its Powderfuse vendor's level 40 gear
     ["Stormwind City"] = { 1, 60 },
