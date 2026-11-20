@@ -122,6 +122,7 @@ Data\Items_WesternPlaguelands.lua
 Data\Items_Winterspring.lua
 Data\Items_EasternPlaguelands.lua
 Data\Items_Moonglade.lua
+Data\Items_MountHyjal.lua
 Data\Items_Silithus.lua
 Data\Items_DungeonSetQuests.lua
 Data\Items_PvPHonorVendors.lua
