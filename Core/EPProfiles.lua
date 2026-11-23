@@ -695,7 +695,7 @@ function EverGear:GetWeightFieldLayout(weights)
         -- Physical Damage
         ATTACK_POWER = "Physical Damage", RANGED_ATTACK_POWER = "Physical Damage",
         HIT_CHANCE = "Physical Damage", CRIT_CHANCE = "Physical Damage", HASTE = "Physical Damage",
-        ARMOR_PENETRATION = "Physical Damage",
+        ARMOR_PENETRATION = "Physical Damage", DODGE_PARRY_REDUCTION = "Physical Damage",
         PHYSICAL_DAMAGE = "Physical Damage", ATTACK_POWER_VS_BEASTS = "Physical Damage",
         ATTACK_POWER_VS_HUMANOIDS = "Physical Damage", ATTACK_POWER_VS_UNDEAD = "Physical Damage",
         -- Spell Damage (includes healing -- same "caster" stat family, and

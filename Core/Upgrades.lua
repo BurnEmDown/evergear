@@ -136,6 +136,15 @@ end
 -- percentage), so ARMOR_PENETRATION kept its old per-point weight unchanged
 -- -- only its name lost the misleading "_RATING" suffix.
 --
+-- DODGE_PARRY_REDUCTION is the one Expertise-like stat the game does have: "Reduces chance
+-- to be Dodged or Parried by X%" (items, and a few set bonuses) lowers the target's dodge
+-- and parry chances against the wearer's melee attacks by X percentage points each. It
+-- is a flat percentage like HIT_CHANCE and is weighted per percentage point. Melee specs
+-- (and a tank's threat profile) weight it at 1.5x their HIT_CHANCE weight: it cuts both
+-- avoidance rolls where a hit only fixes one (parry only counts from the front, so not
+-- 2x). That ratio is an estimate, not derived from data -- tune freely. Hunters (ranged)
+-- and casters/healers list it at 0, like every other melee-only stat.
+--
 -- dpsWeight is the MELEE weapon DPS weight (main/off hand); rangedDpsWeight is the
 -- ranged-slot one (bow/gun/crossbow/thrown/wand). Hunters weight ranged far above
 -- melee; melee classes ignore ranged (0); wand users (Mage/Warlock/Priest) value
@@ -161,7 +170,7 @@ EverGear.SPEC_PROFILES = {
                 -- HASTE here stands in for sixtyupgrades' "speed" --
                 -- confirmed to mean the Haste stat, not the weapon's own
                 -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
-                ATTACK_POWER = 1, HIT_CHANCE = 20, CRIT_CHANCE = 20, HASTE = 50,
+                ATTACK_POWER = 1, HIT_CHANCE = 20, DODGE_PARRY_REDUCTION = 30, CRIT_CHANCE = 20, HASTE = 50,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
@@ -184,7 +193,7 @@ EverGear.SPEC_PROFILES = {
                 -- HASTE here stands in for sixtyupgrades' "speed" --
                 -- confirmed to mean the Haste stat, not the weapon's own
                 -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
-                ATTACK_POWER = 1, HIT_CHANCE = 20, CRIT_CHANCE = 20, HASTE = 50,
+                ATTACK_POWER = 1, HIT_CHANCE = 20, DODGE_PARRY_REDUCTION = 30, CRIT_CHANCE = 20, HASTE = 50,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
@@ -242,7 +251,7 @@ EverGear.SPEC_PROFILES = {
                             ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                             SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
                             DODGE_CHANCE = 16.29, PARRY_CHANCE = 16.29, BLOCK_CHANCE = 0,
-                            BLOCK_VALUE = 0.43, ATTACK_POWER = 0, HIT_CHANCE = 0,
+                            BLOCK_VALUE = 0.43, ATTACK_POWER = 0, HIT_CHANCE = 0, DODGE_PARRY_REDUCTION = 0,
                             CRIT_CHANCE = 0, HASTE = 0, ARMOR_PENETRATION = 0,
                             DEFENSE = 2.61, PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0,
                             ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
@@ -269,7 +278,7 @@ EverGear.SPEC_PROFILES = {
                             ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                             SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
                             DODGE_CHANCE = 0, PARRY_CHANCE = 7.47, BLOCK_CHANCE = 0,
-                            BLOCK_VALUE = 0.9, ATTACK_POWER = 1, HIT_CHANCE = 27,
+                            BLOCK_VALUE = 0.9, ATTACK_POWER = 1, HIT_CHANCE = 27, DODGE_PARRY_REDUCTION = 40.5,
                             CRIT_CHANCE = 22, HASTE = 0, ARMOR_PENETRATION = 0,
                             DEFENSE = 0.22, PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0,
                             ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
@@ -290,7 +299,7 @@ EverGear.SPEC_PROFILES = {
             -- MANA_REGEN, same as Priest Holy/Discipline.
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 1, SPIRIT = 0.5 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, DODGE_PARRY_REDUCTION = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
@@ -317,7 +326,7 @@ EverGear.SPEC_PROFILES = {
                 SHADOW_RESISTANCE = 0.1, MOVEMENT_IMPAIRING_REDUCTION = 0.2, SPELL_DAMAGE_REDUCTION = 0.3,
                 -- Tank-specific stats
                 DODGE_CHANCE = 15.84, PARRY_CHANCE = 13.86, BLOCK_CHANCE = 11.88,
-                BLOCK_VALUE = 0.5, ATTACK_POWER = 0.2, HIT_CHANCE = 4.74,
+                BLOCK_VALUE = 0.5, ATTACK_POWER = 0.2, HIT_CHANCE = 4.74, DODGE_PARRY_REDUCTION = 7.11,
                 CRIT_CHANCE = 4.4, HASTE = 1.58, ARMOR_PENETRATION = 0.05,
                 DEFENSE = 1.0, PHYSICAL_DAMAGE = 0.1, ATTACK_POWER_VS_BEASTS = 0.05, ATTACK_POWER_VS_HUMANOIDS = 0.05,
                 ATTACK_POWER_VS_UNDEAD = 0.05, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
@@ -336,7 +345,7 @@ EverGear.SPEC_PROFILES = {
                 NATURE_DAMAGE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                ATTACK_POWER = 1, HIT_CHANCE = 20, CRIT_CHANCE = 15, HASTE = 50,
+                ATTACK_POWER = 1, HIT_CHANCE = 20, DODGE_PARRY_REDUCTION = 30, CRIT_CHANCE = 15, HASTE = 50,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
@@ -362,7 +371,7 @@ EverGear.SPEC_PROFILES = {
                 -- HASTE here stands in for sixtyupgrades' "rangedSpeed" --
                 -- confirmed to mean the Haste stat, not the weapon's own
                 -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
-                ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 100,
+                ATTACK_POWER = 1, HIT_CHANCE = 21.98, DODGE_PARRY_REDUCTION = 0, CRIT_CHANCE = 28.57, HASTE = 100,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
@@ -386,7 +395,7 @@ EverGear.SPEC_PROFILES = {
                 -- HASTE here stands in for sixtyupgrades' "rangedSpeed" --
                 -- confirmed to mean the Haste stat, not the weapon's own
                 -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
-                ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 100,
+                ATTACK_POWER = 1, HIT_CHANCE = 21.98, DODGE_PARRY_REDUCTION = 0, CRIT_CHANCE = 28.57, HASTE = 100,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
@@ -410,7 +419,7 @@ EverGear.SPEC_PROFILES = {
                 -- HASTE here stands in for sixtyupgrades' "rangedSpeed" --
                 -- confirmed to mean the Haste stat, not the weapon's own
                 -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
-                ATTACK_POWER = 1, HIT_CHANCE = 21.98, CRIT_CHANCE = 28.57, HASTE = 100,
+                ATTACK_POWER = 1, HIT_CHANCE = 21.98, DODGE_PARRY_REDUCTION = 0, CRIT_CHANCE = 28.57, HASTE = 100,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
@@ -436,7 +445,7 @@ EverGear.SPEC_PROFILES = {
                 -- HASTE here stands in for sixtyupgrades' "speed" --
                 -- confirmed to mean the Haste stat, not the weapon's own
                 -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
-                ATTACK_POWER = 1, HIT_CHANCE = 16, CRIT_CHANCE = 20, HASTE = 50,
+                ATTACK_POWER = 1, HIT_CHANCE = 16, DODGE_PARRY_REDUCTION = 24, CRIT_CHANCE = 20, HASTE = 50,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
@@ -459,7 +468,7 @@ EverGear.SPEC_PROFILES = {
                 -- HASTE here stands in for sixtyupgrades' "speed" --
                 -- confirmed to mean the Haste stat, not the weapon's own
                 -- base speed (already fully captured by dpsWeight/WEAPON_DPS).
-                ATTACK_POWER = 1, HIT_CHANCE = 18, CRIT_CHANCE = 23, HASTE = 50,
+                ATTACK_POWER = 1, HIT_CHANCE = 18, DODGE_PARRY_REDUCTION = 27, CRIT_CHANCE = 23, HASTE = 50,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
@@ -479,7 +488,7 @@ EverGear.SPEC_PROFILES = {
                 NATURE_DAMAGE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                ATTACK_POWER = 1, HIT_CHANCE = 16, CRIT_CHANCE = 20, HASTE = 50,
+                ATTACK_POWER = 1, HIT_CHANCE = 16, DODGE_PARRY_REDUCTION = 24, CRIT_CHANCE = 20, HASTE = 50,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
@@ -500,7 +509,7 @@ EverGear.SPEC_PROFILES = {
             -- user confirmation.
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 1.16, SPIRIT = 0.83 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 1.0,
             secondary = {
-                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, DODGE_PARRY_REDUCTION = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
@@ -519,7 +528,7 @@ EverGear.SPEC_PROFILES = {
             -- zero-fill convention and the "mana"->MANA_REGEN fold.
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 1.16, SPIRIT = 0.83 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 1.0,
             secondary = {
-                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, DODGE_PARRY_REDUCTION = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
@@ -540,7 +549,7 @@ EverGear.SPEC_PROFILES = {
             -- SPELL_HEALING.)
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.04, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 2.0,
             secondary = {
-                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, DODGE_PARRY_REDUCTION = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
@@ -564,7 +573,7 @@ EverGear.SPEC_PROFILES = {
             -- SPELL_HEALING.)
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.13, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, DODGE_PARRY_REDUCTION = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
@@ -591,7 +600,7 @@ EverGear.SPEC_PROFILES = {
                 NATURE_DAMAGE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                ATTACK_POWER = 1, HIT_CHANCE = 24, CRIT_CHANCE = 23.38, HASTE = 50,
+                ATTACK_POWER = 1, HIT_CHANCE = 24, DODGE_PARRY_REDUCTION = 36, CRIT_CHANCE = 23.38, HASTE = 50,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
@@ -608,7 +617,7 @@ EverGear.SPEC_PROFILES = {
             -- MANA_REGEN, same as Priest Holy/Discipline.
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.5, SPIRIT = 0.5 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, DODGE_PARRY_REDUCTION = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
@@ -630,7 +639,7 @@ EverGear.SPEC_PROFILES = {
             -- zero-fill convention.
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.2, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 2.0,
             secondary = {
-                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, DODGE_PARRY_REDUCTION = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
@@ -652,7 +661,7 @@ EverGear.SPEC_PROFILES = {
             -- SPELL_HEALING.)
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.2, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 2.0,
             secondary = {
-                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, DODGE_PARRY_REDUCTION = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
@@ -672,7 +681,7 @@ EverGear.SPEC_PROFILES = {
             -- mechanically-rescaled placeholder.
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.19, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 2.0,
             secondary = {
-                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, DODGE_PARRY_REDUCTION = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
@@ -697,7 +706,7 @@ EverGear.SPEC_PROFILES = {
             -- SPELL_HEALING.)
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.28, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 2.0,
             secondary = {
-                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, DODGE_PARRY_REDUCTION = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
@@ -717,7 +726,7 @@ EverGear.SPEC_PROFILES = {
             -- for the zero-fill convention.
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.28, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 2.0,
             secondary = {
-                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, DODGE_PARRY_REDUCTION = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
@@ -737,7 +746,7 @@ EverGear.SPEC_PROFILES = {
             -- for the zero-fill convention.
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.28, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0, rangedDpsWeight = 2.0,
             secondary = {
-                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, DODGE_PARRY_REDUCTION = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
@@ -761,7 +770,7 @@ EverGear.SPEC_PROFILES = {
             -- damage in practice, but this set only weights Arcane).
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.11, SPIRIT = 0 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, DODGE_PARRY_REDUCTION = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
@@ -788,7 +797,7 @@ EverGear.SPEC_PROFILES = {
                 NATURE_DAMAGE = 0,
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
-                ATTACK_POWER = 1, HIT_CHANCE = 8.21, CRIT_CHANCE = 8.19, HASTE = 4.17,
+                ATTACK_POWER = 1, HIT_CHANCE = 8.21, DODGE_PARRY_REDUCTION = 12.32, CRIT_CHANCE = 8.19, HASTE = 4.17,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0,
                 PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0,
@@ -824,7 +833,7 @@ EverGear.SPEC_PROFILES = {
                 ARCANE_RESISTANCE = 0, FIRE_RESISTANCE = 0, FROST_RESISTANCE = 0, NATURE_RESISTANCE = 0,
                 SHADOW_RESISTANCE = 0, MOVEMENT_IMPAIRING_REDUCTION = 0, SPELL_DAMAGE_REDUCTION = 0,
                 DODGE_CHANCE = 0, PARRY_CHANCE = 0, BLOCK_CHANCE = 0,
-                BLOCK_VALUE = 0, ATTACK_POWER = 1, HIT_CHANCE = 36.1,
+                BLOCK_VALUE = 0, ATTACK_POWER = 1, HIT_CHANCE = 36.1, DODGE_PARRY_REDUCTION = 54.15,
                 CRIT_CHANCE = 25.8, HASTE = 26.6, ARMOR_PENETRATION = 0,
                 DEFENSE = 0.46, PHYSICAL_DAMAGE = 0, ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0,
                 ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0, THREAT_REDUCTION = 0,
@@ -840,7 +849,7 @@ EverGear.SPEC_PROFILES = {
             -- MANA_REGEN, same as the other healer specs.
             stats = { STRENGTH = 0, AGILITY = 0, STAMINA = 0, INTELLECT = 0.3, SPIRIT = 0.46 }, armorWeight = 0, dpsWeight = 0,
             secondary = {
-                ATTACK_POWER = 0, HIT_CHANCE = 0, CRIT_CHANCE = 0, HASTE = 0,
+                ATTACK_POWER = 0, HIT_CHANCE = 0, DODGE_PARRY_REDUCTION = 0, CRIT_CHANCE = 0, HASTE = 0,
                 ARMOR_PENETRATION = 0, DODGE_CHANCE = 0,
                 PARRY_CHANCE = 0, BLOCK_CHANCE = 0, BLOCK_VALUE = 0, PHYSICAL_DAMAGE = 0,
                 ATTACK_POWER_VS_BEASTS = 0, ATTACK_POWER_VS_HUMANOIDS = 0, ATTACK_POWER_VS_UNDEAD = 0, RANGED_ATTACK_POWER = 0,
@@ -944,8 +953,35 @@ local function StatWeight(profile, statName)
     return 0
 end
 
+-- "Reduces chance to be Dodged or Parried by 1.0%." is kept in the data as raw "Equip:" text
+-- (EQUIP_1, EQUIP_2...), so it is read through the shared text parser (SetBonuses.lua) here.
+-- Only this stat is taken from raw text: a couple of other raw lines also parse, and scoring
+-- them would change existing items' scores. Parsed once per distinct text.
+local equipTextCache = {}
+local function ParsedEquipText(text)
+    local parsed = equipTextCache[text]
+    if parsed == nil then
+        parsed = (EverGear.ParseEquipText and EverGear.ParseEquipText(text)) or false
+        equipTextCache[text] = parsed
+    end
+    return parsed
+end
+
 local function ScoreItem(stats, profile, armorValue, dps, isRanged)
     local score = 0
+
+    for statName, value in pairs(stats or {}) do
+        if type(value) == "string" and statName:find("^EQUIP_") then
+            local parsed = ParsedEquipText(value)
+            if parsed then
+                for _, kv in ipairs(parsed) do
+                    if kv[1] == "DODGE_PARRY_REDUCTION" then
+                        score = score + kv[2] * StatWeight(profile, kv[1])
+                    end
+                end
+            end
+        end
+    end
 
     for statName, value in pairs(stats or {}) do
         if type(value) == "number" and not EXCLUDED_STAT_KEYS[statName] then

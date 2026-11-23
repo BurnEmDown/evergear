@@ -59,6 +59,12 @@ function EverGear.ParseEquipText(text)
     if v then return { { "PARRY_CHANCE", tonumber(v) } } end
     v = t:match("^increases your chance to block attacks with a shield by ([%d.]+)%%%.?$")
     if v then return { { "BLOCK_CHANCE", tonumber(v) } } end
+    -- "Reduces chance to be Dodged or Parried" on items, and the set-bonus wording: the
+    -- percentage points by which the target's dodge and parry chances against the
+    -- wearer's melee attacks drop. (WoW Forever has no Expertise stat; this is its stand-in.)
+    v = t:match("^reduces chance to be dodged or parried by ([%d.]+)%%%.?$")
+        or t:match("^reduces the chance for your attacks to be dodged or parried by ([%d.]+)%%%.?$")
+    if v then return { { "DODGE_PARRY_REDUCTION", tonumber(v) } } end
     v = t:match("^improves your chance to hit with spells by ([%d.]+)%%%.?$")
     if v then return { { "SPELL_HIT_CHANCE", tonumber(v) } } end
     v = t:match("^improves your chance to get a critical strike with spells by ([%d.]+)%%%.?$")

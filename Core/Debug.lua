@@ -100,7 +100,7 @@ local PARSEABLE = {
     ATTACK_POWER_VS_HUMANOIDS = true, ATTACK_POWER_VS_ELEMENTALS = true,
     SPELL_DAMAGE = true, SPELL_HEALING = true, MP5 = true, HP5 = true, DEFENSE = true,
     HIT_CHANCE = true, CRIT_CHANCE = true, DODGE_CHANCE = true, PARRY_CHANCE = true,
-    BLOCK_CHANCE = true, SPELL_HIT_CHANCE = true, SPELL_CRIT_CHANCE = true,
+    BLOCK_CHANCE = true, SPELL_HIT_CHANCE = true, SPELL_CRIT_CHANCE = true, DODGE_PARRY_REDUCTION = true,
     WEAPON_SPEED = true, WEAPON_DPS = true,
 }
 for _, s in ipairs(SCHOOLS) do
