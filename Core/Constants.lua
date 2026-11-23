@@ -6,7 +6,7 @@ EverGear.ADDON_NAME = "EverGear"
 -- change, no matter how small -- 0.0.1 -> 0.0.2 -> 0.0.3, etc. Moving to
 -- 0.1.0 or 1.0.0 is the user's call alone; Claude may suggest it's time,
 -- but must never bump a minor/major version on its own initiative.
-EverGear.VERSION = "0.5.5"
+EverGear.VERSION = "0.6.0"
 
 -- Populated later from Data\*.lua files. Each entry keyed by numeric item id.
 -- Canonical item shape (mirrors evergear-backend/schema.md):
@@ -38,13 +38,16 @@ EverGear.VERSION = "0.5.5"
 --                                -- Forever's own custom items (id >= 200000) are NOT assumed
 --                                -- and stay nil until verified in-game.
 --   source = {
---     type = "dungeonDrop",     -- worldDrop | dungeonDrop | raidDrop | quest | vendor | craft | special
+--     type = "dungeonDrop",     -- worldDrop | dungeonDrop | raidDrop | quest | vendor | currencyVendor | craft | special
 --     zone = "The Stockade",
 --     boss = "Hamhock",         -- present for dungeonDrop/raidDrop
 --     quest = "Quest Title",    -- present for quest
 --     minLevel = 20,            -- optional, quest: the level the quest can be picked up at
 --     npc = "Mother Fang",      -- optional, worldDrop: the one mob (often a rare) it drops from
 --     name = "Kat Sampson",     -- vendor: who sells it
+--                               -- currencyVendor: one NPC selling gear for a special currency;
+--                               -- also location = "Booty Bay" (display only, NOT a zone, so the
+--                               -- Zones filter never hides it) and currency = "Tarnished Undermine Real"
 --     note = "Blade of Silverlaine + Scroll of the Saber", -- special: how to get it
 --     chance = 0.18,            -- optional, 0-1
 --   },
@@ -179,6 +182,8 @@ EverGear.ZONE_LEVEL_RANGES = {
     ["Eastern Plaguelands"] = { 55, 60 },  -- foreverdb.net
     ["Deadwind Pass"] = { 56, 60 },        -- foreverdb.net
     ["Silithus"] = { 57, 60 },             -- foreverdb.net
+    ["Mount Hyjal"] = { 56, 60 },          -- new in Forever, no published range: an estimate
+                                           -- from the captured quest levels (56-58)
     ["Riverglades"] = { 35, 45 },          -- new in Forever, no published range: an
                                            -- estimate from its Powderfuse vendor's level 40 gear
     ["Stormwind City"] = { 1, 60 },
@@ -251,6 +256,7 @@ EverGear.OTHER_FACTION_ZONES = {
 EverGear.SOURCE_TYPE_FILTERS = {
     { key = "quest",       label = "Quest" },
     { key = "vendor",      label = "Vendor" },
+    { key = "currencyVendor", label = "Currency Vendor" },
     { key = "craft",       label = "Craft" },
     { key = "worldDrop",   label = "World Drop" },
     { key = "dungeonDrop", label = "Dungeon Drop" },

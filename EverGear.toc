@@ -101,6 +101,7 @@ Data\Items_Desolace.lua
 Data\Items_ArathiHighlands.lua
 Data\Items_AlteracMountains.lua
 Data\Items_StranglethornVale.lua
+Data\Items_CurrencyVendors.lua
 Data\Items_SwampOfSorrows.lua
 Data\Items_Badlands.lua
 Data\Items_StormwindCity.lua
@@ -122,6 +123,7 @@ Data\Items_WesternPlaguelands.lua
 Data\Items_Winterspring.lua
 Data\Items_EasternPlaguelands.lua
 Data\Items_Moonglade.lua
+Data\Items_MountHyjal.lua
 Data\Items_Silithus.lua
 Data\Items_DungeonSetQuests.lua
 Data\Items_PvPHonorVendors.lua
