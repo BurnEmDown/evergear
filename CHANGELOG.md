@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.6.0] - 2026-11-23
+
+### Added
+- Added stat 'Dodge/parry reduction' which is now calculated for upgrades.
+  It is added to default profiles of all melee classes and specs.
+- Currency vendors for Tarnished Undermine Real added, Pix Xizzix in Booty
+  Bay, with 34 items.
+  - Filters: a new "Currency Vendor" checkbox under Sources.
+  - They are not tied to a zone, so the Zones filter never hides them.
+  - Upgrades by Zone has a new "Special vendors" group listing the NPC.
+- About 125 new items, including:
+  - 36 Bind on Equip world drops (weapons, shields, rings, necklaces and
+    armor from level 35 to 59).
+  - 22 crafted items from Blacksmithing, Leatherworking and Tailoring.
+  - Quest rewards from Burning Steppes, Blackrock Depths and the Warlock
+    class quest in Sunken Temple.
+  - Green Lens (Engineering) and Dragon's Blood Necklace (Scarlet Monastery).
+
+### Changed
+- Blackhand's Breadth, Mark of Tyranny and Eye of the Beast are now listed
+  under the Orgrimmar quest "For The Horde!" (level 60), with their in-game
+  stats.
+- Custom profiles you saved earlier get a dodge/parry reduction weight too:
+  it follows the profile's own Hit chance weight. A profile that gives Hit
+  no weight stays at 0 until you set it.
+- Fishing poles such as Nat Pagle's Extreme Angler are no longer suggested
+  as weapons.
+
+### Fixed
+- Mark of Tyranny, Eye of the Beast and Dragon's Blood Necklace were wrongly
+  marked as not in WoW Forever and are now suggested.
+
 ## [0.5.5] - 2026-11-19
 
 ### Added
