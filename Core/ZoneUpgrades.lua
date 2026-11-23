@@ -184,6 +184,7 @@ local function SourceDetail(item, zone)
         end
         return "Quest: " .. (quest or "?")
     end
+    if source.type == "currencyVendor" then return source.currency or EverGear:GetSourceSummary(item) end
     if source.boss then return source.rare and (source.boss .. " (rare spawn)") or source.boss end
     if source.npc then return source.npc end
     return EverGear:GetSourceSummary(item)
@@ -276,7 +277,9 @@ UIDropDownMenu_Initialize(zoneDropdown, function(_, level, menuList)
             info.func = function() SelectZone(here) end
             UIDropDownMenu_AddButton(info, level)
         end
-        for _, group in ipairs({ { "Dungeons", "dungeons" }, { "Zones", "zones" } }) do
+        local groups = { { "Dungeons", "dungeons" }, { "Zones", "zones" } }
+        if #EverGear.CollectCurrencyVendors() > 0 then table.insert(groups, { "Special vendors", "vendors" }) end
+        for _, group in ipairs(groups) do
             local info = UIDropDownMenu_CreateInfo()
             info.text = group[1]
             info.hasArrow = true
@@ -288,6 +291,8 @@ UIDropDownMenu_Initialize(zoneDropdown, function(_, level, menuList)
         for _, zone in ipairs(dungeons) do AddZone(zone) end
     elseif menuList == "zones" then
         for _, zone in ipairs(zones) do AddZone(zone) end
+    elseif menuList == "vendors" then
+        for _, name in ipairs(EverGear.CollectCurrencyVendors()) do AddZone(name) end
     end
 end)
 

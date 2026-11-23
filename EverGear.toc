@@ -101,6 +101,7 @@ Data\Items_Desolace.lua
 Data\Items_ArathiHighlands.lua
 Data\Items_AlteracMountains.lua
 Data\Items_StranglethornVale.lua
+Data\Items_CurrencyVendors.lua
 Data\Items_SwampOfSorrows.lua
 Data\Items_Badlands.lua
 Data\Items_StormwindCity.lua
