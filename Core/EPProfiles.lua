@@ -119,7 +119,7 @@ end
 -- defaults, so every key the target actually uses is guaranteed present
 -- before `overlay` (the source profile) gets a chance to overwrite any of
 -- them.
-local function MergeWeightsOnto(base, overlay)
+local function MergeWeightsOnto(base, overlay, classToken)
     local merged = CloneWeights(base)
     for key, value in pairs(overlay or {}) do
         if type(value) == "table" then
@@ -132,6 +132,17 @@ local function MergeWeightsOnto(base, overlay)
         elseif type(value) == "number" then
             merged[key] = EverGear:ClampWeight(value)
         end
+    end
+    -- Profiles saved or exported before DODGE_PARRY_REDUCTION existed have no weight for it.
+    -- Merging onto the builtin would give them the builtin's value, which is 0 for a profile
+    -- built on a preset that doesn't weight Hit (a Protection Warrior built on Threat, say,
+    -- falls back to the Mitigation preset). Derive it from the profile's own Hit weight
+    -- instead, the same 1.5x the builtin profiles use. Hunters stay at 0 (ranged).
+    local own = overlay and overlay.secondary
+    if own and own.DODGE_PARRY_REDUCTION == nil and classToken ~= "HUNTER"
+        and type(own.HIT_CHANCE) == "number" and own.HIT_CHANCE > 0 then
+        merged.secondary = merged.secondary or {}
+        merged.secondary.DODGE_PARRY_REDUCTION = EverGear:ClampWeight(own.HIT_CHANCE * 1.5)
     end
     -- Profiles saved or exported before spell power was scored as spell damage
     -- plus healing (Upgrades.lua's ScoreItem) carry their own SPELL_POWER
@@ -321,7 +332,7 @@ function EverGear:GetProfileWeights(classToken, specName, profileId)
     -- a profile saved before a new stat key existed in SPEC_PROFILES still
     -- scores that key sanely (at the current default) instead of it being
     -- missing/nil in arithmetic -- same safety net CopyProfile relies on.
-    return MergeWeightsOnto(self:GetBuiltinProfile(classToken, specName), entry.weights)
+    return MergeWeightsOnto(self:GetBuiltinProfile(classToken, specName), entry.weights, classToken)
 end
 
 -- Makes profileId this character's active profile, and remembers it as the
@@ -490,7 +501,7 @@ function EverGear:CopyProfile(fromClass, fromSpec, fromProfileId, toClass, toSpe
         return nil, "The source profile no longer exists."
     end
     local targetDefaults = self:GetBuiltinProfile(toClass, toSpec)
-    local merged = MergeWeightsOnto(targetDefaults, sourceWeights)
+    local merged = MergeWeightsOnto(targetDefaults, sourceWeights, toClass)
     return self:CreateCustomProfile(toClass, toSpec, newName, merged)
 end
 
@@ -605,7 +616,7 @@ end
 -- ProfileEditor.lua since it's data-layer logic, not UI. Returns the new
 -- profile's id.
 function EverGear:ImportProfileWeights(classToken, specName, name, weights)
-    local merged = MergeWeightsOnto(self:GetBuiltinProfile(classToken, specName), weights)
+    local merged = MergeWeightsOnto(self:GetBuiltinProfile(classToken, specName), weights, classToken)
     return self:CreateCustomProfile(classToken, specName, name, merged)
 end
 
