@@ -180,6 +180,30 @@ function EverGear:GetSourceZones(item, faction)
     return zones
 end
 
+-- Currency vendors (one NPC selling gear for a special currency) are not tied to a
+-- zone: GetSourceZones skips them, so the Zones filter never hides them. Upgrades
+-- by Zone lists them by NPC name instead, next to the zones.
+function EverGear:IsSoldByCurrencyVendor(item, vendorName)
+    for _, source in ipairs(self:GetAllSources(item)) do
+        if source.type == "currencyVendor" and source.name == vendorName then return true end
+    end
+    return false
+end
+
+function EverGear.CollectCurrencyVendors()
+    local names, seen = {}, {}
+    for _, item in pairs(EverGear.Items) do
+        for _, source in ipairs(EverGear:GetAllSources(item)) do
+            if source.type == "currencyVendor" and source.name and not seen[source.name] then
+                seen[source.name] = true
+                table.insert(names, source.name)
+            end
+        end
+    end
+    table.sort(names)
+    return names
+end
+
 local function HasZone(zones, zoneName)
     for _, zone in ipairs(zones) do
         if zone == zoneName then return true end
@@ -191,7 +215,7 @@ EverGear.ZoneListHas = HasZone
 function EverGear:GetItemsForZone(zoneName, faction)
     local results = {}
     for _, item in pairs(self.Items) do
-        if HasZone(self:GetSourceZones(item, faction), zoneName) then
+        if HasZone(self:GetSourceZones(item, faction), zoneName) or self:IsSoldByCurrencyVendor(item, zoneName) then
             table.insert(results, item)
         end
     end

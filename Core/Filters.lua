@@ -158,6 +158,7 @@ local y = WINDOW_TOP
 for _, entry in ipairs({
     { key = "quest", label = "Quest" },
     { key = "vendor", label = "Vendor" },
+    { key = "currencyVendor", label = "Currency Vendor" },
     { key = "worldDrop", label = "World Drop" },
     { key = "dungeonDrop", label = "Dungeon Drop" },
     { key = "special", label = "Special" },
@@ -746,7 +747,7 @@ end
 function EverGear:GetActiveFilterSummary()
     local active = {}
     local sources = Sources()
-    for _, key in ipairs({ "quest", "vendor", "craft", "worldDrop", "dungeonDrop", "special", "reputation" }) do
+    for _, key in ipairs({ "quest", "vendor", "currencyVendor", "craft", "worldDrop", "dungeonDrop", "special", "reputation" }) do
         if sources[key] == false then table.insert(active, "Sources") break end
     end
     if Table("pvpFilter").hidden and active[1] ~= "Sources" then table.insert(active, "Sources") end
