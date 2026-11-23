@@ -1697,7 +1697,8 @@ function EverGear:GetUpgradesForZone(zoneName)
         local candidates, currentScore = self:GetUpgradesForSlot(slotToken, self:GetEquippedItemLink(slotToken), { ignoreZoneFilter = true })
         for _, candidate in ipairs(candidates) do
             local item = candidate.item
-            if EverGear.ZoneListHas(self:GetSourceZones(item, self:GetPlayerInfo().faction), zoneName)
+            if (EverGear.ZoneListHas(self:GetSourceZones(item, self:GetPlayerInfo().faction), zoneName)
+                or self:IsSoldByCurrencyVendor(item, zoneName))
                 and self:IsSourceTypeEnabled(item, sourceFilters) then
                 local gain = candidate.score - (currentScore or 0)
                 if not best[item.id] or gain > best[item.id].gain then
@@ -1759,6 +1760,12 @@ local function SingleSourceSummary(self, item, source)
             return text
         end
         return "Vendor" .. (source.name and (": " .. source.name) or "")
+    elseif source.type == "currencyVendor" then
+        -- One NPC selling gear for a special currency, e.g. "Pix Xizzix (Booty Bay) - Tarnished Undermine Real".
+        local text = source.name or "Vendor"
+        if source.location then text = text .. " (" .. source.location .. ")" end
+        if source.currency then text = text .. " - " .. source.currency end
+        return text
     elseif source.type == "worldDrop" then
         -- A drop from one named mob (often a rare) names it after the zone:
         -- "World Drop - Teldrassil (Nightscreech)".

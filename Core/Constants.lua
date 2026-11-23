@@ -38,13 +38,16 @@ EverGear.VERSION = "0.5.5"
 --                                -- Forever's own custom items (id >= 200000) are NOT assumed
 --                                -- and stay nil until verified in-game.
 --   source = {
---     type = "dungeonDrop",     -- worldDrop | dungeonDrop | raidDrop | quest | vendor | craft | special
+--     type = "dungeonDrop",     -- worldDrop | dungeonDrop | raidDrop | quest | vendor | currencyVendor | craft | special
 --     zone = "The Stockade",
 --     boss = "Hamhock",         -- present for dungeonDrop/raidDrop
 --     quest = "Quest Title",    -- present for quest
 --     minLevel = 20,            -- optional, quest: the level the quest can be picked up at
 --     npc = "Mother Fang",      -- optional, worldDrop: the one mob (often a rare) it drops from
 --     name = "Kat Sampson",     -- vendor: who sells it
+--                               -- currencyVendor: one NPC selling gear for a special currency;
+--                               -- also location = "Booty Bay" (display only, NOT a zone, so the
+--                               -- Zones filter never hides it) and currency = "Tarnished Undermine Real"
 --     note = "Blade of Silverlaine + Scroll of the Saber", -- special: how to get it
 --     chance = 0.18,            -- optional, 0-1
 --   },
@@ -253,6 +256,7 @@ EverGear.OTHER_FACTION_ZONES = {
 EverGear.SOURCE_TYPE_FILTERS = {
     { key = "quest",       label = "Quest" },
     { key = "vendor",      label = "Vendor" },
+    { key = "currencyVendor", label = "Currency Vendor" },
     { key = "craft",       label = "Craft" },
     { key = "worldDrop",   label = "World Drop" },
     { key = "dungeonDrop", label = "Dungeon Drop" },
