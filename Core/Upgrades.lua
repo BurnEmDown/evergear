@@ -1455,9 +1455,41 @@ end
 -- * The profession skill cap (EverGear.PROFESSION_SKILL_CAP, the beta's 225):
 --   a crafted item whose recipe needs more skill can't be made by anyone yet,
 --   so it's never shown, whatever the filters say.
+-- PvP rank names by faction, indexed by rank number (1-14).
+EverGear.PVP_RANK_NAMES = {
+    Alliance = { "Private", "Corporal", "Sergeant", "Master Sergeant", "Sergeant Major", "Knight",
+        "Knight-Lieutenant", "Knight-Captain", "Knight-Champion", "Lieutenant Commander", "Commander",
+        "Marshal", "Field Marshal", "Grand Marshal" },
+    Horde = { "Scout", "Grunt", "Sergeant", "Senior Sergeant", "First Sergeant", "Stone Guard",
+        "Blood Guard", "Legionnaire", "Centurion", "Champion", "Lieutenant General", "General",
+        "Warlord", "High Warlord" },
+}
+
+-- The name of a rank number for the player's faction, nil for 0 or an unknown faction.
+function EverGear:GetPvPRankName(rank)
+    local names = self.PVP_RANK_NAMES[UnitFactionGroup and UnitFactionGroup("player") or ""]
+    return names and names[rank] or nil
+end
+
+-- The rank set with the Filters window's slider (charDB.pvpFilter.rank), or
+-- nil when it follows the game. Set it to nil to go back to the game's rank.
+function EverGear:SetChosenPvPRank(rank)
+    local db = self:GetCharDB()
+    db.pvpFilter = db.pvpFilter or {}
+    db.pvpFilter.rank = rank and math.max(0, math.min(14, math.floor(rank))) or nil
+end
+
+function EverGear:GetChosenPvPRank()
+    local pvpFilter = self:GetCharDB().pvpFilter
+    return pvpFilter and tonumber(pvpFilter.rank) or nil
+end
+
 -- The character's PvP rank number (0 = none, 1 = Private / Scout ... 14 =
--- Grand Marshal / High Warlord) and its name, from the game.
+-- Grand Marshal / High Warlord) and its name: the one chosen with the
+-- Filters window's slider if there is one, otherwise the game's.
 function EverGear:GetPlayerPvPRank()
+    local chosen = self:GetChosenPvPRank()
+    if chosen then return chosen, self:GetPvPRankName(chosen) end
     local rankId = UnitPVPRank and UnitPVPRank("player")
     if not rankId or rankId == 0 or not GetPVPRankInfo then return 0, nil end
     local name, number = GetPVPRankInfo(rankId)
