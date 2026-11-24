@@ -1149,25 +1149,47 @@ setTextBox:SetScript("OnTextChanged", function(self, userInput)
     end
 end)
 
-function EverGear:ShowSetExport(index)
-    local text = self:SerializeSet(index)
+-- Export format switch (its label names the format shown): sixtyupgrades.com's, or wowsims'.
+local setTextFormat = CreateFrame("Button", "EverGearSetTextFormat", setTextPopup, "UIPanelButtonTemplate")
+setTextFormat:SetSize(120, 22)
+setTextFormat:SetPoint("BOTTOMRIGHT", -20, 16)
+setTextFormat:Hide()
+local exportSimFormat = false
+
+local function ShowExportText(index)
+    local sim = exportSimFormat
+    local text = sim and EverGear:SerializeSimSet(index) or EverGear:SerializeSet(index)
     if not text then return end
     exportText = text
-    setTextTitle:SetText("Export: " .. self:GetSets()[index].name)
-    setTextHint:SetText("Already selected -- press Ctrl+C to copy. It's in sixtyupgrades.com's format, so the site can import it too.")
+    setTextTitle:SetText("Export: " .. EverGear:GetSets()[index].name)
+    setTextHint:SetText(sim
+        and "Already selected -- press Ctrl+C to copy. It's wowsims' format (gear and enchants only), for the sim's JSON import."
+        or "Already selected -- press Ctrl+C to copy. It's in sixtyupgrades.com's format, so the site can import it too.")
     setTextError:SetText("")
     setTextBox:SetText(text)
-    setTextAction:SetText("Done")
-    setTextAction:SetScript("OnClick", function() setTextPopup:Hide() end)
-    setTextPopup:Show()
+    setTextFormat:SetText(sim and "WoWSims" or "sixtyupgrades")
     setTextBox:SetFocus()
     setTextBox:HighlightText()
 end
 
+function EverGear:ShowSetExport(index)
+    exportSimFormat = false
+    setTextAction:SetText("Done")
+    setTextAction:SetScript("OnClick", function() setTextPopup:Hide() end)
+    setTextFormat:SetScript("OnClick", function()
+        exportSimFormat = not exportSimFormat
+        ShowExportText(index)
+    end)
+    setTextFormat:Show()
+    setTextPopup:Show()
+    ShowExportText(index)
+end
+
 function EverGear:ShowSetImport()
     exportText = nil
+    setTextFormat:Hide()
     setTextTitle:SetText("Import Gear Set")
-    setTextHint:SetText("Paste a gear set exported from EverGear or sixtyupgrades.com below, then click Import. It's added as a new set.")
+    setTextHint:SetText("Paste a gear set exported from EverGear, sixtyupgrades.com or wowsims below, then click Import. It's added as a new set.")
     setTextError:SetText("")
     setTextBox:SetText("")
     setTextAction:SetText("Import")
@@ -1183,13 +1205,25 @@ function EverGear:ShowSetImport()
     setTextBox:SetFocus()
 end
 
-local exportSetButton = CreateSmallButton("Export...", 80, function()
+local exportSetButton = CreateSmallButton("Export...", 76, function()
     local index = EverGear:GetActiveSetIndex()
     if index then EverGear:ShowSetExport(index) end
 end)
-exportSetButton:SetPoint("BOTTOMRIGHT", setsFrame, "BOTTOM", -4, 16)
-local importSetButton = CreateSmallButton("Import...", 80, function() EverGear:ShowSetImport() end)
-importSetButton:SetPoint("BOTTOMLEFT", setsFrame, "BOTTOM", 4, 16)
+exportSetButton:SetPoint("BOTTOMLEFT", setsFrame, "BOTTOMLEFT", 16, 16)
+local importSetButton = CreateSmallButton("Import...", 76, function() EverGear:ShowSetImport() end)
+importSetButton:SetPoint("LEFT", exportSetButton, "RIGHT", 6, 0)
+
+-- Replaces the selected set's contents with what the character wears now.
+local copyEquippedButton = CreateSmallButton("Copy equipped", 108, function()
+    local index = EverGear:GetActiveSetIndex()
+    local set = index and EverGear:GetSets()[index]
+    if set then StaticPopup_Show("EVERGEAR_COPY_EQUIPPED", set.name, nil, index) end
+end)
+copyEquippedButton:SetPoint("LEFT", importSetButton, "RIGHT", 6, 0)
+copyEquippedButton:SetScript("OnEnter", function(self)
+    Tooltip(self, "Copy equipped", "Puts everything you're wearing, enchants included, into the selected set, replacing what it holds.")
+end)
+copyEquippedButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 if importSetButton.SetMotionScriptsWhileDisabled then importSetButton:SetMotionScriptsWhileDisabled(true) end
 importSetButton:SetScript("OnEnter", function(self)
     if self:IsEnabled() then return end
@@ -1201,6 +1235,7 @@ setsFrame:HookScript("OnHide", function() setTextPopup:Hide() end)
 
 local function RefreshSetTransferButtons()
     exportSetButton:SetEnabled(EverGear:GetActiveSetIndex() ~= nil)
+    copyEquippedButton:SetEnabled(EverGear:GetActiveSetIndex() ~= nil)
     importSetButton:SetEnabled(#EverGear:GetSets() < EverGear.MAX_GEAR_SETS)
 end
 setsFrame:HookScript("OnShow", RefreshSetTransferButtons)
@@ -1320,6 +1355,19 @@ StaticPopupDialogs["EVERGEAR_RENAME_SET"] = {
         if not AcceptSetName(popup, popup.data, true) then popup:Hide() end
     end,
     EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
+    timeout = 0, whileDead = true, hideOnEscape = true,
+}
+
+StaticPopupDialogs["EVERGEAR_COPY_EQUIPPED"] = {
+    text = "Replace everything in the gear set \"%s\" with the gear you're wearing now?",
+    button1 = ACCEPT or "Replace",
+    button2 = CANCEL or "Cancel",
+    OnAccept = function(_, data)
+        local count = EverGear:CopyEquippedToSet(data)
+        if count == 0 then
+            print("|cff33ff99EverGear|r You aren't wearing anything to copy; the set is unchanged.")
+        end
+    end,
     timeout = 0, whileDead = true, hideOnEscape = true,
 }
 

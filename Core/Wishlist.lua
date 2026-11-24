@@ -26,6 +26,13 @@ local function CharDB()
     return charDB
 end
 
+-- Slots "copy from current" reads, in the order the sets list them.
+local SET_COPY_SLOTS = {
+    "HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", "ShirtSlot", "TabardSlot", "WristSlot",
+    "HandsSlot", "WaistSlot", "LegsSlot", "FeetSlot", "Finger0Slot", "Finger1Slot", "Trinket0Slot", "Trinket1Slot",
+    "MainHandSlot", "SecondaryHandSlot", "RangedSlot",
+}
+
 local function Print(msg)
     print("|cff33ff99EverGear|r " .. msg)
 end
@@ -249,6 +256,39 @@ function EverGear:SetSetEnchant(index, slotToken, spellId)
     self:NotifyWishlistChanged()
 end
 
+-- Replaces everything in a set with what the character has equipped right
+-- now, enchants included where EverGear knows the enchant (or keeps the bare
+-- enchant id otherwise). Returns the number of slots filled, or nil if the
+-- set doesn't exist.
+function EverGear:CopyEquippedToSet(index)
+    local set = CharDB().sets[index]
+    if not set then return nil end
+    local slots, enchants, count = {}, {}, 0
+    for _, pair in ipairs(SET_COPY_SLOTS) do
+        local slotToken = pair
+        local slotId = GetInventorySlotInfo and GetInventorySlotInfo(slotToken)
+        local link = slotId and GetInventoryItemLink("player", slotId)
+        local itemId = link and tonumber(link:match("item:(%d+)"))
+        if itemId then
+            slots[slotToken] = itemId
+            count = count + 1
+            local enchantId = tonumber(link:match("item:%d+:(%d+)"))
+            if enchantId and enchantId > 0 and not self.COSMETIC_SLOTS[slotToken] then
+                local known = self.GetEnchantByEnchantId and self:GetEnchantByEnchantId(enchantId)
+                enchants[slotToken] = known
+                    and { name = known.name, id = known.enchantId, spellId = known.spellId }
+                    or { id = enchantId }
+            end
+        end
+    end
+    if count == 0 then return 0 end  -- nothing worn: leave the set as it is
+    set.slots = slots
+    set.enchants = next(enchants) and enchants or nil
+    self:NotifyWishlistChanged()
+    self:ScanForAcquiredItems()
+    return count
+end
+
 -- Number of filled slots and how many of those are acquired.
 function EverGear:GetSetProgress(index)
     local set = CharDB().sets[index]
@@ -412,6 +452,77 @@ function EverGear:SerializeSet(index)
     })
 end
 
+-- ===== WoWSims =====
+-- wowsims' "Export JSON" (individual sim settings): player.equipment.items is
+-- 17 entries in this fixed slot order, each { id, enchant } with the enchant
+-- as the game's enchant (effect) id, or {} for an empty slot. Only gear and
+-- enchants are read; everything else in the file is ignored.
+local SIM_SLOTS = {
+    "HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", "WristSlot", "HandsSlot", "WaistSlot",
+    "LegsSlot", "FeetSlot", "Finger0Slot", "Finger1Slot", "Trinket0Slot", "Trinket1Slot",
+    "MainHandSlot", "SecondaryHandSlot", "RangedSlot",
+}
+local SITE_FROM_SLOT = {}
+for _, pair in ipairs(SITE_SLOTS) do SITE_FROM_SLOT[pair[2]] = pair[1] end
+
+-- True for a decoded wowsims export.
+local function IsSimExport(decoded)
+    return type(decoded) == "table" and type(decoded.player) == "table"
+        and type(decoded.player.equipment) == "table" and type(decoded.player.equipment.items) == "table"
+end
+
+-- A wowsims export in the shape ImportSet reads (the site's: items with a slot).
+local function SimToSiteSet(decoded)
+    local items = {}
+    for i, entry in ipairs(decoded.player.equipment.items) do
+        local slotToken = SIM_SLOTS[i]
+        local itemId = type(entry) == "table" and tonumber(entry.id)
+        if slotToken and itemId and itemId > 0 then
+            local enchantId = tonumber(entry.enchant)
+            items[#items + 1] = {
+                id = itemId,
+                slot = SITE_FROM_SLOT[slotToken],
+                enchant = enchantId and enchantId > 0 and { id = enchantId } or nil,
+            }
+        end
+    end
+    local name = type(decoded.player.name) == "string" and decoded.player.name ~= "" and decoded.player.name or nil
+    return { name = (name and name ~= "Player") and name or "WoWSims set", items = items }
+end
+
+-- UnitRace's file token -> wowsims' race name, where it isn't just "Race" + the token.
+local SIM_RACE = { Scourge = "RaceUndead" }
+
+-- A set as wowsims' import reads it: the player's name, race and class and
+-- the gear with its enchants. Talents, buffs, rotation and the other sim
+-- settings are left out; the sim fills those in itself.
+function EverGear:SerializeSimSet(index)
+    local set = CharDB().sets[index]
+    if not set then return nil end
+    local _, raceToken = UnitRace("player")
+    local classToken = self:GetPlayerInfo().classToken
+    local items = {}
+    for i, slotToken in ipairs(SIM_SLOTS) do
+        local itemId = set.slots[slotToken]
+        if itemId then
+            local record = set.enchants and set.enchants[slotToken]
+            items[i] = { id = itemId, enchant = record and record.id or nil }
+        else
+            items[i] = {}
+        end
+    end
+    return self.JSON.encode({
+        apiVersion = 2,
+        player = {
+            apiVersion = 2,
+            name = UnitName("player"),
+            race = raceToken and (SIM_RACE[raceToken] or ("Race" .. raceToken)) or nil,
+            class = classToken and ("Class" .. classToken:sub(1, 1) .. classToken:sub(2):lower()) or nil,
+            equipment = { items = items },
+        },
+    })
+end
+
 -- Cuts a name to the set-name limit, whole characters only.
 local function TrimSetName(name)
     local out, count = {}, 0
@@ -443,6 +554,7 @@ end
 function EverGear:ImportSet(text)
     local ok, decoded = pcall(self.JSON.decode, text or "")
     if not ok then return nil, "Couldn't read that as an exported gear set." end
+    if IsSimExport(decoded) then decoded = SimToSiteSet(decoded) end
     if type(decoded) ~= "table" or type(decoded.items) ~= "table" then
         return nil, "That isn't an exported gear set (no \"items\" list)."
     end
