@@ -1502,14 +1502,21 @@ function EverGear:GetPlayerPvPRank()
         if rankId <= 14 then return rankId, self:GetPvPRankName(rankId) end
         if rankId <= 18 then return rankId - 4, self:GetPvPRankName(rankId - 4) end
     end
-    -- Last resort: the rank title in front of the player's name ("Private Bob").
+    -- Last resort: the rank title in front of the player's name ("Scout Bob").
+    -- Matched without regard to case; longer titles are tried first so
+    -- "Sergeant Major" isn't read as "Sergeant".
     local titled = UnitPVPName and UnitPVPName("player")
-    local plain = UnitName and UnitName("player")
     local names = self.PVP_RANK_NAMES[UnitFactionGroup and UnitFactionGroup("player") or ""]
-    if titled and plain and names then
-        for number = #names, 1, -1 do
-            if titled == names[number] .. " " .. plain then return number, names[number] end
+    if titled and names then
+        titled = titled:lower()
+        local best, bestLength = nil, 0
+        for number, rankName in ipairs(names) do
+            local prefix = rankName:lower() .. " "
+            if titled:sub(1, #prefix) == prefix and #prefix > bestLength then
+                best, bestLength = number, #prefix
+            end
         end
+        if best then return best, names[best] end
     end
     return 0, nil
 end
