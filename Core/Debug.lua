@@ -443,10 +443,12 @@ function EverGear:CompareLiveToDatabase(live, db)
     -- reputation too, and the raw lines are in the capture either way.)
     local source = db.source or {}
     local rep = live._reputation
-    if source.type == "reputation" and (not rep or source.repFaction ~= rep.faction or source.standing ~= rep.standing) then
+    -- The game's item tooltip often leaves the reputation requirement out (it is shown in
+    -- the vendor's window instead), so a read with no reputation line says nothing about
+    -- the data and isn't a difference; only a requirement the game does show is compared.
+    if source.type == "reputation" and rep and (source.repFaction ~= rep.faction or source.standing ~= rep.standing) then
         diffs[#diffs + 1] = string.format("reputation: addon %s - %s, game %s",
-            tostring(source.repFaction), tostring(source.standing),
-            rep and (rep.faction .. " - " .. rep.standing) or "none")
+            tostring(source.repFaction), tostring(source.standing), rep.faction .. " - " .. rep.standing)
     end
     local rank = live._pvpRank
     if source.type == "pvp" and rank and source.rank ~= rank.rank then
