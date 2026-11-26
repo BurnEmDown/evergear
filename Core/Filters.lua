@@ -185,7 +185,45 @@ y = y - SUB_ROW
 local pvpRankText = Note(sourcesPage, "", "GameFontNormalSmall")
 pvpRankText:SetPoint("TOPLEFT", 16 + INDENT + 6, y)
 pvpRankText:SetTextColor(unpack(THEME.parchment))
-y = y - LINE - 10
+y = y - LINE - 4
+
+-- Rank slider, 0 (none) to 14. Until it's moved the rank follows the game; "Game rank" goes back to that.
+local pvpRankSlider = CreateFrame("Slider", "EverGearPvPRankSlider", sourcesPage, "BackdropTemplate")
+pvpRankSlider:SetOrientation("HORIZONTAL")
+pvpRankSlider:SetSize(150, 17)
+pvpRankSlider:SetPoint("TOPLEFT", 16 + INDENT + 6, y)
+pvpRankSlider:SetHitRectInsets(0, 0, -6, -6)
+pvpRankSlider:SetThumbTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
+pvpRankSlider:SetBackdrop({
+    bgFile = "Interface\\Buttons\\UI-SliderBar-Background",
+    edgeFile = "Interface\\Buttons\\UI-SliderBar-Border",
+    tile = true, tileSize = 8, edgeSize = 8,
+    insets = { left = 3, right = 3, top = 6, bottom = 6 },
+})
+pvpRankSlider:SetMinMaxValues(0, 14)
+pvpRankSlider:SetValueStep(1)
+if pvpRankSlider.SetObeyStepOnDrag then pvpRankSlider:SetObeyStepOnDrag(true) end
+pvpRankSlider:EnableMouseWheel(true)
+pvpRankSlider:SetScript("OnMouseWheel", function(self, delta)
+    if not self.IsEnabled or self:IsEnabled() then self:SetValue(self:GetValue() + delta) end
+end)
+Tooltip(pvpRankSlider, "PvP rank", "Set your PvP rank, from 0 (none) to 14. Gear that needs a higher rank is "
+    .. "left out while \"Only what my rank allows\" is ticked. Drag it, or use the mouse wheel over it.")
+local pvpRankUpdating = false
+pvpRankSlider:SetScript("OnValueChanged", function(self, value, userInput)
+    if pvpRankUpdating then return end
+    EverGear:SetChosenPvPRank(value)
+    EverGear:SyncFiltersWindow()
+    Refresh()
+end)
+local pvpRankAuto = SmallButton(sourcesPage, "Game rank", 70, function()
+    EverGear:SetChosenPvPRank(nil)
+    EverGear:SyncFiltersWindow()
+    Refresh()
+end)
+pvpRankAuto:SetPoint("LEFT", pvpRankSlider, "RIGHT", 8, 0)
+Tooltip(pvpRankAuto, "Game rank", "Stop using the slider and read your rank from the game again.")
+y = y - LINE - 12
 
 -- Reputation: every reputation vendor, battleground or not.
 local repCheck = SourceCheck("reputation", "Reputation", 16, y)
@@ -390,8 +428,16 @@ local function RefreshSourcesPage()
     end
 
     local rank, rankName = EverGear:GetPlayerPvPRank()
-    pvpRankText:SetText(rank > 0 and ("Your PvP rank: " .. (rankName or "?") .. " (rank " .. rank .. ")")
-        or "Your PvP rank: none yet")
+    local chosen = EverGear:GetChosenPvPRank() ~= nil
+    pvpRankText:SetText((rank > 0 and ("Your PvP rank: " .. (rankName or "?") .. " (rank " .. rank .. ")")
+        or "Your PvP rank: none yet") .. (chosen and " - set here" or ""))
+    pvpRankUpdating = true
+    pvpRankSlider:SetValue(rank)
+    pvpRankUpdating = false
+    local pvpOn = pvpCheck:GetChecked() and true or false
+    if pvpRankSlider.SetEnabled then pvpRankSlider:SetEnabled(pvpOn) end
+    pvpRankSlider:SetAlpha(pvpOn and 1 or 0.5)
+    if chosen and pvpOn then pvpRankAuto:Enable() else pvpRankAuto:Disable() end
 
     repFactions = ReputationFactions()
     UpdateReputationRows()
