@@ -1491,9 +1491,27 @@ function EverGear:GetPlayerPvPRank()
     local chosen = self:GetChosenPvPRank()
     if chosen then return chosen, self:GetPvPRankName(chosen) end
     local rankId = UnitPVPRank and UnitPVPRank("player")
-    if not rankId or rankId == 0 or not GetPVPRankInfo then return 0, nil end
-    local name, number = GetPVPRankInfo(rankId)
-    return tonumber(number) or 0, name
+    -- Retail-style clients number ranks 5-18 and GetPVPRankInfo turns that
+    -- into 1-14. Some clients may hand back 1-14 straight away (GetPVPRankInfo
+    -- then has nothing for it), so accept that too.
+    if rankId and rankId > 0 then
+        local name, number
+        if GetPVPRankInfo then name, number = GetPVPRankInfo(rankId) end
+        number = tonumber(number)
+        if number and number > 0 then return number, name end
+        if rankId <= 14 then return rankId, self:GetPvPRankName(rankId) end
+        if rankId <= 18 then return rankId - 4, self:GetPvPRankName(rankId - 4) end
+    end
+    -- Last resort: the rank title in front of the player's name ("Private Bob").
+    local titled = UnitPVPName and UnitPVPName("player")
+    local plain = UnitName and UnitName("player")
+    local names = self.PVP_RANK_NAMES[UnitFactionGroup and UnitFactionGroup("player") or ""]
+    if titled and plain and names then
+        for number = #names, 1, -1 do
+            if titled == names[number] .. " " .. plain then return number, names[number] end
+        end
+    end
+    return 0, nil
 end
 
 -- Reputation standings, as the game numbers them (GetFactionInfoByID's
